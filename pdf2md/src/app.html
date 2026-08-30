@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PDF → Markdown</title>
+<style>
+  :root{
+    --bg:#f7f6f3; --panel:#ffffff; --ink:#2f2b26; --muted:#8a8378;
+    --line:#e3ded5; --accent:#5b8266; --accent-ink:#ffffff; --drop:#fbfaf7;
+    --code-bg:#fbfaf7;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#1e1c1a; --panel:#272421; --ink:#eae5dd; --muted:#9a9187;
+      --line:#3a3631; --accent:#7ea98a; --accent-ink:#16211a; --drop:#221f1d;
+      --code-bg:#1b1917;
+    }
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif;
+    line-height:1.7; padding:32px 20px 80px;
+  }
+  .wrap{max-width:840px; margin:0 auto}
+  h1{font-size:22px; margin:0 0 4px; font-weight:600; letter-spacing:.02em}
+  .sub{color:var(--muted); font-size:13px; margin:0 0 24px}
+  .drop{
+    border:2px dashed var(--line); border-radius:14px; background:var(--drop);
+    padding:52px 24px; text-align:center; cursor:pointer; transition:.15s;
+  }
+  .drop:hover{border-color:var(--accent)}
+  .drop.over{border-color:var(--accent); background:var(--panel)}
+  .drop .big{font-size:16px; font-weight:600; margin-bottom:6px}
+  .drop .small{font-size:13px; color:var(--muted)}
+  .opts{
+    display:flex; flex-wrap:wrap; gap:14px 20px; margin:18px 2px 0;
+    font-size:13px; color:var(--muted);
+  }
+  .opts label{display:flex; align-items:center; gap:6px; cursor:pointer}
+  .opts input{accent-color:var(--accent); cursor:pointer}
+  .panel{
+    background:var(--panel); border:1px solid var(--line); border-radius:14px;
+    padding:18px; margin-top:20px;
+  }
+  .bar{display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:12px}
+  .meta{font-size:13px; color:var(--muted)}
+  .btns{display:flex; gap:8px; flex-wrap:wrap}
+  button{
+    font:inherit; font-size:13px; padding:7px 14px; border-radius:8px;
+    border:1px solid var(--line); background:var(--panel); color:var(--ink); cursor:pointer;
+  }
+  button:hover{border-color:var(--accent)}
+  button.primary{background:var(--accent); color:var(--accent-ink); border-color:var(--accent); font-weight:600}
+  textarea{
+    width:100%; min-height:420px; resize:vertical; padding:14px;
+    border:1px solid var(--line); border-radius:10px; background:var(--code-bg); color:var(--ink);
+    font-family:"SF Mono",Menlo,Consolas,monospace; font-size:13px; line-height:1.75;
+  }
+  .prog{margin-top:20px; font-size:14px; color:var(--muted); text-align:center}
+  .note{
+    margin-top:20px; padding:14px 16px; border-radius:10px;
+    background:var(--panel); border:1px solid var(--line); font-size:13px; line-height:1.8;
+  }
+  .note b{color:var(--ink)}
+  .err{border-color:#c76b5a}
+  .hide{display:none}
+  footer{margin-top:36px; text-align:center; font-size:12px; color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1>PDF → Markdown</h1>
+  <p class="sub">PDFを放り込むとMarkdownになります。ネットにはつながりません。ファイルはこのパソコンの中だけで処理されます。</p>
+
+  <div class="drop" id="drop">
+    <div class="big">ここにPDFをドラッグ&amp;ドロップ</div>
+    <div class="small">クリックしてファイルを選ぶこともできます</div>
+    <input type="file" id="file" accept="application/pdf,.pdf" class="hide">
+  </div>
+
+  <div class="opts">
+    <label><input type="checkbox" id="optHeading" checked> 見出しを自動でつける</label>
+    <label><input type="checkbox" id="optClean" checked> ヘッダー・フッター・ページ番号を消す</label>
+    <label><input type="checkbox" id="optJoin" checked> 途中で切れた行をつなぐ</label>
+    <label><input type="checkbox" id="optPage"> ページの区切り線を入れる</label>
+  </div>
+
+  <div class="prog hide" id="prog"></div>
+  <div class="note hide" id="msg"></div>
+
+  <div class="panel hide" id="result">
+    <div class="bar">
+      <div class="meta" id="meta"></div>
+      <div class="btns">
+        <button id="copy">コピー</button>
+        <button class="primary" id="save">.md で保存</button>
+        <button id="again">別のPDF</button>
+      </div>
+    </div>
+    <textarea id="out" spellcheck="false"></textarea>
+  </div>
+
+  <footer>むすび製 · pdf.js (Mozilla, Apache-2.0) を同梱</footer>
+</div>
+
+<!--PDFJS_WORKER-->
+<!--PDFJS_LIB-->
+
+<script>
+(function(){
+  "use strict";
+
+  var $ = function(id){ return document.getElementById(id); };
+  var drop = $("drop"), fileInput = $("file"), prog = $("prog"), msg = $("msg"),
+      result = $("result"), out = $("out"), meta = $("meta");
+
+  var current = null;   // { name, pages, numPages }
+
+  /* ============ 画面まわり ============ */
+
+  function showMsg(text, isError){
+    msg.innerHTML = text;
+    msg.className = "note" + (isError ? " err" : "");
+  }
+  function hideMsg(){ msg.className = "note hide"; }
+  function showProg(text){ prog.textContent = text; prog.className = "prog"; }
+  function hideProg(){ prog.className = "prog hide"; }
+
+  drop.addEventListener("click", function(){ fileInput.click(); });
+  fileInput.addEventListener("change", function(){
+    if (fileInput.files && fileInput.files[0]) handleFile(fileInput.files[0]);
+    fileInput.value = "";
+  });
+  ["dragenter","dragover"].forEach(function(ev){
+    drop.addEventListener(ev, function(e){ e.preventDefault(); drop.classList.add("over"); });
+  });
+  ["dragleave","drop"].forEach(function(ev){
+    drop.addEventListener(ev, function(e){ e.preventDefault(); drop.classList.remove("over"); });
+  });
+  drop.addEventListener("drop", function(e){
+    var files = e.dataTransfer && e.dataTransfer.files;
+    if (!files || !files.length) return;
+    if (files.length > 1) showMsg("PDFは1つずつ変換します。<b>" + esc(files[0].name) + "</b> を変換しました。");
+    handleFile(files[0]);
+  });
+  window.addEventListener("dragover", function(e){ e.preventDefault(); });
+  window.addEventListener("drop", function(e){ e.preventDefault(); });
+
+  ["optHeading","optClean","optJoin","optPage"].forEach(function(id){
+    $(id).addEventListener("change", function(){
+      if (current) render();
+    });
+  });
+
+  $("again").addEventListener("click", function(){
+    current = null;
+    result.className = "panel hide";
+    hideMsg(); hideProg();
+    window.scrollTo({top:0, behavior:"smooth"});
+  });
+
+  $("copy").addEventListener("click", function(){
+    out.select();
+    var ok = false;
+    try { ok = document.execCommand("copy"); } catch(e){}
+    if (!ok && navigator.clipboard) navigator.clipboard.writeText(out.value).catch(function(){});
+    window.getSelection().removeAllRanges();
+    var b = $("copy"), t = b.textContent;
+    b.textContent = "コピーしました";
+    setTimeout(function(){ b.textContent = t; }, 1400);
+  });
+
+  $("save").addEventListener("click", function(){
+    var name = (current ? current.name : "output").replace(/\.pdf$/i, "") + ".md";
+    var blob = new Blob([out.value], {type:"text/markdown;charset=utf-8"});
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement("a");
+    a.href = url; a.download = name;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 4000);
+  });
+
+  function esc(s){
+    return String(s).replace(/[&<>"]/g, function(c){
+      return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c];
+    });
+  }
+
+  /* ============ PDF を読む ============ */
+
+  function handleFile(file){
+    if (!/\.pdf$/i.test(file.name) && file.type !== "application/pdf"){
+      showMsg("PDFファイルを入れてください。", true);
+      return;
+    }
+    hideMsg();
+    result.className = "panel hide";
+    showProg("読み込んでいます…");
+
+    var reader = new FileReader();
+    reader.onerror = function(){ hideProg(); showMsg("ファイルを読めませんでした。", true); };
+    reader.onload = function(){
+      var data = new Uint8Array(reader.result);
+      readPdf(file.name, data);
+    };
+    reader.readAsArrayBuffer(file);
+  }
+
+  function readPdf(name, data){
+    var task = pdfjsLib.getDocument({
+      data: data,
+      isEvalSupported: false,
+      useSystemFonts: false,
+      disableFontFace: true
+    });
+
+    task.promise.then(function(pdf){
+      return extractPages(pdf).then(function(pages){
+        current = { name: name, pages: pages, numPages: pdf.numPages };
+        pdf.destroy();
+        hideProg();
+        render();
+      });
+    }).catch(function(err){
+      hideProg();
+      var m = String(err && err.message || err);
+      if (/password/i.test(m)){
+        showMsg("このPDFにはパスワードがかかっています。パスワードを外したものを入れてください。", true);
+      } else {
+        showMsg("読み込みに失敗しました。<br><span style=\"color:var(--muted)\">" + esc(m) + "</span>", true);
+      }
+    });
+  }
+
+  function extractPages(pdf){
+    var pages = [];
+    var i = 0;
+    function next(){
+      if (i >= pdf.numPages) return Promise.resolve(pages);
+      i++;
+      showProg(i + " / " + pdf.numPages + " ページを読んでいます…");
+      var n = i;
+      return pdf.getPage(n).then(function(page){
+        var vp = page.getViewport({ scale: 1 });
+        return page.getTextContent().then(function(tc){
+          pages.push({
+            num: n,
+            width: vp.width,
+            height: vp.height,
+            lines: buildLines(tc.items)
+          });
+          page.cleanup();
+          // 画面が固まらないように一拍おく
+          return new Promise(function(res){ setTimeout(res, 0); }).then(next);
+        });
+      });
+    }
+    return next();
+  }
+
+  /* ============ 文字のかたまり → 行 ============ */
+
+  // PDFによっては、漢字が「部首の記号」という別の文字コードで埋まっていることがある
+  // (「長」が ⻑、「用」が ⽕ など)。そのままでは読みにくいので、ふつうの漢字に直す。
+  // 上下の文字列は1文字ずつ対応している(113文字)。
+  var RAD_SRC = "⺀⺁⺂⺃⺄⺅⺆⺇⺈⺉⺊⺋⺌⺍⺎⺏⺐⺑⺒⺓⺔⺕⺖⺗⺘⺙⺛⺜⺝⺞⺠⺡⺢⺣⺤⺥⺦⺧⺨⺩⺪⺫⺬⺭⺮⺯⺰⺱⺲⺳⺴⺵⺶⺷⺸⺹⺺⺻⺼⺽⺾⺿⻀⻁⻂⻃⻄⻅⻆⻇⻈⻉⻊⻋⻌⻍⻎⻏⻐⻑⻒⻓⻔⻕⻖⻗⻘⻙⻚⻛⻜⻝⻞⻟⻠⻡⻢⻣⻤⻥⻦⻧⻨⻩⻪⻫⻬⻭⻮⻯⻰⻱⻲";
+  var RAD_DST = "冫厂乙乙乙人冂几刀刀卜卩小小尢尢尢尢巳糸彐彐心心手攴旡日月歹民水水火爪爪木牛犬玉疋目示示竹糸糸网网网网网羊羊羊老聿聿肉臼艸艸艸虍衣襾西見角角言貝足車辵辵辵邑金長長長門阜阜雨青韋頁風飛食食食食首馬骨鬼魚鳥鹵麦黄黽斉斉歯歯竜竜亀亀";
+  var RAD_MAP = (function(){
+    var m = {};
+    for (var i=0; i<RAD_SRC.length; i++) m[RAD_SRC.charAt(i)] = RAD_DST.charAt(i);
+    return m;
+  })();
+
+  function normalizeGlyphs(t){
+    return t
+      .replace(/[\u2e80-\u2ef3]/g, function(c){ return RAD_MAP[c] || c; })
+      .replace(/[\u2f00-\u2fd5]/g, function(c){
+        var n = c.normalize("NFKC");
+        return n.length === 1 ? n : c;
+      })
+      .replace(/[\u0335\u0336\u2014\u2015]/g, "\u2014")
+      .replace(/[\u00a0\u2007\u202f\u2009\u200a]/g, " ")
+      .replace(/[\u200b\u200c\u200d\ufeff]/g, "")
+      .replace(/[\ue000-\uf8ff]/g, "");   // アイコンフォントなど、文字として意味のないもの
+  }
+
+  function itemSize(it){
+    var t = it.transform;
+    var s = Math.sqrt(t[2]*t[2] + t[3]*t[3]);
+    if (!s || !isFinite(s)) s = it.height || 10;
+    return Math.round(s * 10) / 10;
+  }
+
+  function buildLines(items){
+    var boxes = [];
+    for (var i=0; i<items.length; i++){
+      var it = items[i];
+      if (typeof it.str !== "string" || it.str === "") continue;
+      var t = it.transform;
+      boxes.push({
+        str: it.str,
+        x: t[4],
+        y: t[5],
+        w: it.width || 0,
+        size: itemSize(it),
+        bold: /bold|black|heavy|semibold|W[6-9]/i.test(it.fontName || "")
+      });
+    }
+    if (!boxes.length) return [];
+
+    // 上から下へ、同じ行に見えるものをまとめる
+    boxes.sort(function(a,b){
+      if (Math.abs(a.y - b.y) > 0.1) return b.y - a.y;
+      return a.x - b.x;
+    });
+
+    var lines = [];
+    var cur = null;
+    for (var j=0; j<boxes.length; j++){
+      var b = boxes[j];
+      var tol = Math.max(2, b.size * 0.45);
+      if (cur && Math.abs(cur.y - b.y) <= tol){
+        cur.boxes.push(b);
+        cur.y = (cur.y * (cur.boxes.length - 1) + b.y) / cur.boxes.length;
+      } else {
+        if (cur) lines.push(cur);
+        cur = { y: b.y, boxes: [b] };
+      }
+    }
+    if (cur) lines.push(cur);
+
+    return lines.map(finishLine).filter(function(l){ return l && l.text !== ""; });
+  }
+
+  function finishLine(line){
+    var bs = line.boxes.slice().sort(function(a,b){ return a.x - b.x; });
+    var text = "";
+    var prev = null;
+    for (var i=0; i<bs.length; i++){
+      var b = bs[i];
+      // 太字を表すために、同じ字をわずかにずらして重ね描きしているPDFがある。
+      // そのままだと「踏んだ」が「踏踏んだんだ」になるので、重なった分を捨てる。
+      if (prev && b.str === prev.str &&
+          Math.abs(b.x - prev.x) < Math.max(prev.w, b.w, 1) * 0.35){
+        continue;
+      }
+      if (prev){
+        var gap = b.x - (prev.x + prev.w);
+        var unit = Math.min(prev.size, b.size);
+        if (gap > unit * 0.22 && !/\s$/.test(text) && !/^\s/.test(b.str)){
+          text += " ";
+        }
+      }
+      text += b.str;
+      prev = b;
+    }
+    text = normalizeGlyphs(text).replace(/\s+/g, " ").replace(/^\s+|\s+$/g, "");
+    if (!/[^\s\u00ad\u2060]/.test(text)) text = "";   // 中身のない行
+
+    // その行で一番よく使われている文字サイズ(文字数で重みづけ)
+    var tally = {};
+    for (var k=0; k<bs.length; k++){
+      var s = bs[k].size;
+      tally[s] = (tally[s] || 0) + bs[k].str.length;
+    }
+    var size = 0, best = -1;
+    for (var key in tally){
+      if (tally[key] > best){ best = tally[key]; size = parseFloat(key); }
+    }
+
+    var boldChars = 0, allChars = 0;
+    for (var m=0; m<bs.length; m++){
+      allChars += bs[m].str.length;
+      if (bs[m].bold) boldChars += bs[m].str.length;
+    }
+
+    return {
+      text: text,
+      y: line.y,
+      size: size,
+      left: bs[0].x,
+      right: bs[bs.length-1].x + bs[bs.length-1].w,
+      bold: allChars > 0 && boldChars / allChars > 0.6
+    };
+  }
+
+  /* ============ 行 → Markdown ============ */
+
+  function render(){
+    var opts = {
+      heading: $("optHeading").checked,
+      clean:   $("optClean").checked,
+      join:    $("optJoin").checked,
+      pageMark:$("optPage").checked
+    };
+    var md = toMarkdown(current.pages, opts);
+    out.value = md;
+
+    var chars = md.replace(/\s/g, "").length;
+    meta.innerHTML = "<b>" + esc(current.name) + "</b> · " + current.numPages + "ページ · 約" + chars.toLocaleString() + "文字";
+    result.className = "panel";
+
+    var total = 0;
+    current.pages.forEach(function(p){ total += p.lines.length; });
+    if (total === 0){
+      showMsg("<b>文字が取り出せませんでした。</b><br>紙をスキャンしたPDFなど、文字が画像になっているものは、このアプリでは変換できません。", true);
+    } else {
+      hideMsg();
+    }
+  }
+
+  function toMarkdown(pages, opts){
+    var junk = opts.clean ? findRepeated(pages) : {};
+    var body = bodySize(pages);
+    var ctx = { body: body, lead: leading(pages, body) };
+    var headingSizes = opts.heading ? rankHeadings(pages, body) : {};
+
+    var chunks = [];
+    for (var p=0; p<pages.length; p++){
+      var page = pages[p];
+      var lines = page.lines.filter(function(l){
+        return opts.clean ? !isJunk(l, page, junk) : true;
+      });
+      if (opts.clean) lines = stripPageNumber(lines);
+      if (opts.pageMark && chunks.length) chunks.push({ type:"rule" });
+      chunks = chunks.concat(pageChunks(lines, page, ctx, headingSizes, opts));
+    }
+    return chunksToText(chunks);
+  }
+
+  // ふつうの行送り(行と行の間隔の中央値)。これより広く空いていたら段落の切れ目。
+  function leading(pages, body){
+    var gaps = [];
+    pages.forEach(function(p){
+      for (var i=1; i<p.lines.length; i++){
+        var g = p.lines[i-1].y - p.lines[i].y;
+        if (g > body * 0.5 && g < body * 6) gaps.push(g);
+      }
+    });
+    if (gaps.length < 4) return body * 2.2;
+    gaps.sort(function(a,b){ return a - b; });
+    return gaps[Math.floor(gaps.length * 0.5)];
+  }
+
+  // ページの先頭・末尾にぽつんとある数字はページ番号とみなす
+  function stripPageNumber(lines){
+    var num = /^[\s\-\u2013\u2014\[\(]*\d{1,4}[\s\-\u2013\u2014\]\)]*$/;
+    var out = lines.slice();
+    if (out.length && num.test(out[out.length-1].text)) out.pop();
+    if (out.length && num.test(out[0].text)) out.shift();
+    return out;
+  }
+
+  // 本文の文字サイズ = 一番たくさん使われているサイズ
+  function bodySize(pages){
+    var tally = {};
+    pages.forEach(function(p){
+      p.lines.forEach(function(l){
+        var s = Math.round(l.size * 2) / 2;
+        tally[s] = (tally[s] || 0) + l.text.length;
+      });
+    });
+    var size = 10, best = -1;
+    for (var k in tally){
+      if (tally[k] > best){ best = tally[k]; size = parseFloat(k); }
+    }
+    return size;
+  }
+
+  // 本文より大きいサイズを、大きい順に # ## ### #### へ
+  function rankHeadings(pages, body){
+    var seen = {};
+    pages.forEach(function(p){
+      p.lines.forEach(function(l){
+        var s = Math.round(l.size * 2) / 2;
+        if (s > body * 1.12 && l.text.length <= 80) seen[s] = (seen[s] || 0) + 1;
+      });
+    });
+    var sizes = Object.keys(seen).map(parseFloat).sort(function(a,b){ return b - a; });
+    var map = {};
+    for (var i=0; i<sizes.length && i<4; i++) map[sizes[i]] = i + 1;
+    return map;
+  }
+
+  // 半分以上のページで同じ位置に同じ文字 = ヘッダー/フッター
+  function findRepeated(pages){
+    if (pages.length < 3) return {};
+    var tally = {};
+    pages.forEach(function(p){
+      var seen = {};
+      p.lines.forEach(function(l){
+        var zone = zoneOf(l, p);
+        if (zone === "mid") return;
+        var key = zone + " " + l.text.replace(/\d+/g, "#");
+        if (seen[key]) return;
+        seen[key] = true;
+        tally[key] = (tally[key] || 0) + 1;
+      });
+    });
+    var junk = {};
+    var need = Math.max(2, Math.ceil(pages.length * 0.5));
+    for (var k in tally){
+      if (tally[k] >= need) junk[k] = true;
+    }
+    return junk;
+  }
+
+  function zoneOf(line, page){
+    var fromTop = page.height - line.y;
+    if (fromTop < page.height * 0.12) return "top";
+    if (line.y < page.height * 0.12) return "bottom";
+    return "mid";
+  }
+
+  function isJunk(line, page, junk){
+    var zone = zoneOf(line, page);
+    if (zone === "mid") return false;
+    var t = line.text;
+    // ページ番号らしきもの
+    if (/^[\s\-–—\[\(]*\d{1,4}[\s\-–—\]\)]*$/.test(t)) return true;
+    if (/^\d{1,4}\s*[\/\-]\s*\d{1,4}$/.test(t)) return true;
+    if (/^(page|p\.?)\s*\d+/i.test(t)) return true;
+    if (/^\d{1,4}\s*ページ$/.test(t)) return true;
+    return !!junk[zone + " " + t.replace(/\d+/g, "#")];
+  }
+
+  function pageChunks(lines, page, ctx, headingSizes, opts){
+    var body = ctx.body, lead = ctx.lead;
+
+    // 本文の右端・左端(折り返しと字下げの判定に使う)
+    var rights = lines.filter(function(l){ return l.text.length > 6; })
+                      .map(function(l){ return l.right; })
+                      .sort(function(a,b){ return a - b; });
+    var edge = rights.length ? rights[Math.floor(rights.length * 0.9)] : page.width;
+    var baseLeft = commonLeft(lines);
+
+    var listed = markIndentedLists(lines, headingSizes, baseLeft, edge, body);
+    var runs = sizeRuns(lines);
+
+    var chunks = [];
+    var para = null;
+    function flush(){ if (para){ chunks.push(para); para = null; } }
+
+    for (var i=0; i<lines.length; i++){
+      var l = lines[i];
+      var t = l.text;
+      var s = Math.round(l.size * 2) / 2;
+
+      // --- 見出し ---
+      var level = headingSizes[s];
+      if (level && runs[i] <= 2 && t.length <= 80){
+        var htext = cleanText(t);
+        // 2行に折り返した見出しは1つにまとめる
+        if (runs[i] === 2 && i + 1 < lines.length &&
+            Math.round(lines[i+1].size * 2) / 2 === s &&
+            htext.length + lines[i+1].text.length <= 80){
+          htext = joinText(htext, cleanText(lines[i+1].text));
+          i++;
+        }
+        flush();
+        chunks.push({ type:"heading", level: level, text: htext });
+        continue;
+      }
+
+      // --- 箇条書き(記号つき) ---
+      var bullet = matchBullet(t);
+      if (bullet){
+        flush();
+        chunks.push({ type:"list", marker: bullet.marker, text: cleanText(bullet.rest) });
+        continue;
+      }
+
+      // --- 箇条書き(記号はないが字下げされているもの) ---
+      if (listed[i]){
+        flush();
+        chunks.push({ type:"list", marker:"-", text: cleanText(t) });
+        continue;
+      }
+
+      // --- 段落 ---
+      if (!opts.join){
+        flush();
+        chunks.push({ type:"para", text: cleanText(t) });
+        continue;
+      }
+
+      var gapBig = false, prevEnded = true;
+      if (i > 0){
+        gapBig = (lines[i-1].y - l.y) > lead * 1.35;
+        prevEnded = lineEnded(lines[i-1], l, edge, body);
+      }
+
+      if (para && !gapBig && !prevEnded){
+        para.text = joinText(para.text, cleanText(t));
+      } else {
+        flush();
+        para = { type:"para", text: cleanText(t) };
+      }
+    }
+    flush();
+    return chunks;
+  }
+
+  // 同じ文字サイズの行がいくつ続いているかを数える。
+  // 見出しはせいぜい1〜2行。3行以上続くなら、それは大きめの本文とみなす。
+  function sizeRuns(lines){
+    var run = [];
+    var i = 0;
+    while (i < lines.length){
+      var s0 = Math.round(lines[i].size * 2) / 2;
+      var j = i + 1;
+      while (j < lines.length && Math.round(lines[j].size * 2) / 2 === s0) j++;
+      for (var k=i; k<j; k++) run[k] = j - i;
+      i = j;
+    }
+    return run;
+  }
+
+  // 一番よく使われている行の左端 = 本文の左端
+  function commonLeft(lines){
+    var tally = {}, best = -1, left = 0;
+    lines.forEach(function(l){
+      var k = Math.round(l.left / 3) * 3;
+      tally[k] = (tally[k] || 0) + 1;
+    });
+    for (var k in tally){
+      if (tally[k] > best){ best = tally[k]; left = parseFloat(k); }
+    }
+    return left;
+  }
+
+  // 記号のない箇条書き(字下げされた短い行が続くところ)を見つける。
+  // 折り返しのある長い行が混ざっていたら、ただの字下げ段落とみなして手を出さない。
+  function markIndentedLists(lines, headingSizes, baseLeft, edge, body){
+    var listed = [];
+    var i = 0;
+    while (i < lines.length){
+      var l = lines[i];
+      var indented = l.left > baseLeft + body * 0.8;
+      var isHeading = !!headingSizes[Math.round(l.size * 2) / 2];
+      if (!indented || isHeading || matchBullet(l.text)){ i++; continue; }
+
+      var j = i, allShort = true;
+      while (j < lines.length &&
+             Math.abs(lines[j].left - l.left) < body * 0.5 &&
+             !headingSizes[Math.round(lines[j].size * 2) / 2] &&
+             !matchBullet(lines[j].text)){
+        if (lines[j].right > edge - body) allShort = false;
+        j++;
+      }
+      if (j - i >= 2 && allShort){
+        for (var k=i; k<j; k++) listed[k] = true;
+      }
+      i = Math.max(j, i + 1);
+    }
+    return listed;
+  }
+
+  // 前の行がそこで終わっているか(= 次の行とつなげてはいけないか)。
+  // 日本語は1文字ずつ折り返すので、右に余白があれば区切り。
+  // 英文は単語ごとに折り返すので、「次の単語が入る余白が空いていた」なら区切り。
+  function lineEnded(prev, next, edge, body){
+    if (endsSentence(prev.text)) return true;
+    var space = edge - prev.right;
+    if (space <= 0) return false;
+    if (hasCJK(prev.text)) return space > body * 1.8;
+
+    var word = (next.text.split(/\s/)[0] || "").length;
+    var charW = next.text.length ? (next.right - next.left) / next.text.length : body * 0.5;
+    if (!(charW > 0)) charW = body * 0.5;
+    return space > (word + 1) * charW;
+  }
+
+  function hasCJK(t){
+    return /[\u3040-\u30ff\u3400-\u9fff\uf900-\ufaff\uff66-\uff9f]/.test(t);
+  }
+
+  function endsSentence(t){
+    return /[。．.!?！？：:；;」』】）\)]$/.test(t);
+  }
+
+  function joinText(a, b){
+    if (!a) return b;
+    if (/-$/.test(a)) return a + b;                              // opt-out のような語をつぶさない
+    if (/[A-Za-z0-9,)]$/.test(a) && /^[A-Za-z0-9(]/.test(b)) return a + " " + b;
+    return a + b;
+  }
+
+  var CIRCLED = "①②③④⑤⑥⑦⑧⑨⑩⑪⑫⑬⑭⑮⑯⑰⑱⑲⑳";
+
+  function matchBullet(t){
+    var m;
+    if ((m = /^([・•◦▪▫‣·◆■□●○☆★])\s*(.+)$/.exec(t))) return { marker:"-", rest:m[2] };
+    if ((m = /^([\-–—*])\s+(.+)$/.exec(t)))              return { marker:"-", rest:m[2] };
+    if ((m = /^(\d{1,3})[.)、]\s*(.+)$/.exec(t)))        return { marker:m[1] + ".", rest:m[2] };
+    var idx = CIRCLED.indexOf(t.charAt(0));
+    if (idx >= 0){
+      var rest = t.slice(1).replace(/^[\s.、)]+/, "");
+      if (rest) return { marker:(idx + 1) + ".", rest:rest };
+    }
+    return null;
+  }
+
+  function cleanText(t){
+    return t
+      .replace(/\s+/g, " ")
+      .replace(/^\s+|\s+$/g, "")
+      .replace(/([^\s])\s+([、。，．])/g, "$1$2")   // 句読点の前の余分なスペース
+      .replace(/�/g, "");
+  }
+
+  function chunksToText(chunks){
+    var lines = [];
+    var prev = null;
+    for (var i=0; i<chunks.length; i++){
+      var c = chunks[i];
+      if (c.type !== "rule" && !/\S/.test(c.text || "")) continue;
+      if (c.type === "rule"){
+        lines.push("", "---", "");
+      } else if (c.type === "heading"){
+        if (lines.length) lines.push("");
+        lines.push(new Array(c.level + 1).join("#") + " " + c.text);
+        lines.push("");
+      } else if (c.type === "list"){
+        if (prev && prev.type !== "list") lines.push("");
+        lines.push(c.marker + " " + c.text);
+      } else {
+        if (lines.length && !(prev && prev.type === "heading")) lines.push("");
+        lines.push(c.text);
+      }
+      prev = c;
+    }
+    return lines.join("\n").replace(/\n{3,}/g, "\n\n").replace(/^\n+/, "").replace(/\s+$/, "") + "\n";
+  }
+
+})();
+</script>
+</body>
+</html>

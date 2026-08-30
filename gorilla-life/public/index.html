@@ -1,0 +1,1664 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>ゴリラファミリーダンジョン</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html,body { height:100%; background:#0b0d12; color:#f2efe9; font-family:-apple-system,"Hiragino Kaku Gothic ProN","Noto Sans JP",sans-serif; overflow:hidden; }
+  #wrap { display:flex; align-items:center; justify-content:center; height:100%; }
+  canvas { image-rendering:pixelated; background:#0b0d12; max-width:100vw; max-height:100vh; touch-action:none; }
+</style>
+</head>
+<body>
+<div id="wrap"><canvas id="cv" width="540" height="960"></canvas></div>
+<script>
+"use strict";
+// ============================================================
+// ゴリラの一生 〜ダンジョンと家族〜  (Canvas + 素のJS 1枚完結)
+// ============================================================
+const cv = document.getElementById("cv");
+const ctx = cv.getContext("2d");
+ctx.imageSmoothingEnabled = false;
+
+// ---------- 乱数・ユーティリティ ----------
+function ri(a,b){ return a + Math.floor(Math.random()*(b-a+1)); }
+function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+function clamp(v,a,b){ return v<a?a:(v>b?b:v); }
+
+// ---------- ドット絵スプライト ----------
+// 文字マップ→オフスクリーンcanvas。'.'は透明
+function makeSprite(map, pal){
+  const h = map.length, w = map[0].length;
+  const c = document.createElement("canvas"); c.width=w; c.height=h;
+  const g = c.getContext("2d");
+  for(let y=0;y<h;y++) for(let x=0;x<w;x++){
+    const ch = map[y][x];
+    if(ch==='.') continue;
+    g.fillStyle = pal[ch]; g.fillRect(x,y,1,1);
+  }
+  return c;
+}
+const GPAL = { K:"#1b1613", S:"#6d6157", F:"#454a52", L:"#c9ccd2", E:"#e4e6e9",
+               W:"#ffffff", B:"#241c12", N:"#555a62", M:"#3c332c",
+               P:"#e58fb1", R:"#d24a5e", G:"#3f6b52", Y:"#e8b93e", T:"#8a5a3b",
+               V:"#7a5299", O:"#d97c33" };
+// 主人公ゴリラ(24x28・高精細/アイコンと同一ドット)
+const HERO_MAP = [
+"........KKKKKKKK........",
+"......KKKKKKKKKKK.......",
+".....KKKKKKKKKKKKK......",
+"....KKKKKKKKKKKKKKK.....",
+"...KKKKKKKKKKKKKKKKK....",
+"...SKKKKKKKKKKKKKKKS....",
+"..SSKKKKKKKKKKKKKKSS....",
+"..SSLLLLLLLLLLLLLLSS....",
+".SSLLLLLLLLLLLLLLLLSS...",
+".SSLLBBLLLLLLLLBBLLSS...",
+".SSLLBWLLLLLLLLBWLLSS...",
+".FFLLLLLLLLLLLLLLLLFF...",
+".FFLLLEEEEEEEEEELLLFF...",
+"..FLLEENNEEEENNEELLF....",
+"..FLLEEEEEEEEEEEELLF....",
+"..FLLEEMEEEEEEMEELLF....",
+"..FLLEEEMMMMMMEEELLF....",
+"...FLLLEEEEEEEELLLF.....",
+"....FFLLLLLLLLLLFF......",
+".....FFFFFFFFFFFF.......",
+"....FFFFFFFFFFFFFF......",
+"...FFFFFFFFFFFFFFFF.....",
+"...FLFFFFFFFFFFFFLF.....",
+"...FLLFFFFFFFFFFLLF.....",
+"....FFFFFFFFFFFFFF......",
+".....FFFF....FFFF.......",
+".....FFFF....FFFF.......",
+"....LLLLL....LLLLL......",
+];
+const SP_HERO = makeSprite(HERO_MAP, GPAL);
+// メスゴリラ(花付き・24x28)
+function makeFemale(flower){
+  const pal = Object.assign({}, GPAL, {P: flower});
+  const m = HERO_MAP.slice();
+  m[0] = "..PPP...KKKKKKKK........";
+  m[1] = ".PPPPPKKKKKKKKKKK.......";
+  m[2] = "..PPPKKKKKKKKKKKKK......";
+  return makeSprite(m, pal);
+}
+// 子ゴリラ(16x18)
+const SP_KID = makeSprite([
+".....KKKKKK.....",
+"...KKKKKKKKKK...",
+"..SKKKKKKKKKKS..",
+"..SLLLLLLLLLLS..",
+".SLLBBLLLLBBLLS.",
+".SLLBWLLLLBWLLS.",
+".FLLLEEEEEELLLF.",
+".FLLENNEENNELLF.",
+".FLLEEMMMMEELLF.",
+"..FLLEEEEEELLF..",
+"...FLLLLLLLLF...",
+"..FFFFFFFFFFFF..",
+".FFFFFFFFFFFFFF.",
+".FLFFFFFFFFFFLF.",
+"..FFFFFFFFFFFF..",
+"..FFF......FFF..",
+"..FFF......FFF..",
+".LLLL......LLLL.",
+], GPAL);
+// 敵: ヘビ / コウモリ / イノシシ(16x幅・高精細)
+const SP_SNAKE = makeSprite([
+"................",
+"....GGGGGG......",
+"...GGWBGGGG.....",
+"...GGGGGGGGGG...",
+"........GGGGG...",
+"....GGGGGGGGG...",
+"..GGGGGG........",
+"..GGGGGGGGGGG...",
+".....GGGGGGGGG..",
+"...RRGGGGG......",
+"..GGGGGG........",
+"................",
+], Object.assign({},GPAL,{G:"#5a8f4f"}));
+const SP_BAT = makeSprite([
+"................",
+".V...........V.",
+".VV.........VV.",
+".VVV..VVV..VVV..",
+".VVVVVVVVVVVVV.",
+"..VVVBWWBVVVV...",
+"...VVVVVVVVV....",
+".....VV.VV......",
+"................",
+], GPAL);
+const SP_BOAR = makeSprite([
+"................",
+"....TTTTTTT.....",
+"..TTTTTTTTTTT...",
+".TTBWTTTTTTTTT..",
+".TTTTTTTTTTTTWW.",
+"..TTTTTTTTTTTT..",
+"..TTT.TTTT.TTT..",
+"..LLL.LLLL.LLL..",
+"................",
+], GPAL);
+const SP_BANANA = makeSprite([
+"..........",
+"......KK..",
+".....KYY..",
+"....YYYY..",
+"...YYYYY..",
+"..YYYYY...",
+".YYYYY....",
+".EYYY.....",
+"..EE......",
+"..........",
+], Object.assign({},GPAL,{Y:"#f5d942",E:"#c9a44f"}));
+const SP_COIN = makeSprite([
+"..KKKK..",
+".KYYYYK.",
+"KYYWYYYK",
+"KYWYYYYK",
+"KYYYYYYK",
+"KYYYYOYK",
+".KYYYYK.",
+"..KKKK..",
+], Object.assign({},GPAL,{Y:"#e8b93e",O:"#c9862e",W:"#f7e9b0",K:"#7a5f1e"}));
+const ENEMY_KINDS = [
+  { name:"ジャングルヘビ", sp:SP_SNAKE, hp:8,  atk:3, def:0, gold:[5,12] },
+  { name:"どうくつコウモリ", sp:SP_BAT, hp:6,  atk:4, def:0, gold:[6,14] },
+  { name:"あばれイノシシ", sp:SP_BOAR, hp:14, atk:5, def:1, gold:[10,22] },
+];
+
+// ---------- ゲーム状態 ----------
+const FLOWERS = ["#e58fb1","#d24a5e","#e8b93e","#8fb9e5","#b98fe5"];
+const F_NAMES = ["モモ","ハナ","ユズ","スミレ","アンズ","サクラ","カエデ","ボタン"];
+const K_NAMES = ["コタロウ","ウホミ","バナオ","ゴウ","モリコ","タイシ","ウララ","ドンタ"];
+const PERSONA = [
+  {p:"しっかり者", shop:1.3, farm:1.0, home:1.1},
+  {p:"おてんば",   shop:1.0, farm:1.3, home:0.9},
+  {p:"おっとり",   shop:0.9, farm:1.0, home:1.3},
+  {p:"ちゃっかり", shop:1.2, farm:1.2, home:0.9},
+];
+// ---------- 演出用セリフ ----------
+const SUPPORT_LINES = [
+  "「がんばって、とうちゃん!」","「まだいけるよ、しっかり!」","「わたしがついてるから」",
+  "「ここであきらめないで」","「つぎはわたしが守るから」",
+];
+// はじめて連れて行かれた子(timesTaken<3)のつぶやき
+const KID_MURMUR_NEW = [
+  "「ここ、はじめてだけど…だいじょうぶ」","「とうちゃん、ほんとに強いんだね」",
+  "「ちょっと怖いけど、がんばる」","「これがダンジョンかぁ…」",
+  "「はぐれないように、ぎゅっと近くにいるね」",
+];
+// なんども連れて行かれた子(timesTaken>=3)のつぶやき
+const KID_MURMUR_USED = [
+  "「とうちゃんのせなか、大きいね」","「ここ、まえに来たときより怖くないよ」",
+  "「つぎはぼくが先に歩くよ」","「もう道、おぼえちゃった」",
+  "「とうちゃんといると、なんでも平気な気がする」",
+];
+let S = null; // セーブ対象の全状態
+function newGame(){
+  S = {
+    mode:"home",
+    year:0, age:12, lifespan: ri(30,36),
+    hp:30, maxhp:30, atk:6, def:1, gold:50,
+    wife:null,           // {name, persona, flower, affection, role, years}
+    candidates:[],       // 連れ帰ったメスゴリラ
+    kids:[],             // {name, age, policy, atk, sup, hap, style}
+    party:[],            // 出撃に連れて行く kids の index
+    plannedBaby:false, danranDone:false, deepestFloor:0,
+    log:["ジャングルのすみっこで、ひとりぐらしの若ゴリラ。","ダンジョンでかせいで、いつか家族をつくるんだ。"],
+  };
+  ensureSocial();
+}
+function save(){ try{ localStorage.setItem("gorilla-life", JSON.stringify(S)); }catch(e){} }
+function load(){ try{ const d=localStorage.getItem("gorilla-life"); if(d){ S=JSON.parse(d); ensureSocial(); return true; } }catch(e){} return false; }
+// 古いセーブ対策: 街システム(social/free)が無ければ初期化する
+function ensureSocial(){
+  if(!S) return;
+  if(!S.social) S.social = { dokyo:10, seiketsu:10, kiku:10, warai:10, moriage:10, leader:10, shinshi:10 };
+  if(S.free===undefined || S.free===null) S.free = 2;
+}
+
+// ---------- ダンジョン ----------
+const MW=40, MH=22, TILE=40, VC=13, VR=15;
+let DVIEW=null;
+let D = null; // {map, seen, ex, ey, enemies, items, floor, boss, turn, kidsInParty}
+
+// ---------- ダンジョン タイルテクスチャ(3階ごとに雰囲気を切替) ----------
+// 1-3F:青灰の洞窟 / 4-6F:苔むした遺跡 / 7-9F:赤茶の溶岩帯 / 10F〜:紫の深淵
+const FLOOR_THEMES = [
+  { wallTop:"#767e94", wallMid:"#565d70", wallDark:"#2c313e", wallShadow:"#181b23",
+    floorBase:"#232734", floorLight:"#333a4c", floorDark:"#181b24", crack:"#101219", pebble:"#4a5266" },
+  { wallTop:"#8aa072", wallMid:"#4f6a45", wallDark:"#28361f", wallShadow:"#141d0f",
+    floorBase:"#26301f", floorLight:"#37452c", floorDark:"#151d10", crack:"#0d1109", pebble:"#5c7a4a" },
+  { wallTop:"#b06c46", wallMid:"#7a3d26", wallDark:"#3a1e12", wallShadow:"#1c0d07",
+    floorBase:"#341f16", floorLight:"#4a2e1f", floorDark:"#1c110b", crack:"#100905", pebble:"#c2521f" },
+  { wallTop:"#8a6fb0", wallMid:"#5a3f78", wallDark:"#2c1f42", wallShadow:"#150c22",
+    floorBase:"#241c34", floorLight:"#332748", floorDark:"#140e1f", crack:"#0b0714", pebble:"#8a5fc0" },
+];
+function themeIdxForFloor(floor){ return clamp(Math.floor((floor-1)/3), 0, FLOOR_THEMES.length-1); }
+let TILESET=null; // {themeIdx, floorTiles:[c0,c1,c2], wallTile} キャッシュ(テーマが変わったときだけ作り直す)
+function buildTileset(floor){
+  const idx = themeIdxForFloor(floor);
+  if(TILESET && TILESET.themeIdx===idx) return TILESET;
+  const th = FLOOR_THEMES[idx];
+  const pal = { B:th.floorBase, L:th.floorLight, D:th.floorDark, C:th.crack, P:th.pebble,
+                T:th.wallTop, M:th.wallMid, K:th.wallDark, S:th.wallShadow };
+  // 床(16x16): 石畳の目地+バリエーション0=無地/1=ヒビ/2=小石
+  function floorRows(variant){
+    const rows=[];
+    for(let y=0;y<16;y++){
+      let row="";
+      for(let x=0;x<16;x++){
+        const groutX = (x%8===0), groutY = (y%7===0 && (((y/7|0)+variant)%2===0));
+        row += (groutX||groutY) ? 'D' : (((x+y*3+variant*5)%11===0) ? 'L' : 'B');
+      }
+      rows.push(row.split(""));
+    }
+    if(variant===1){ rows[4][3]='C'; rows[5][4]='C'; rows[5][5]='C'; rows[6][5]='C'; rows[10][11]='C'; rows[11][12]='C'; }
+    else if(variant===2){ rows[3][12]='P'; rows[4][11]='P'; rows[12][3]='P'; rows[9][9]='P'; }
+    return rows.map(r=>r.join(""));
+  }
+  const floorTiles = [0,1,2].map(v=>makeSprite(floorRows(v), pal));
+  // 壁(16x16): 上1/3=明るい石の上面、下2/3=暗い石+レンガ目地、最下段=影ライン(擬似立体)
+  const wallRows=[];
+  for(let y=0;y<16;y++){
+    let row="";
+    for(let x=0;x<16;x++){
+      let ch;
+      if(y<5) ch = (x+y)%5===0 ? 'T' : 'M';
+      else if(y===15) ch = 'S';
+      else {
+        const brickTop = (y-5)%4===0;
+        const offset = (((y-5)/4|0)%2===0) ? 0 : 4;
+        const seam = brickTop || ((x+offset)%8===0);
+        ch = seam ? 'S' : (((x+y)%7===0) ? 'M' : 'K');
+      }
+      row += ch;
+    }
+    wallRows.push(row);
+  }
+  const wallTile = makeSprite(wallRows, pal);
+  TILESET = { themeIdx: idx, floorTiles, wallTile };
+  return TILESET;
+}
+function tileVariant(x,y){ return (x*7+y*13)%3; }
+
+function genFloor(floor){
+  const map = Array.from({length:MH},()=>Array(MW).fill(1)); // 1=壁 0=床
+  const rooms=[];
+  for(let i=0;i<9;i++){
+    const w=ri(4,8), h=ri(3,6), x=ri(1,MW-w-2), y=ri(1,MH-h-2);
+    rooms.push({x,y,w,h,cx:x+(w>>1),cy:y+(h>>1)});
+    for(let yy=y;yy<y+h;yy++) for(let xx=x;xx<x+w;xx++) map[yy][xx]=0;
+  }
+  rooms.sort((a,b)=>a.cx-b.cx);
+  for(let i=1;i<rooms.length;i++){
+    let {cx:ax,cy:ay}=rooms[i-1], {cx:bx,cy:by}=rooms[i];
+    while(ax!==bx){ map[ay][ax]=0; ax+= ax<bx?1:-1; }
+    while(ay!==by){ map[ay][ax]=0; ay+= ay<by?1:-1; }
+  }
+  const isBoss = floor%3===0;
+  const start = rooms[0], last = rooms[rooms.length-1];
+  const enemies=[];
+  const n = isBoss? ri(2,3) : ri(4,6);
+  for(let i=0;i<n;i++){
+    const r = pick(rooms.slice(1));
+    const k = ENEMY_KINDS[clamp(ri(0, Math.min(2, ((floor/2)|0))),0,2)];
+    const lv = 1 + (floor-1)*0.35;
+    enemies.push({x:r.cx+ri(-1,1), y:r.cy+ri(-1,1), kind:k, hp:Math.round(k.hp*lv),
+                  maxhp:Math.round(k.hp*lv), atk:Math.round(k.atk*lv), def:k.def, boss:false});
+  }
+  let boss=null;
+  if(isBoss){
+    const lv = 1 + floor*0.32;
+    boss = {x:last.cx, y:last.cy, kind:null, boss:true,
+            name:pick(F_NAMES), persona:pick(PERSONA), flower:pick(FLOWERS),
+            hp:Math.round(26*lv), maxhp:Math.round(26*lv), atk:Math.round(5*lv*0.75), def:1};
+    boss.sp = makeFemale(boss.flower);
+    enemies.push(boss);
+  }
+  const items=[];
+  for(let i=0;i<ri(3,5);i++){
+    const r=pick(rooms); const t = Math.random()<0.55 ? "gold":"banana";
+    items.push({x:r.cx+ri(-1,1), y:r.cy+ri(-1,1), t});
+  }
+  const stairs = {x:last.cx===start.cx?last.cx+1:last.cx, y:last.cy};
+  return { map, seen:Array.from({length:MH},()=>Array(MW).fill(false)),
+           px:start.cx, py:start.cy, enemies, items, stairs, floor, boss,
+           bossDown:false, msg:[], turn:0, tileset:buildTileset(floor) };
+}
+function startExpedition(){
+  D = genFloor(1);
+  FX=[];
+  D.food = S.wife && S.wife.role==="farm";
+  D.kids = S.party.map(i=>{
+    const k = S.kids[i];
+    k.timesTaken = (k.timesTaken||0) + 1; // 覚えている: 連れて行った回数
+    return { ref:k, x:D.px, y:D.py+1, hp:20+k.atk*2, maxhp:20+k.atk*2, cd:0 };
+  });
+  if(D.food){ S.hp = Math.min(S.maxhp+8, S.hp+8); }
+  fov();
+  dmsg(D.boss? "…この階のずっと下に、つよい気配がする。" : "ダンジョンにもぐった。(Bキー/にげるボタンで帰還)");
+  S.mode = "dungeon";
+}
+function dmsg(t){ D.msg.push(t); if(D.msg.length>4) D.msg.shift(); }
+function fov(){
+  for(let y=0;y<MH;y++)for(let x=0;x<MW;x++){
+    if(Math.abs(x-D.px)<=6 && Math.abs(y-D.py)<=5) D.seen[y][x]=true;
+  }
+}
+function dmg(a, d){ return Math.max(1, a - d + ri(-1,2)); }
+function enemyAt(x,y){ return D.enemies.find(e=>e.hp>0 && e.x===x && e.y===y); }
+function kidAt(x,y){ return D.kids.find(k=>k.hp>0 && k.x===x && k.y===y); }
+function walkable(x,y){ return x>=0&&y>=0&&x<MW&&y<MH&&D.map[y][x]===0; }
+
+function playerStep(dx,dy){
+  const nx=D.px+dx, ny=D.py+dy;
+  const e = enemyAt(nx,ny);
+  if(e){
+    const v = dmg(S.atk, e.def); e.hp -= v;
+    sfx("attack"); addDmgPopup(nx,ny,"-"+v,"#fff2c9");
+    dmsg((e.boss? e.name : e.kind.name)+" に "+v+" ダメージ!");
+    if(e.hp<=0) onKill(e);
+  } else if(walkable(nx,ny) && !kidAt(nx,ny)){
+    D.px=nx; D.py=ny; pickup();
+  } else return false;
+  endTurn(); return true;
+}
+function pickup(){
+  const i = D.items.findIndex(it=>it.x===D.px&&it.y===D.py);
+  if(i>=0){
+    const it=D.items[i];
+    if(it.t==="gold"){ const g=ri(8,20)+D.floor*4; S.gold+=g; sfx("coin"); dmsg(g+"ゴールドを拾った!"); }
+    else { S.hp=Math.min(S.maxhp,S.hp+10); sfx("eat"); dmsg("バナナを食べた。HPが回復!"); }
+    D.items.splice(i,1);
+  }
+  if(D.px===D.stairs.x && D.py===D.stairs.y){
+    if(D.boss && !D.bossDown){ dmsg("階段の前に立ちはだかられている!ボスをたおそう。"); }
+    else {
+      sfx("stairs");
+      const f = D.floor+1;
+      S.deepestFloor = Math.max(S.deepestFloor, D.floor);
+      const kids = D.kids;
+      D = genFloor(f);
+      D.kids = kids.map(k=>({...k, x:D.px, y:D.py+1}));
+      D.food = S.wife && S.wife.role==="farm";
+      fov();
+      dmsg("地下"+f+"階におりた。");
+    }
+  }
+}
+function onKill(e){
+  if(e.boss){
+    D.bossDown = true;
+    S.atk+=1; S.maxhp+=3;
+    sfx("levelup"); triggerFlash(8);
+    dmsg(e.name+"はひざをついた…!");
+    dmsg("激闘をこえて、少しつよくなった!(攻+1 HP+3)");
+    openDialog([
+      {text:"メスゴリラの「"+e.name+"」("+e.persona.p+")は、あなたの強さに目をかがやかせている。"},
+      {text:"「…あんた、なかなかやるじゃない。ついていってあげてもいいけど?」",
+       choices:[
+         {label:"家に連れて帰る", fn:()=>{ S.candidates.push({name:e.name, persona:e.persona, flower:e.flower});
+            dmsg(e.name+"が仲間になった!(家で会える)"); }},
+         {label:"ていねいに断る", fn:()=>{ dmsg(e.name+"は少しさみしそうに森へ帰っていった。"); }},
+       ]},
+    ]);
+  } else {
+    const g = ri(e.kind.gold[0], e.kind.gold[1]) + D.floor*2;
+    S.gold += g;
+    sfx("coin");
+    dmsg(e.kind.name+"をたおした!("+g+"G)");
+  }
+}
+function kidTurns(){
+  if(DIALOG) return;
+  for(const k of D.kids){
+    if(k.hp<=0) continue;
+    const st = k.ref.style;
+    if(k.cd>0) k.cd--;
+    // サポーター: 主人公のHPが半分以下なら回復
+    if(st==="サポーター" && k.cd===0 && S.hp < S.maxhp*0.55){
+      const v = 8 + k.ref.sup*2; S.hp=Math.min(S.maxhp,S.hp+v); k.cd=7;
+      dmsg(k.ref.name+pick(SUPPORT_LINES)+" HPが"+v+"回復!"); continue;
+    }
+    // 攻撃対象: 隣接敵
+    const adj = D.enemies.find(e=>e.hp>0 && Math.abs(e.x-k.x)+Math.abs(e.y-k.y)===1);
+    if(adj){
+      const v = dmg(k.ref.atk, adj.def); adj.hp-=v;
+      sfx("attack"); addDmgPopup(adj.x,adj.y,"-"+v,"#cfe8ff");
+      dmsg(k.ref.name+"のこうげき!"+v+"ダメージ");
+      if(adj.hp<=0) onKill(adj);
+      continue;
+    }
+    // 移動: 先陣型は近くの敵へ、他は主人公のそばへ
+    let tx=D.px, ty=D.py;
+    if(st==="先陣型"){
+      const near = D.enemies.filter(e=>e.hp>0 && Math.abs(e.x-k.x)+Math.abs(e.y-k.y)<=5)
+                            .sort((a,b)=>(Math.abs(a.x-k.x)+Math.abs(a.y-k.y))-(Math.abs(b.x-k.x)+Math.abs(b.y-k.y)))[0];
+      if(near){ tx=near.x; ty=near.y; }
+    }
+    stepToward(k, tx, ty, (x,y)=> walkable(x,y) && !enemyAt(x,y) && !kidAt(x,y) && !(x===D.px&&y===D.py));
+  }
+}
+function stepToward(o, tx, ty, ok){
+  const dx = Math.sign(tx-o.x), dy = Math.sign(ty-o.y);
+  const tries = Math.abs(tx-o.x)>=Math.abs(ty-o.y) ? [[dx,0],[0,dy]] : [[0,dy],[dx,0]];
+  for(const [mx,my] of tries){
+    if((mx||my) && ok(o.x+mx,o.y+my)){ o.x+=mx; o.y+=my; return true; }
+  }
+  return false;
+}
+function enemyTurns(){
+  if(DIALOG) return;
+  for(const e of D.enemies){
+    if(e.hp<=0) continue;
+    const dp = Math.abs(e.x-D.px)+Math.abs(e.y-D.py);
+    const kid = D.kids.filter(k=>k.hp>0).sort((a,b)=>(Math.abs(a.x-e.x)+Math.abs(a.y-e.y))-(Math.abs(b.x-e.x)+Math.abs(b.y-e.y)))[0];
+    const dk = kid? Math.abs(kid.x-e.x)+Math.abs(kid.y-e.y) : 99;
+    // 隣接攻撃(近い方)
+    if(dp===1 && dp<=dk){
+      const v = dmg(e.atk, S.def); S.hp-=v;
+      sfx("hit"); triggerShake(4); addDmgPopup(D.px,D.py,"-"+v,"#ff8080");
+      dmsg((e.boss?e.name:e.kind.name)+"のこうげき!"+v+"ダメージ");
+      if(S.hp<=0){ rescued(); return; }
+      continue;
+    }
+    if(kid && dk===1){
+      const v = dmg(e.atk, 1); kid.hp-=v;
+      sfx("hit"); addDmgPopup(kid.x,kid.y,"-"+v,"#ffb0b0");
+      dmsg(kid.ref.name+"が"+v+"ダメージをうけた!");
+      if(kid.hp<=0){ dmsg(kid.ref.name+"はたおれた…(家で休めばなおる)"); kid.ref.hap=Math.max(0,kid.ref.hap-5); }
+      continue;
+    }
+    // 追跡 or うろつき
+    const target = (kid && dk<dp) ? kid : {x:D.px,y:D.py};
+    const dist = Math.min(dp,dk);
+    if(dist<=7){ stepToward(e, target.x, target.y, (x,y)=>walkable(x,y)&&!enemyAt(x,y)&&!kidAt(x,y)&&!(x===D.px&&y===D.py)); }
+    else if(Math.random()<0.4){
+      const [mx,my]=pick([[1,0],[-1,0],[0,1],[0,-1]]);
+      if(walkable(e.x+mx,e.y+my)&&!enemyAt(e.x+mx,e.y+my)) { e.x+=mx; e.y+=my; }
+    }
+  }
+}
+function kidMurmur(){
+  const alive = D.kids.filter(k=>k.hp>0);
+  if(!alive.length) return;
+  const k = pick(alive);
+  const pool = (k.ref.timesTaken||0) >= 3 ? KID_MURMUR_USED : KID_MURMUR_NEW;
+  dmsg(k.ref.name+pick(pool));
+}
+function endTurn(){
+  D.turn++;
+  if(D.food && D.turn%5===0) S.hp=Math.min(S.maxhp,S.hp+1);
+  if(D.kids.length && D.turn%10===0 && Math.random()<0.35) kidMurmur();
+  kidTurns(); enemyTurns(); fov();
+}
+function rescued(){
+  sfx("death");
+  const lost = Math.floor(S.gold/2); S.gold-=lost;
+  openDialog([
+    {text:"目のまえがまっくらになった…。"},
+    {text:"気がつくと、家のふとんの中だった。("+lost+"ゴールドを落としてしまった)"},
+  ], ()=> returnHome(false));
+}
+function nearestEnemyDist(){
+  let d=99;
+  for(const e of D.enemies){ if(e.hp>0) d=Math.min(d, Math.abs(e.x-D.px)+Math.abs(e.y-D.py)); }
+  return d;
+}
+function tryFlee(){
+  if(nearestEnemyDist()<=4){
+    sfx&&sfx("hit");
+    dmsg("敵が近くにいて、つるにつかまれない!");
+    dmsg("ふりきるか、たおしてから逃げよう。");
+    return;
+  }
+  openDialog([{text:"つるにつかまって地上へ帰る?",choices:[
+    {label:"帰る",fn:()=>returnHome(true)},
+    {label:"まだ潜る",fn:()=>{}},
+  ]}]);
+}
+function returnHome(safe){
+  S.mode="home"; D=null; FX=[];
+  passYear(safe);
+}
+
+// ---------- 家族ビネット(毎年の小さな情景) ----------
+function familyVignette(){
+  const w=S.wife;
+  const cands=[];
+  if(w && S.kids.length===0){
+    const byPersona = {
+      "しっかり者":[
+        w.name+"はきょうも、かえりみちの足あとを窓からかぞえていた",
+        "「がんばりすぎないでね」と、"+w.name+"がそっと肩をたたいた",
+        w.name+"がつくった弁当には、いつも一言メモが添えてあった",
+      ],
+      "おてんば":[
+        w.name+"は「わたしもダンジョン行きたい」と、また拗ねていた",
+        w.name+"がこっそり木の棒で素振りの練習をしていた",
+        w.name+"と腕相撲をして、本気で悔しがられた",
+      ],
+      "おっとり":[
+        w.name+"は縁側でひなたぼっこをしながら、あなたの帰りを待っていた",
+        w.name+"が「今日はなんだかいい日だったね」と、理由もなく笑った",
+        w.name+"のいれたお茶は、いつもすこしぬるかった。それが好きだった",
+      ],
+      "ちゃっかり":[
+        w.name+"が「今月のもうけ、ちゃんと聞かせてよね」と迫ってきた",
+        w.name+"は帰ってきたあなたのポケットを真っ先にのぞいた",
+        w.name+"が「あんたと結婚してよかった」と、めずらしく本音をこぼした",
+      ],
+    };
+    (byPersona[w.persona.p]||[]).forEach(t=>cands.push(t));
+    cands.push("ふたりで夕やけを見た。それだけの日が、いちばんいい日だった");
+  }
+  for(const k of S.kids){
+    if(k.age<=1){
+      cands.push(k.name+"がはじめて笑った。"+(w? w.name+"はずっとその顔をまねしている" : "あなたはずっとその顔をまねしている"));
+      cands.push(k.name+"の寝息を聞いているだけで、一日のつかれがぬけていく");
+      cands.push(k.name+"の小さな手が、あなたの指をきつくにぎってはなさない");
+      cands.push("夜泣きする"+k.name+"を、家族みんなで交代であやした朝がた");
+    } else if(k.age<=3){
+      cands.push(k.name+"がはじめて「とうちゃん」と言った。なんども言わせてしまった");
+      cands.push(k.name+"が転んで泣いて、あなたの顔を見たとたんに泣きやんだ");
+      cands.push(k.name+"は毎日おなじ絵本を「もういっかい」とせがんでくる");
+      cands.push(k.name+"が真似して歩くから、あなたはわざと大股で歩くようになった");
+    } else if(k.age===4){
+      cands.push("小さなこぶしが、あなたの親指をぎゅっとにぎった");
+    } else if(k.age>=8){
+      if(k.policy==="きたえる"){
+        cands.push(k.name+"が庭で木の棒をふる音が、朝から聞こえてくる");
+        cands.push(k.name+"の素振りは、日にちがすこしずつ様になってきた");
+        cands.push(k.name+"が「とうちゃんより強くなる」と、まじめな顔で言った");
+      } else if(k.policy==="まなぶ"){
+        cands.push(k.name+"が薬草の図鑑を、ひざの上でずっとめくっている");
+        cands.push(k.name+"は知らない植物を見つけると、必ず名前を聞いてくる");
+        cands.push(k.name+"の部屋の灯りが、夜おそくまでついていた");
+      } else {
+        cands.push(k.name+"が友だちと笑う声が、家の外まで聞こえてきた");
+        cands.push(k.name+"はだれかがころぶと、いちばんに駆けよっていく");
+        cands.push(k.name+"が知らない子とも、すぐ仲良くなっていた");
+      }
+    }
+  }
+  if(!cands.length) return null;
+  return pick(cands);
+}
+// 寿命の予感(残り3年以内、帰宅時に添える一言)
+function twilightLine(){
+  const lines=[];
+  if(S.wife) lines.push("妻の手を、いつもより長くにぎった");
+  if(S.kids.length) lines.push("子どもたちの寝顔を、ずっと見ていた");
+  lines.push("なんでもない夕食が、やけに愛おしく感じられた");
+  return pick(lines);
+}
+
+// ---------- 1年経過・家族処理 ----------
+function passYear(safe){
+  S.year++; S.age++;
+  S.danranDone=false;
+  ensureSocial(); S.free=2;
+  const w=S.wife;
+  const home=[];
+  if(w){
+    w.years=(w.years||0)+1;
+    if(w.role==="shop"){ const g=Math.round((30+w.years*8)*w.persona.shop); S.gold+=g; home.push("お店のもうけで +"+g+"G!"); }
+    if(w.role==="home"){ S.hp=S.maxhp; w.affection=Math.min(100,w.affection+2); home.push(w.name+"がまいにち看病してくれた(全回復)"); }
+    if(w.role==="farm"){ home.push("はたけのめぐみで、次の出撃も体力もちがよさそうだ。"); }
+    if(safe) w.affection=Math.min(100, w.affection+3);
+    if(rankAtLeast("shinshi","B")){ w.affection=Math.min(100, w.affection+2); home.push("あなたの気づかいがうれしい"); }
+  }
+  if(S.candidates.length){
+    const g=S.candidates.length*8; S.gold+=g;
+    home.push("村にすむ仲間ゴリラたちが手つだってくれた(+"+g+"G)");
+  }
+  if(S.plannedBaby && w && S.kids.length<4){
+    const name=pick(K_NAMES.filter(n=>!S.kids.some(k=>k.name===n)))||"チビ";
+    S.kids.push({name, age:0, policy:"みまもる", atk:3, sup:1, hap:60, style:"みならい", timesTaken:0});
+    home.push("あかちゃんが生まれた!名前は「"+name+"」!");
+    sfx("baby");
+    w.affection=Math.min(100,w.affection+8);
+    S.plannedBaby=false;
+  }
+  for(const k of S.kids){
+    k.age++;
+    const bonus = (w && w.role==="home")? 1.4 : 1.0;
+    if(k.policy==="きたえる"){ k.atk+=Math.round(2*bonus); k.hap+= (k.hap>50? -1: 1); }
+    if(k.policy==="まなぶ"){ k.sup+=Math.round(2*bonus); k.hap+=1; }
+    if(k.policy==="みまもる"){ k.atk+=1; k.sup+=1; k.hap+=Math.round(3*bonus); }
+    if(rankAtLeast("leader","B")) k.hap+=1;
+    k.hap=clamp(k.hap,0,100);
+    k.style = k.atk>=k.sup*2 ? (k.atk>=14?"先陣型":"アタッカー") : (k.sup>k.atk? "サポーター" : "アタッカー");
+    if(k.age===4) home.push(k.name+"は4さいになった。ダンジョンに連れて行ける!");
+  }
+  const vig = familyVignette();
+  if(vig) home.push(vig);
+  S.hp=S.maxhp;
+  S.log = home.length? home : ["しずかな1年だった。"];
+  save();
+  if(S.age>=S.lifespan){ startEpilogue(); return; }
+  if(S.age>=S.lifespan-3){
+    S.log.push("…さいきん、むねがざわつく。のこされた時間は長くないのかもしれない。");
+    S.log.push(twilightLine());
+  }
+}
+
+// ---------- 家族からのことば(エンディングの核) ----------
+function familyLetters(){
+  const w=S.wife, pages=[];
+  if(w){
+    pages.push("──"+w.name+"からの手紙");
+    const tier = w.affection>=70? "high" : w.affection>=40? "mid" : "low";
+    const LETTERS = {
+      high:{
+        "しっかり者":"「あなたと歩いた毎日が、わたしの宝物です。むこうで、まっててね」",
+        "おてんば":"「もっと一緒に暴れたかったな。でも、最高の一生だったよ!」",
+        "おっとり":"「ふふ、さきに行っちゃうのね。のんびり待ってるから」",
+        "ちゃっかり":"「じゅうぶん稼がせてもらったわ。ありがとう、あなた」",
+      },
+      mid:{
+        "しっかり者":"「いろいろあったけど、わるくない一生だったわね」",
+        "おてんば":"「けんかもしたけど、退屈しなかったよ」",
+        "おっとり":"「なんだかんだ、しあわせな日々だったなぁ」",
+        "ちゃっかり":"「まあまあの稼ぎだったけど、良しとするわ」",
+      },
+      low:{
+        "しっかり者":"「最後まで、ちゃんと話せなかったね……ごめんね」",
+        "おてんば":"「もっと構ってほしかったな、ほんとは」",
+        "おっとり":"「すこし、さみしかったよ……」",
+        "ちゃっかり":"「もっと稼いでほしかったけど……まあ、いいか」",
+      },
+    };
+    pages.push(w.name+LETTERS[tier][w.persona.p]);
+    for(const k of S.kids){
+      const tk = k.timesTaken||0;
+      let line;
+      if(tk>=3) line = k.name+"「とうちゃんのせなかを見て育ったよ。ありがとう」";
+      else if(tk===0) line = k.name+"「もっと一緒に、ダンジョンに行きたかったな」";
+      else line = k.name+"「いっしょに歩いた道、覚えてるよ」";
+      pages.push(line);
+    }
+  } else {
+    pages.push("結婚はしなかった。だけど、洞窟の壁に刻んだ記録を、いつか誰かが見つけて、そっと涙するかもしれない。");
+  }
+  return pages;
+}
+
+// ---------- エンディング ----------
+function startEpilogue(){
+  const w=S.wife, kids=S.kids;
+  const pages=[];
+  pages.push("──それから、しばらくのち。");
+  pages.push("主人公ゴリラは "+S.age+"さい。ながい一生のおわりが、しずかにやってきた。");
+  let score=0;
+  if(w){
+    score += w.affection>=70? 3 : w.affection>=40? 2 : 0;
+    const wl = w.affection>=70? w.name+"は最後の日まで手をにぎっていた。「いい一生だったね」"
+             : w.affection>=40? w.name+"は静かに見送った。「おつかれさま、あんた」"
+             : w.name+"とは、最後まですこし距離があったままだった…。";
+    pages.push(wl);
+    const role = w.role==="shop"? w.name+"のお店は村いちばんの人気店になり、あなたの話が今も語られている。"
+               : w.role==="farm"? "ふたりで耕したはたけは、村いちばんの実りをつけるようになった。"
+               : w.role==="home"? "あたたかい家庭は、村じゅうのあこがれだった。"
+               : null;
+    if(role) pages.push(role);
+  } else {
+    pages.push("結婚はしなかった。強さの記録だけが、洞窟の壁にきざまれている。");
+  }
+  if(kids.length===0 && w) pages.push("ふたりの思い出は、だれにも継がれずに消えていく…。");
+  for(const k of kids){
+    score += (k.hap>=60?1:0) + ((k.atk>=16||k.sup>=12)?1:0) - (k.hap<25?2:0);
+    let f;
+    if(k.hap<25) f = k.name+"は家を出たきり、もどらなかった…。";
+    else if(k.style==="先陣型") f = k.name+"は伝説の冒険ゴリラとなり、あなたをこえる強さで一族を守った。";
+    else if(k.style==="サポーター") f = k.name+"はみんなを支えるいやし手になり、村に診療所をひらいた。";
+    else if(k.atk>=16) f = k.name+"はたのもしい戦士に育ち、ダンジョンの深くまで名をとどろかせた。";
+    else if(k.hap>=75) f = k.name+"はしあわせな家庭を築き、にぎやかな笑い声がたえなかった。";
+    else f = k.name+"は自分のペースで、ゆっくりと自分の道をみつけた。";
+    pages.push(f);
+  }
+  if(S.gold>=800){ score+=2; pages.push("のこした"+S.gold+"ゴールドの遺産は、家族のくらしを長く支えた。"); }
+  else if(S.gold>=300){ score+=1; }
+  pages.push("とうたつした最深記録: 地下"+S.deepestFloor+"階");
+  familyLetters().forEach(t=>pages.push(t));
+  let title;
+  if(!w) title = score>=2? "── 孤高の王 END ──" : "── ひとりぼっちの強者 END ──";
+  else if(score>=6) title = "── だいだいだい満足のハッピーエンド ──";
+  else if(score>=3) title = "── まずまずの一生 END ──";
+  else title = "── すこしさみしい END ──";
+  if(title==="── だいだいだい満足のハッピーエンド ──") pages.push("──家族はきょうも、あなたの話をしている。");
+  pages.push(title);
+  pages.push("(Enter/タップでタイトルへ)");
+  S.mode="epilogue"; S.epPages=pages; S.epIdx=0;
+  try{ localStorage.removeItem("gorilla-life"); }catch(e){}
+}
+
+// ---------- ダイアログ ----------
+let DIALOG=null; // {queue, idx, choiceIdx, onEnd}
+function openDialog(queue, onEnd){
+  if(DIALOG){
+    DIALOG.queue.push(...queue);
+    if(onEnd){ const old=DIALOG.onEnd; DIALOG.onEnd = old? ()=>{ old(); onEnd(); } : onEnd; }
+    return;
+  }
+  DIALOG={queue, idx:0, choiceIdx:0, onEnd};
+}
+function dialogInput(key){
+  const cur=DIALOG.queue[DIALOG.idx];
+  if(cur.choices){
+    if(key==="up") DIALOG.choiceIdx=(DIALOG.choiceIdx+cur.choices.length-1)%cur.choices.length;
+    else if(key==="down") DIALOG.choiceIdx=(DIALOG.choiceIdx+1)%cur.choices.length;
+    else if(key==="ok"){ const c=cur.choices[DIALOG.choiceIdx]; advanceDialog(); if(c.fn)c.fn(); }
+  } else if(key==="ok") advanceDialog();
+}
+function advanceDialog(){
+  DIALOG.idx++; DIALOG.choiceIdx=0;
+  if(DIALOG.idx>=DIALOG.queue.length){ const f=DIALOG.onEnd; DIALOG=null; if(f)f(); }
+}
+
+// ---------- ホーム画面メニュー ----------
+let HMENU={idx:0};
+function trainCost(){ return 40 + (S.atk-6)*30; }
+function train(){
+  const c=trainCost();
+  if(S.gold<c){ openDialog([{text:"ゴールドがたりない…(修行には "+c+"G ひつよう)"}]); return; }
+  S.gold-=c; S.atk+=2; S.maxhp+=5; S.hp=S.maxhp;
+  sfx("levelup");
+  openDialog([{text:"たきにうたれて修行した!こうげき+2、さいだいHP+5!(なんども修行できる)"}]);
+}
+function homeItems(){
+  ensureSocial();
+  const it=[{label:"ダンジョンへ出撃 (1年たつ)", fn:startExpedition},
+            {label:"街へでかける(のこり自由時間"+S.free+"回)", fn:townMenu},
+            {label:"修行する ("+trainCost()+"G で 攻+2 HP+5)", fn:train}];
+  if(!S.wife && S.candidates.length)
+    it.push({label:"結婚を申しこむ", fn:menuMarry});
+  if(S.wife){
+    it.push({label:"だんらん ("+S.wife.name+"と話す)", fn:danran});
+    it.push({label:S.wife.name+"の役割: "+roleName(S.wife.role), fn:menuRole});
+    if(S.kids.length<4) it.push({label: S.plannedBaby? "子どもの予定: あり◎":"子どもをつくる", fn:()=>{S.plannedBaby=!S.plannedBaby;}});
+  }
+  if(S.kids.length){
+    it.push({label:"子育てほうしん", fn:menuPolicy});
+    if(S.kids.some(k=>k.age>=4)) it.push({label:"連れて行く子をえらぶ", fn:menuParty});
+  }
+  return it;
+}
+function roleName(r){ return r==="shop"?"お店":r==="farm"?"はたけ":r==="home"?"専業(おうち)":"未定"; }
+function danran(){
+  if(S.danranDone){ openDialog([{text:S.wife.name+"「もう、今日はいっぱい話したでしょ」"}]); return; }
+  S.danranDone=true;
+  ensureSocial();
+  let inc=5, extra="";
+  if(rankAtLeast("moriage","B")){ inc+=2; extra=" 今日は大笑いした。"; }
+  S.wife.affection=Math.min(100,S.wife.affection+inc);
+  const lines={"しっかり者":"「ちゃんとバナナ食べてる?むりしちゃだめよ」","おてんば":"「あたしもダンジョン行きたーい!」","おっとり":"「きょうもぶじで、うれしいなぁ」","ちゃっかり":"「もうけ話、ちゃんと聞かせてよね」"};
+  openDialog([{text:S.wife.name+lines[S.wife.persona.p]+extra+"(なかよし度+"+inc+" → "+S.wife.affection+")"}]);
+}
+function menuMarry(){
+  const cs=S.candidates.map((c,i)=>({label:c.name+"("+c.persona.p+")に申しこむ", fn:()=>{
+    S.wife={...c, affection:50, role:"home", years:0};
+    S.candidates.splice(i,1);
+    sfx("marry");
+    openDialog([{text:c.name+"「…ふふ、まってたよ。よろしくね、あなた」 ふたりは夫婦になった!"}]);
+  }}));
+  cs.push({label:"やめておく", fn:()=>{}});
+  openDialog([{text:"だれに結婚を申しこむ?", choices:cs}]);
+}
+function menuRole(){
+  openDialog([{text:S.wife.name+"にどの役割をお願いする?", choices:[
+    {label:"お店(毎年ゴールド収入)", fn:()=>{S.wife.role="shop"; S.wife.years=0;}},
+    {label:"はたけ(出撃中の体力もち向上)", fn:()=>{S.wife.role="farm"; S.wife.years=0;}},
+    {label:"専業(帰宅時全回復・子育てボーナス)", fn:()=>{S.wife.role="home"; S.wife.years=0;}},
+  ]}]);
+}
+function menuPolicy(){
+  const cs=S.kids.map(k=>({label:k.name+"("+k.age+"さい・"+k.policy+")", fn:()=>{
+    openDialog([{text:k.name+"をどう育てる?", choices:[
+      {label:"きたえる(攻撃力UP)", fn:()=>{k.policy="きたえる";}},
+      {label:"まなぶ(サポートUP)", fn:()=>{k.policy="まなぶ";}},
+      {label:"みまもる(しあわせUP)", fn:()=>{k.policy="みまもる";}},
+    ]}]);
+  }}));
+  cs.push({label:"もどる", fn:()=>{}});
+  openDialog([{text:"どの子の方針を決める?", choices:cs}]);
+}
+function menuParty(){
+  const cs=S.kids.map((k,i)=>{
+    if(k.age<4) return {label:k.name+"(まだ小さい)", fn:()=>{}};
+    const inP=S.party.includes(i);
+    return {label:(inP?"◎ ":"　")+k.name+"("+k.style+" 攻"+k.atk+" 援"+k.sup+")", fn:()=>{
+      if(inP) S.party=S.party.filter(x=>x!==i);
+      else if(S.party.length<2) S.party.push(i);
+      menuParty();
+    }};
+  });
+  cs.push({label:"きめた", fn:()=>{}});
+  openDialog([{text:"連れて行く子は?(2人まで)", choices:cs}]);
+}
+
+// ---------- 街の出会い・自分みがき ----------
+const SOCIAL_LABELS = { dokyo:"度胸", seiketsu:"清潔度", kiku:"きき上手", warai:"笑わせる力",
+                         moriage:"盛り上げ力", leader:"リーダー力", shinshi:"紳士力" };
+const RANK_ORDER = { E:0, D:1, C:2, B:3, A:4, S:5 };
+function rankOf(v){
+  if(v>=100) return {r:"S", label:"伝説"};
+  if(v>=80)  return {r:"A", label:"たよれる"};
+  if(v>=60)  return {r:"B", label:"いい感じ"};
+  if(v>=40)  return {r:"C", label:"なれてきた"};
+  if(v>=20)  return {r:"D", label:"すこし自信"};
+  return {r:"E", label:"まだまだ"};
+}
+function rankText(key){ ensureSocial(); const rk=rankOf(S.social[key]); return rk.r+"("+rk.label+")"; }
+function rankAtLeast(key, target){ ensureSocial(); return RANK_ORDER[rankOf(S.social[key]).r] >= RANK_ORDER[target]; }
+// 力を伸ばす。上限100。ランクが変わったかどうかを返す
+function growSocial(key, amount){
+  ensureSocial();
+  const before = S.social[key];
+  const beforeRank = rankOf(before).r;
+  S.social[key] = clamp(before + amount, 0, 100);
+  const rank = rankOf(S.social[key]);
+  return { rankedUp: rank.r !== beforeRank, rank };
+}
+function showSocialStatus(){
+  ensureSocial();
+  const keys=["dokyo","seiketsu","kiku","warai","moriage","leader","shinshi"];
+  const pages = keys.map(k=>({text:SOCIAL_LABELS[k]+": "+rankText(k)}));
+  openDialog(pages);
+}
+function townMenu(){
+  ensureSocial();
+  if(S.free<=0){ openDialog([{text:"今年はもう時間がない。ダンジョンへ行こう"}]); return; }
+  const cs=[
+    {label:"スナック「ジャングル」(30G)", fn:()=>meetAt("snack")},
+    {label:"広場で声をかける(無料)", fn:()=>meetAt("plaza")},
+    {label:"自分みがき", fn:selfImproveMenu},
+    {label:"じぶんの評価を見る", fn:showSocialStatus},
+    {label:"やめる", fn:()=>{}},
+  ];
+  openDialog([{text:"どこへ行く?", choices:cs}]);
+}
+// ---- 出会い ----
+const MAMA_LINES = ["今日はいい子がきてるわよ", "飲みすぎないでね、あんた", "このまえもここで口説いてた人がいたわね"];
+const GREAT_LINES = ["あなたといると、時間があっというまね", "こんな気持ち、ひさしぶり", "もっと話したかったな、名残おしい"];
+function genTownGirl(){
+  const prefKeys = ["dokyo","seiketsu","kiku","warai","moriage","leader","shinshi"];
+  return { name:pick(F_NAMES), persona:pick(PERSONA), flower:pick(FLOWERS), pref:pick(prefKeys) };
+}
+function failLinesFor(place, key, name){
+  const common = {
+    warai:  ["ギャグは静まりかえり、まわりの咳ばらいだけが響いた。", name+"は苦笑いのまま、そっと目をそらした。", "会心のギャグ、なぜかだれにもうけなかった。"],
+    kiku:   ["うんうんと聞いていたら、いつのまにか"+name+"はいなくなっていた。", "相づちを打ちすぎて、ただの置物だと思われたらしい。", name+"「…あなた、しゃべらないのね」と苦笑いされた。"],
+    moriage:["ひとりで盛り上がって、まわりが一歩ひいた。", "テンションが空回りして、"+name+"にドン引きされた。", "拍手をもとめたが、しんと静まりかえった。"],
+    shinshi:["紳士のつもりが、ただの他人行儀だと思われた。", name+"「かたいのね」と、少し距離をおかれた。", "気づかいすぎて、逆に不審がられてしまった。"],
+  };
+  const placeExtra = {
+    snack: { warai:["ママにまで「寒っ」と言われてしまった。"], kiku:["ママが見かねて割って入ってきた。"],
+             moriage:["グラスを倒して、店中の視線をあびた。"], shinshi:["会計の作法にこだわりすぎて、話がとぎれた。"] },
+    plaza: { warai:["鳩だけが笑ってくれた気がした。"], kiku:["黙って聞くうち、日が暮れてしまった。"],
+             moriage:["盛り上げようとして、ベンチからずり落ちた。"], shinshi:["丁寧すぎて、道案内だと勘ちがいされた。"] },
+  };
+  return common[key].concat(placeExtra[place][key]);
+}
+function meetAt(place){
+  ensureSocial();
+  if(S.free<=0){ openDialog([{text:"今年はもう時間がない。ダンジョンへ行こう"}]); return; }
+  if(place==="snack" && S.gold<30){ openDialog([{text:"スナック「ジャングル」のママ「あら、今日はお金がたりないみたいね」"}]); return; }
+  S.free--;
+  if(place==="snack") S.gold-=30;
+  const girl = genTownGirl();
+  const queue=[];
+  if(place==="snack"){
+    queue.push({text:"スナック「ジャングル」の扉をあけると、"+girl.name+"("+girl.persona.p+")が飲んでいた。"});
+    queue.push({text:"ママ「"+pick(MAMA_LINES)+"」"});
+  } else {
+    queue.push({text:"広場のベンチで、"+girl.name+"("+girl.persona.p+")が涼んでいた。"});
+  }
+  openDialog(queue, ()=> afterMeetIntro(place, girl));
+}
+function afterMeetIntro(place, girl){
+  if(place==="plaza" && S.social.dokyo<25){
+    growSocial("dokyo",5);
+    openDialog([{text:"足がすくんで、うしろ姿を見おくっただけだった…。"}]);
+    return;
+  }
+  proceedSeiketsuCheck(place, girl);
+}
+function proceedSeiketsuCheck(place, girl){
+  if(S.social.seiketsu<20){
+    openDialog([{text:"…ちょっと、においが。"}, {text:girl.name+"はそっと目をそらして、その場をはなれていった。"}]);
+    return;
+  }
+  showApproachChoices(place, girl);
+}
+function showApproachChoices(place, girl){
+  const cs=[
+    {label:"笑わせる",       fn:()=>resolveApproach(place,girl,"warai")},
+    {label:"聞き役にまわる", fn:()=>resolveApproach(place,girl,"kiku")},
+    {label:"場を盛り上げる", fn:()=>resolveApproach(place,girl,"moriage")},
+    {label:"紳士にふるまう", fn:()=>resolveApproach(place,girl,"shinshi")},
+  ];
+  openDialog([{text:"どうやって話しかける?", choices:cs}]);
+}
+function resolveApproach(place, girl, key){
+  ensureSocial();
+  const passivePref = ["dokyo","seiketsu","leader"].includes(girl.pref) && S.social[girl.pref]>=50;
+  const power = S.social[key] + (girl.pref===key? 25:0) + (passivePref? 25:0) + ri(0,30);
+  if(power>=55){
+    const great = power>=80;
+    const lines=[{text:girl.name+"「…また会いたいな」"}];
+    if(great) lines.push({text:girl.name+"「"+pick(GREAT_LINES)+"」"});
+    S.candidates.push({name:girl.name, persona:girl.persona, flower:girl.flower});
+    lines.push({text:"("+girl.name+"が仲間になった!家で結婚を申しこめる)"});
+    openDialog(lines);
+  } else {
+    const failLine = pick(failLinesFor(place, key, girl.name));
+    const {rankedUp, rank} = growSocial(key, 3);
+    const q=[{text:failLine},{text:"ふられたが、少しうまくなった気がする。("+SOCIAL_LABELS[key]+": "+rank.r+"("+rank.label+"))"}];
+    if(rankedUp){ sfx("levelup"); q.push({text:"ランクアップ!"}); }
+    openDialog(q);
+  }
+}
+// ---- 自分みがき ----
+const SELF_IMPROVE = [
+  {key:"seiketsu", label:"川で水あび(無料)",       cost:0},
+  {key:"dokyo",    label:"つり橋わたり(無料)",     cost:0},
+  {key:"kiku",     label:"長老のお茶会(無料)",     cost:0},
+  {key:"warai",    label:"お笑い道場(20G)",         cost:20},
+  {key:"moriage",  label:"たいこの練習(20G)",       cost:20},
+  {key:"leader",   label:"子ゴリラ団の引率(無料)", cost:0},
+  {key:"shinshi",  label:"マナー教室(30G)",         cost:30},
+];
+function selfImproveMenu(){
+  ensureSocial();
+  if(S.free<=0){ openDialog([{text:"今年はもう時間がない。ダンジョンへ行こう"}]); return; }
+  const cs = SELF_IMPROVE.map(o=>({label:o.label, fn:()=>doSelfImprove(o)}));
+  cs.push({label:"やめる", fn:()=>{}});
+  openDialog([{text:"何をして自分をみがく?", choices:cs}]);
+}
+function doSelfImprove(o){
+  ensureSocial();
+  if(S.free<=0){ openDialog([{text:"今年はもう時間がない。ダンジョンへ行こう"}]); return; }
+  if(o.cost>0 && S.gold<o.cost){ openDialog([{text:"ゴールドがたりない…("+o.cost+"G ひつよう)"}]); return; }
+  S.free--;
+  if(o.cost>0) S.gold-=o.cost;
+  const amount = ri(8,14);
+  const {rankedUp, rank} = growSocial(o.key, amount);
+  const q=[{text:SOCIAL_LABELS[o.key]+"の評価が上がった!(いまは"+rank.r+"ランク・"+rank.label+")"}];
+  if(o.key==="leader" && S.kids.length){
+    S.kids.forEach(k=>{ k.hap=clamp(k.hap+2,0,100); });
+    q.push({text:"子ゴリラたちも、すこし楽しそうだった。"});
+  }
+  if(rankedUp){ sfx("levelup"); q.push({text:"ランクアップ!"}); }
+  openDialog(q);
+}
+
+// ---------- サウンド(WebAudio・素材ファイルなし) ----------
+let ACTX=null, sfxGain=null, bgmGain=null, muted=false, noiseBuf=null;
+try{ muted = localStorage.getItem("gorilla-life-mute")==="1"; }catch(e){}
+function ensureAudio(){
+  if(ACTX) return ACTX;
+  try{
+    const AC = window.AudioContext||window.webkitAudioContext;
+    if(!AC) return null;
+    ACTX = new AC();
+    sfxGain = ACTX.createGain(); sfxGain.gain.value = muted?0:0.5; sfxGain.connect(ACTX.destination);
+    bgmGain = ACTX.createGain(); bgmGain.gain.value = muted?0:0.035; bgmGain.connect(ACTX.destination);
+  }catch(e){ ACTX=null; }
+  return ACTX;
+}
+function unlockAudio(){
+  try{
+    const a=ensureAudio();
+    if(a && a.state==="suspended") a.resume().catch(()=>{});
+  }catch(e){}
+}
+window.addEventListener("pointerup", unlockAudio);
+window.addEventListener("keydown", unlockAudio);
+function toggleMute(){
+  muted=!muted;
+  try{ localStorage.setItem("gorilla-life-mute", muted?"1":"0"); }catch(e){}
+  try{
+    if(sfxGain) sfxGain.gain.value = muted?0:0.5;
+    if(bgmGain) bgmGain.gain.value = muted?0:0.035;
+  }catch(e){}
+}
+function playTone(freq,dur,type,startGain,endGain,delay,dest){
+  const a=ACTX; if(!a) return;
+  const t0=a.currentTime+(delay||0);
+  const osc=a.createOscillator(); const g=a.createGain();
+  osc.type=type||"square"; osc.frequency.setValueAtTime(freq,t0);
+  g.gain.setValueAtTime(startGain,t0);
+  g.gain.exponentialRampToValueAtTime(Math.max(endGain,0.0001), t0+dur);
+  osc.connect(g); g.connect(dest||sfxGain);
+  osc.start(t0); osc.stop(t0+dur+0.02);
+}
+function getNoiseBuf(){
+  if(noiseBuf) return noiseBuf;
+  const len = Math.floor(ACTX.sampleRate*0.3);
+  noiseBuf = ACTX.createBuffer(1,len,ACTX.sampleRate);
+  const d = noiseBuf.getChannelData(0);
+  for(let i=0;i<len;i++) d[i]=Math.random()*2-1;
+  return noiseBuf;
+}
+function playNoise(dur,startGain,cutoff,delay,dest){
+  const a=ACTX; if(!a) return;
+  const t0=a.currentTime+(delay||0);
+  const src=a.createBufferSource(); src.buffer=getNoiseBuf();
+  const filt=a.createBiquadFilter(); filt.type="lowpass"; filt.frequency.setValueAtTime(cutoff||200,t0);
+  const g=a.createGain(); g.gain.setValueAtTime(startGain,t0); g.gain.exponentialRampToValueAtTime(0.0001,t0+dur);
+  src.connect(filt); filt.connect(g); g.connect(dest||sfxGain);
+  src.start(t0); src.stop(t0+dur+0.02);
+}
+// 効果音: attack/hit/coin/eat/stairs/levelup/baby/marry/death/tap
+function sfx(name){
+  if(!ACTX) return;
+  try{
+    switch(name){
+      case "attack":
+        playTone(300,0.06,"square",0.18,0.001,0);
+        playTone(180,0.05,"square",0.14,0.001,0.03);
+        break;
+      case "hit":
+        playNoise(0.14,0.22,180,0);
+        break;
+      case "coin":
+        playTone(880,0.05,"square",0.16,0.001,0);
+        playTone(1318,0.09,"square",0.14,0.001,0.05);
+        break;
+      case "eat":
+        playTone(440,0.08,"triangle",0.16,0.001,0);
+        playTone(587,0.1,"triangle",0.13,0.001,0.06);
+        break;
+      case "stairs":
+        playTone(523,0.1,"triangle",0.14,0.001,0);
+        playTone(392,0.12,"triangle",0.12,0.001,0.07);
+        playTone(294,0.16,"triangle",0.1,0.001,0.14);
+        break;
+      case "levelup":
+        [523,659,784,1047].forEach((f,i)=>playTone(f,0.11,"square",0.15,0.001,i*0.07));
+        break;
+      case "baby":
+        [392,494,587,784].forEach((f,i)=>playTone(f,0.2,"triangle",0.11,0.001,i*0.11));
+        break;
+      case "marry":
+        [392,494,587].forEach((f,i)=>playTone(f,0.4,"triangle",0.1,0.001,i*0.015));
+        break;
+      case "death":
+        playTone(320,0.28,"square",0.15,0.001,0);
+        playTone(220,0.3,"square",0.13,0.001,0.14);
+        playTone(140,0.35,"square",0.11,0.001,0.28);
+        break;
+      case "tap":
+        playTone(760,0.035,"square",0.08,0.001,0);
+        break;
+    }
+  }catch(e){}
+}
+// ---------- BGM本格化: 音名テーブル+多声部+lookaheadスケジューラ ----------
+// ジブリ的な空気(あたたかい長調⇄せつない短調・IV-V-vi進行・ペンタトニック混じりの旋律・
+// 3拍子のワルツ感・6度跳躍・口ずさめる主題の反復と変奏)を「技法」として使い、旋律は完全オリジナル。
+const NOTE_IDX = { C:0,"C#":1,Db:1, D:2,"D#":3,Eb:3, E:4, F:5,"F#":6,Gb:6, G:7,"G#":8,Ab:8, A:9,"A#":10,Bb:10, B:11 };
+function noteFreq(name){
+  if(!name || name==="R") return 0;
+  const m = /^([A-Ga-g])([#b]?)(-?\d)$/.exec(name);
+  if(!m) return 0;
+  const idx = NOTE_IDX[m[1].toUpperCase()+m[2]];
+  if(idx===undefined) return 0;
+  const midi = (parseInt(m[3],10)+1)*12 + idx; // C4=MIDI60, A4=MIDI69=440Hz
+  return 440*Math.pow(2,(midi-69)/12);
+}
+// 空間系: ConvolverではなくDelay+フィードバック+ローパスで軽い残響を作る(bgmGain手前に常設)
+let bgmDry=null, reverbDelay=null, reverbFeedback=null, reverbLPF=null, reverbWet=null;
+function ensureBgmFx(){
+  if(bgmDry || !ACTX) return;
+  bgmDry = ACTX.createGain(); bgmDry.gain.value=1; bgmDry.connect(bgmGain);
+  reverbDelay = ACTX.createDelay(1.0); reverbDelay.delayTime.value=0.25;
+  reverbFeedback = ACTX.createGain(); reverbFeedback.gain.value=0.25;
+  reverbLPF = ACTX.createBiquadFilter(); reverbLPF.type="lowpass"; reverbLPF.frequency.value=2200;
+  reverbWet = ACTX.createGain(); reverbWet.gain.value=0.35;
+  reverbDelay.connect(reverbFeedback); reverbFeedback.connect(reverbLPF); reverbLPF.connect(reverbDelay);
+  reverbDelay.connect(reverbWet); reverbWet.connect(bgmGain);
+}
+// 1音を鳴らす。attack/releaseで必ず包絡をつけ、ブツ切りのクリックノイズを出さない
+function bgmNote(t0, freq, dur, cfg){
+  const a=ACTX; if(!a || !freq || dur<=0) return;
+  ensureBgmFx();
+  const type = cfg.type||"triangle";
+  const vol = Math.max(0, (cfg.vol!=null?cfg.vol:0.2) * (cfg.volMul||1));
+  const attack = cfg.attack!=null?cfg.attack:0.02;
+  const release = cfg.release!=null?cfg.release:Math.max(0.05,dur*0.3);
+  const wet = cfg.wet!=null?cfg.wet:0.2;
+  const osc=a.createOscillator(); osc.type=type; osc.frequency.setValueAtTime(freq,t0);
+  const g=a.createGain(); g.gain.setValueAtTime(0.0001,t0);
+  g.gain.exponentialRampToValueAtTime(Math.max(vol,0.0005), t0+attack);
+  const sEnd = Math.max(t0+attack+0.01, t0+dur-release);
+  g.gain.setValueAtTime(Math.max(vol,0.0005), sEnd);
+  g.gain.exponentialRampToValueAtTime(0.0001, t0+dur+release);
+  let src=osc;
+  if(cfg.filterHz){ const f=a.createBiquadFilter(); f.type="lowpass"; f.frequency.value=cfg.filterHz; osc.connect(f); src=f; }
+  src.connect(g); g.connect(bgmDry);
+  if(wet>0 && reverbDelay){ const s=a.createGain(); s.gain.value=wet; g.connect(s); s.connect(reverbDelay); }
+  if(cfg.vibrato){ // 笛/オカリナ風のビブラート(5-6Hz、深さ数セント〜十数セント)
+    const lfo=a.createOscillator(); lfo.type="sine"; lfo.frequency.value=cfg.vibratoRate||5.6;
+    const ld=a.createGain(); ld.gain.value=cfg.vibrato;
+    lfo.connect(ld); ld.connect(osc.detune);
+    lfo.start(t0); lfo.stop(t0+dur+release+0.05);
+  }
+  osc.start(t0); osc.stop(t0+dur+release+0.08);
+  if(cfg.extraRatio){ // ピアノ/オルゴール風: 上の倍音をもう1枚重ねる
+    const o2=a.createOscillator(); o2.type=cfg.extraType||"sine"; o2.frequency.setValueAtTime(freq*cfg.extraRatio,t0);
+    const g2=a.createGain(); g2.gain.setValueAtTime(0.0001,t0);
+    const v2 = vol*(cfg.extraVol!=null?cfg.extraVol:0.4);
+    g2.gain.exponentialRampToValueAtTime(Math.max(v2,0.0005), t0+attack*0.7);
+    g2.gain.exponentialRampToValueAtTime(0.0001, t0+dur+release*0.6);
+    o2.connect(g2); g2.connect(bgmDry);
+    if(wet>0 && reverbDelay){ const s2=a.createGain(); s2.gain.value=wet; g2.connect(s2); s2.connect(reverbDelay); }
+    o2.start(t0); o2.stop(t0+dur+release+0.1);
+  }
+}
+// 音色プリセット: メロディ=三角波+ビブラート(笛)/ハーモニー=控えめな和音/ベース=低域三角/
+// ピアノ=sine+triangle重ね速いアタック/オルゴール=sine+高次倍音+長めの残響
+const VOICE = {
+  melody:   { type:"triangle", vol:0.46, attack:0.03,  release:0.14, vibrato:14, vibratoRate:5.6, wet:0.26, filterHz:3200 },
+  harmony:  { type:"triangle", vol:0.16, attack:0.05,  release:0.20, wet:0.20 },
+  bass:     { type:"triangle", vol:0.30, attack:0.006, release:0.08, wet:0.06, filterHz:800 },
+  piano:    { type:"sine",     vol:0.28, attack:0.006, release:0.6,  extraRatio:2, extraType:"triangle", extraVol:0.35, wet:0.28 },
+  musicbox: { type:"sine",     vol:0.24, attack:0.004, release:0.7,  extraRatio:2, extraType:"sine",     extraVol:0.55, wet:0.42 },
+};
+
+// ---- home: 3拍子のあたたかいワルツ(ト長調・田園/街の空気)。反復(1-4小節)と変奏(5-8小節・6度跳躍の頂点) ----
+const HOME_MELODY = [
+  ["D4",1],["G4",1],["B4",1],                         // 1: G(I)
+  ["B4",1],["A4",0.5],["G4",0.5],["E4",1],            // 2: Em(vi)
+  ["E4",1],["G4",1],["C5",1],                         // 3: C(IV)
+  ["B4",1],["D5",0.5],["B4",0.5],["A4",1],            // 4: D(V)
+  ["G4",1],["B4",1],["D5",1],                         // 5: G(I) 変奏スタート
+  ["G4",0.5],["E5",1.5],["D5",1],                     // 6: C(IV) … G4→E5は6度上行(空へ広がる)
+  ["D5",1],["C5",1],["B4",1],                         // 7: D(V)
+  ["A4",1],["G4",1.5],["R",0.5],                      // 8: G(I) 着地
+];
+const HOME_HARMONY = [ // オンビート後打ちの和音(oom-pah-pah)。3rd/5thのみ、1拍目は空けて軽く
+  ["R",1],["B3",1],["D4",1],   ["R",1],["G3",1],["B3",1],
+  ["R",1],["E3",1],["G3",1],   ["R",1],["F#3",1],["A3",1],
+  ["R",1],["B3",1],["D4",1],   ["R",1],["E3",1],["G3",1],
+  ["R",1],["F#3",1],["A3",1],  ["R",1],["B3",1],["D4",1],
+];
+const HOME_BASS = [ // 1拍目だけ鳴る軽い刻み
+  ["G2",1],["R",2], ["E2",1],["R",2], ["C2",1],["R",2], ["D2",1],["R",2],
+  ["G2",1],["R",2], ["C2",1],["R",2], ["D2",1],["R",2], ["G2",1],["R",2],
+];
+
+// ---- dungeon: ラピュタ的「冒険と切なさ」。ニ短調、6度跳躍の勇壮な主題+低音ostinatoの推進力 ----
+const DUNGEON_MELODY = [
+  ["D4",1],["F4",1],["A4",1],["D5",1],                       // 1: Dm(i)
+  ["A4",1],["Bb4",1],["A4",1],["F4",1],                      // 2: Bb(VI)
+  ["C5",1],["A4",1],["F4",1],["C4",1],                       // 3: F(III)
+  ["E4",1],["G4",1],["C5",1],["E5",0.5],["D5",0.5],          // 4: C(VII)
+  ["D4",1],["Bb4",1.5],["A4",1],["F4",0.5],                  // 5: Dm(i) … D4→Bb4は6度上行(頂点)
+  ["F4",1],["Bb4",1],["D5",1],["C5",1],                      // 6: Bb(VI)
+  ["G4",1],["Bb4",1],["D5",1],["C5",1],                      // 7: Gm(iv) 緊張
+  ["Bb4",0.5],["A4",0.5],["G4",1],["F4",1],["E4",1],         // 8: A(V) 開放
+];
+const DUNGEON_HARMONY = [
+  ["D3",1],["F3",1],["A3",1],["F3",1],
+  ["Bb2",1],["D3",1],["F3",1],["D3",1],
+  ["F2",1],["A2",1],["C3",1],["A2",1],
+  ["C3",1],["E3",1],["G3",1],["E3",1],
+  ["D3",1],["F3",1],["A3",1],["F3",1],
+  ["Bb2",1],["D3",1],["F3",1],["D3",1],
+  ["G2",1],["Bb2",1],["D3",1],["Bb2",1],
+  ["A2",1],["C#3",1],["E3",1],["C#3",1],
+];
+const DUNGEON_BASS = ( // root-fifthを刻む八分音符ostinato(低音の推進力)
+  [["D2","A2"],["Bb1","F2"],["F1","C2"],["C2","G2"],["D2","A2"],["Bb1","F2"],["G1","D2"],["A1","E2"]]
+).flatMap(([r,f])=>[[r,0.5],[f,0.5],[r,0.5],[f,0.5],[r,0.5],[f,0.5],[r,0.5],[f,0.5]]);
+function dungeonPitch(){ return (D && D.boss && !D.bossDown) ? -1 : 0; } // ボス階は半音下げて緊張感
+function dungeonBassVol(){ return (D && D.boss && !D.bossDown) ? 1.4 : 1; } // ボス階は低音を強める
+
+// ---- title: オルゴール風の静かな主題(dungeon主題1〜4小節の変奏・1オクターブ上/半分のテンポ) ----
+const TITLE_MELODY = [
+  ["D5",1],["F5",1],["A5",1],["D6",1],
+  ["A5",1],["Bb5",1],["A5",1],["F5",1],
+  ["C6",1],["A5",1],["F5",1],["C5",1],
+  ["E5",1],["G5",1],["C6",1],["E6",0.5],["D6",0.5],
+];
+const TITLE_ACCOMP = [ ["D3",2],["R",2], ["Bb2",2],["R",2], ["F2",2],["R",2], ["C3",2],["R",2] ];
+
+// ---- epilogue: 千と千尋のラスト的な静かなバラード。イ短調→ホ長調の開放でせつなく着地 ----
+const EPI_MELODY = [
+  ["E4",2],["C5",2],           // 1: Am(i)
+  ["A4",2],["F4",2],           // 2: F(VI)
+  ["G4",2],["E4",2],           // 3: C(III)
+  ["D5",2],["B4",2],           // 4: G(VII)
+  ["C5",3],["R",1],            // 5: Am(i)
+  ["D5",2],["F5",2],           // 6: Dm(iv)
+  ["B4",2],["G#4",2],          // 7: E(V) せつない導音
+  ["A4",3],["R",1],            // 8: Am(i) ロングトーンで着地
+];
+const EPI_ARP = [ // まばらな左手アルペジオ(1拍目・3拍目だけ)
+  ["A3",2],["E3",2], ["F3",2],["C4",2], ["C3",2],["G3",2], ["G3",2],["D4",2],
+  ["A3",2],["E3",2], ["D3",2],["A3",2], ["E3",2],["B3",2], ["A3",2],["E3",2],
+];
+const EPI_BASS = [ ["A2",4],["F2",4],["C2",4],["G2",4],["A2",4],["D2",4],["E2",4],["A2",4] ]; // 1小節1音のロングトーン
+
+const SONGS = {
+  home:     { bpm:100, parts:[ {voice:"melody",  notes:HOME_MELODY},
+                                {voice:"harmony", notes:HOME_HARMONY},
+                                {voice:"bass",    notes:HOME_BASS} ] },
+  dungeon:  { bpm:118, parts:[ {voice:"melody",  notes:DUNGEON_MELODY, pitchFn:dungeonPitch},
+                                {voice:"harmony", notes:DUNGEON_HARMONY, pitchFn:dungeonPitch},
+                                {voice:"bass",    notes:DUNGEON_BASS, pitchFn:dungeonPitch, volMulFn:dungeonBassVol} ] },
+  title:    { bpm:70,  parts:[ {voice:"musicbox", notes:TITLE_MELODY},
+                                {voice:"bass",     notes:TITLE_ACCOMP, cfg:{vol:0.14,release:0.4,wet:0.3,filterHz:1200}} ] },
+  epilogue: { bpm:58,  parts:[ {voice:"piano", notes:EPI_MELODY},
+                                {voice:"piano", notes:EPI_ARP, cfg:{vol:0.14,extraVol:0.25}},
+                                {voice:"bass",  notes:EPI_BASS, cfg:{release:0.9,vol:0.22}} ] },
+};
+
+// ---- lookaheadスケジューラ(25ms間隔・0.2s先まで予約) ----
+let bgmMode=null, musicState=null;
+function stopMusic(){ if(musicState && musicState.timer) clearInterval(musicState.timer); musicState=null; }
+function startMusic(key){
+  const song = SONGS[key]; if(!song || !ACTX) return;
+  stopMusic();
+  const secPerBeat = 60/song.bpm;
+  const parts = song.parts.map(p=>({...p, idx:0, next:ACTX.currentTime+0.05}));
+  const st = { key, secPerBeat, parts, timer:null };
+  const tick=()=>{
+    const horizon = ACTX.currentTime + 0.2;
+    for(const part of st.parts){
+      while(part.next < horizon){
+        const note = part.notes[part.idx % part.notes.length];
+        const dur = note[1]*st.secPerBeat;
+        if(!muted){
+          const cfg = Object.assign({}, VOICE[part.voice], part.cfg||{});
+          if(part.volMulFn) cfg.volMul = part.volMulFn();
+          const semi = part.pitchFn ? part.pitchFn() : 0;
+          const freq = noteFreq(note[0]) * Math.pow(2, semi/12);
+          try{ bgmNote(part.next, freq, dur*0.96, cfg); }catch(e){}
+        }
+        part.next += dur; part.idx++;
+      }
+    }
+  };
+  st.timer = setInterval(tick, 25);
+  tick();
+  musicState = st;
+}
+function updateBgmForMode(){
+  const target = (S===null || S.mode==="title") ? "title"
+               : (S.mode==="home"||S.mode==="dungeon"||S.mode==="epilogue") ? S.mode : null;
+  if(!ACTX) return; // 初回操作でAudioContextが出来るまで待機(自動再生制限対応)
+  if(target!==bgmMode || (target && !musicState)){ bgmMode=target; if(target) startMusic(target); else stopMusic(); }
+}
+
+// ---------- 画面演出(FX) ----------
+let FRAME=0, shakeFrames=0, flashFrames=0, FX=[];
+function triggerShake(n){ shakeFrames = Math.max(shakeFrames, n||4); }
+function triggerFlash(n){ flashFrames = Math.max(flashFrames, n||6); }
+function addDmgPopup(gx,gy,txt,color){ FX.push({gx,gy,txt,color,age:0,maxAge:34}); }
+
+// ---------- 描画 ----------
+let BTNS=[];
+function px(sp,x,y,scale){ ctx.drawImage(sp, x, y, sp.width*scale, sp.height*scale); }
+// 接地感を出す半透明の楕円影(キャラの足元)
+function drawGroundShadow(cx,cy,rx){
+  ctx.save(); ctx.globalAlpha=0.32; ctx.fillStyle="#000";
+  ctx.beginPath(); ctx.ellipse(cx,cy,rx,rx*0.32,0,0,7); ctx.fill();
+  ctx.restore();
+}
+function text(t,x,y,size,color,align){
+  ctx.fillStyle=color||"#f2efe9"; ctx.font=(size||16)+"px sans-serif";
+  ctx.textAlign=align||"left"; ctx.fillText(t,x,y); ctx.textAlign="left";
+}
+function wrapText(t,x,y,w,size,color){
+  ctx.font=size+"px sans-serif"; ctx.fillStyle=color||"#f2efe9";
+  let line="", yy=y;
+  for(const ch of t){ if(ctx.measureText(line+ch).width>w){ ctx.fillText(line,x,yy); line=ch; yy+=size+9; } else line+=ch; }
+  ctx.fillText(line,x,yy); return yy;
+}
+function btnDraw(x,y,w,h,label,fn,opts){
+  opts=opts||{};
+  ctx.fillStyle=opts.bg||"rgba(30,35,48,0.92)"; ctx.fillRect(x,y,w,h);
+  ctx.strokeStyle=opts.border||"#4a5266"; ctx.strokeRect(x,y,w,h);
+  text(label, x+w/2, y+h/2+(opts.size||16)/2-3, opts.size||16, opts.color||"#f2efe9","center");
+  BTNS.push({x,y,w,h,fn:()=>{ sfx("tap"); fn(); }});
+}
+function drawMuteBtn(){
+  btnDraw(540-52,10,42,42, muted?"🔇":"🔊", toggleMute, {size:20, bg:"rgba(20,22,30,0.75)", border:"#556"});
+}
+function draw(){
+  BTNS=[];
+  FRAME++;
+  updateBgmForMode();
+  ctx.save();
+  if(shakeFrames>0){ ctx.translate(ri(-3,3), ri(-3,3)); shakeFrames--; }
+  ctx.fillStyle="#0b0d12"; ctx.fillRect(0,0,540,960);
+  if(S===null || S.mode==="title") drawTitle();
+  else if(S.mode==="home") drawHome();
+  else if(S.mode==="dungeon") drawDungeon();
+  else if(S.mode==="epilogue") drawEpilogue();
+  drawMuteBtn();
+  if(DIALOG){ BTNS=[]; drawDialog(); }
+  if(flashFrames>0){
+    ctx.fillStyle="rgba(255,255,255,"+(flashFrames/8*0.85)+")"; ctx.fillRect(0,0,540,960);
+    flashFrames--;
+  }
+  ctx.restore();
+  requestAnimationFrame(draw);
+}
+// 遠景の山シルエット(x座標のみに依存する決定論的な波形。フレームごとに再計算しても軽い)
+function drawMountainLayer(baseY, amp, freq, phase, color){
+  ctx.fillStyle=color;
+  ctx.beginPath(); ctx.moveTo(0,960);
+  for(let x=0;x<=540;x+=20){
+    const yv = baseY - (Math.sin(x*freq+phase)*0.5+0.5)*amp
+                      - (Math.sin(x*freq*2.3+phase*1.7)*0.5+0.5)*amp*0.4;
+    ctx.lineTo(x,yv);
+  }
+  ctx.lineTo(540,960); ctx.closePath(); ctx.fill();
+}
+function drawTitle(){
+  const g=ctx.createLinearGradient(0,0,0,960); g.addColorStop(0,"#141327"); g.addColorStop(1,"#31203a");
+  ctx.fillStyle=g; ctx.fillRect(0,0,540,960);
+  for(let i=0;i<70;i++){
+    const tw = 0.15 + Math.abs(Math.sin(FRAME*0.02 + i*0.7))*0.55;
+    ctx.fillStyle="rgba(255,255,255,"+tw+")"; ctx.fillRect((i*97)%540,(i*61)%560,2,2);
+  }
+  // 多層感: 遠景の山シルエット2層+地面ライン
+  drawMountainLayer(520, 60, 0.012, 0, "#221c36");
+  drawMountainLayer(520, 100, 0.017, 2.1, "#171225");
+  ctx.strokeStyle="rgba(200,190,230,0.22)"; ctx.lineWidth=2;
+  ctx.beginPath(); ctx.moveTo(0,600); ctx.lineTo(540,600); ctx.stroke();
+  text("ゴリラファミリー",270,160,44,"#f2efe9","center");
+  text("ダンジョン",270,215,44,"#f2efe9","center");
+  text("〜 かせいで、そだてて、みとどける 〜",270,258,16,"#c9a44f","center");
+  drawGroundShadow(270,466,50);
+  px(SP_HERO,270-60,330,5);
+  btnDraw(120,640,300,64, hasSave? "つづきから":"はじめる", titleStart, {size:20,bg:"rgba(201,164,79,0.25)",border:"#c9a44f"});
+  text("スマホ: ボタン/スワイプ移動・タップ決定",270,880,13,"#778","center");
+  text("PC: 矢印キー移動・Enter決定・B帰還",270,906,13,"#778","center");
+}
+// 空の雲(ゆっくり流れる。半楕円を3つ重ねただけの単純な形)
+function drawCloud(x,y,scale){
+  ctx.fillStyle="rgba(255,255,255,0.55)";
+  ctx.beginPath();
+  ctx.ellipse(x,y,34*scale,14*scale,0,0,7);
+  ctx.ellipse(x+26*scale,y-6*scale,24*scale,12*scale,0,0,7);
+  ctx.ellipse(x-24*scale,y-4*scale,22*scale,11*scale,0,0,7);
+  ctx.fill();
+}
+function drawFlower(x,y,color){
+  ctx.strokeStyle="#3a6b2f"; ctx.lineWidth=2;
+  ctx.beginPath(); ctx.moveTo(x,y); ctx.lineTo(x,y+14); ctx.stroke();
+  ctx.fillStyle=color;
+  for(let i=0;i<5;i++){ const a=i/5*Math.PI*2; ctx.beginPath(); ctx.arc(x+Math.cos(a)*5,y+Math.sin(a)*5,4,0,7); ctx.fill(); }
+  ctx.fillStyle="#e8b93e"; ctx.beginPath(); ctx.arc(x,y,3,0,7); ctx.fill();
+}
+// ホーム画面の背景一式(空・家・庭)。時間帯グラデ+星+雲、瓦/木目/煙突+煙、柵/木/花/小道
+function drawHomeScene(){
+  const g=ctx.createLinearGradient(0,0,0,460);
+  g.addColorStop(0,"#1a2650"); g.addColorStop(0.45,"#3d4270"); g.addColorStop(0.75,"#8a6a5e"); g.addColorStop(1,"#3a5a34");
+  ctx.fillStyle=g; ctx.fillRect(0,0,540,960);
+  for(let i=0;i<22;i++){
+    const sx=(i*53+17)%540, sy=(i*31+7)%130;
+    const tw=0.2+Math.abs(Math.sin(FRAME*0.02+i*1.3))*0.5;
+    ctx.fillStyle="rgba(255,255,255,"+tw+")"; ctx.fillRect(sx,sy,2,2);
+  }
+  drawCloud((FRAME*0.15)%680-80, 60, 1.0);
+  drawCloud((FRAME*0.1+300)%680-80, 110, 0.75);
+  // 屋根+瓦ライン
+  ctx.fillStyle="#5c4433"; ctx.beginPath(); ctx.moveTo(25,150); ctx.lineTo(160,70); ctx.lineTo(295,150); ctx.closePath(); ctx.fill();
+  ctx.save(); ctx.beginPath(); ctx.moveTo(25,150); ctx.lineTo(160,70); ctx.lineTo(295,150); ctx.closePath(); ctx.clip();
+  ctx.strokeStyle="rgba(30,20,12,0.5)"; ctx.lineWidth=2;
+  for(let yy=82;yy<150;yy+=11){ ctx.beginPath(); ctx.moveTo(0,yy); ctx.lineTo(320,yy); ctx.stroke(); }
+  ctx.restore();
+  // 壁+木目
+  ctx.fillStyle="#3a2c22"; ctx.fillRect(40,150,240,160);
+  ctx.strokeStyle="rgba(0,0,0,0.18)"; ctx.lineWidth=1;
+  for(let yy=158;yy<308;yy+=9){ ctx.beginPath(); ctx.moveTo(42,yy); ctx.lineTo(278,yy); ctx.stroke(); }
+  // 煙突+ゆらゆら上る煙
+  ctx.fillStyle="#6b5a4a"; ctx.fillRect(225,80,26,45);
+  ctx.fillStyle="#584639"; ctx.fillRect(220,76,36,10);
+  for(let i=0;i<3;i++){
+    const t=((FRAME*0.6+i*40)%120)/120;
+    const sy=76-t*70, sx=238+Math.sin(FRAME*0.05+i)*8;
+    ctx.fillStyle="rgba(220,220,220,"+(0.5*(1-t))+")";
+    ctx.beginPath(); ctx.arc(sx,sy,6+t*8,0,7); ctx.fill();
+  }
+  // ドア+窓
+  ctx.fillStyle="#e8b93e"; ctx.fillRect(130,230,50,80);
+  ctx.fillStyle="#f5d97a"; ctx.fillRect(65,185,40,40); ctx.fillRect(215,185,40,40);
+  ctx.strokeStyle="#3a2c22"; ctx.lineWidth=2;
+  ctx.strokeRect(65,185,40,40); ctx.beginPath(); ctx.moveTo(85,185); ctx.lineTo(85,225); ctx.moveTo(65,205); ctx.lineTo(105,205); ctx.stroke();
+  ctx.strokeRect(215,185,40,40); ctx.beginPath(); ctx.moveTo(235,185); ctx.lineTo(235,225); ctx.moveTo(215,205); ctx.lineTo(255,205); ctx.stroke();
+  // 庭の地面(草)
+  ctx.fillStyle="#243b22"; ctx.fillRect(0,310,540,130);
+  ctx.fillStyle="rgba(60,110,50,0.5)";
+  for(let i=0;i<40;i++){ const gx=(i*37)%540, gy=316+((i*53)%118); ctx.fillRect(gx,gy,2,6); }
+  // 小道
+  ctx.fillStyle="#8a7a5a";
+  ctx.beginPath(); ctx.moveTo(140,310); ctx.lineTo(200,310); ctx.lineTo(230,440); ctx.lineTo(110,440); ctx.closePath(); ctx.fill();
+  // 柵
+  ctx.fillStyle="#6b5238";
+  for(let x=20;x<540;x+=26){
+    if(x>95&&x<245) continue; // 玄関前はあける
+    ctx.fillRect(x,396,6,34); ctx.fillRect(x-2,404,10,4);
+  }
+  // 木
+  ctx.fillStyle="#5a3d24"; ctx.fillRect(460,340,14,70);
+  ctx.fillStyle="#33632f"; ctx.beginPath(); ctx.arc(467,325,34,0,7); ctx.fill();
+  ctx.fillStyle="#3f7a3a"; ctx.beginPath(); ctx.arc(452,340,22,0,7); ctx.fill();
+  // 花
+  drawFlower(300,420,"#e58fb1"); drawFlower(330,428,"#e8b93e"); drawFlower(360,418,"#8fb9e5");
+}
+function drawHome(){
+  drawHomeScene();
+  px(SP_HERO,330,215+Math.sin(FRAME*0.06)*2,3.4);
+  drawGroundShadow(330+41,215+95+4,44);
+  if(S.wife){
+    px(makeFemale(S.wife.flower),418,222+Math.sin(FRAME*0.06+1)*2,3.1);
+    drawGroundShadow(418+37,222+86+2,40);
+  }
+  S.kids.forEach((k,i)=>{
+    const kx=80+i*54, ky=352+Math.sin(FRAME*0.07+i)*2;
+    px(SP_KID,kx,ky,2.9);
+    drawGroundShadow(kx+23,ky+52+2,24);
+  });
+  ctx.fillStyle="rgba(10,12,18,0.8)"; ctx.fillRect(12,448,516,92);
+  text(S.age+"さい ("+S.year+"年目)   HP "+S.hp+"/"+S.maxhp,26,476,16);
+  text("こうげき "+S.atk+"   ゴールド "+S.gold+"G",26,502,16,"#e8b93e");
+  text(S.wife? "つま: "+S.wife.name+"("+S.wife.persona.p+") なかよし度"+S.wife.affection : "独身 (ボスのメスゴリラを仲間にしよう)",26,528,14,"#e58fb1");
+  // メニュー位置を先に確定し、ログは残りの空間に収める(重なり防止)
+  const items=homeItems();
+  HMENU.idx=clamp(HMENU.idx,0,items.length-1);
+  const rowH = items.length>=8 ? 44 : items.length>=7 ? 47 : items.length>=6 ? 51 : 56;
+  const my=960-items.length*rowH-14;
+  const logTop=540, logBottom=my-8;
+  const maxLines=clamp(Math.floor((logBottom-logTop-30)/20),0,5);
+  if(maxLines>0){
+    const logs=S.log.slice(0,maxLines);
+    ctx.fillStyle="rgba(10,12,18,0.8)"; ctx.fillRect(12,logTop,516,30+logs.length*20);
+    text("【この1年のできごと】",26,logTop+20,12,"#c9a44f");
+    logs.forEach((l,i)=>text("・"+(l.length>36? l.slice(0,35)+"…":l),26,logTop+40+i*20,13));
+  }
+  items.forEach((it,i)=>{
+    btnDraw(12,my+i*rowH,516,rowH-5,it.label,it.fn,{size:17, bg:i===HMENU.idx?"rgba(201,164,79,0.22)":"rgba(18,22,32,0.9)"});
+  });
+}
+function drawDungeon(){
+  const camX=clamp(D.px-((VC/2)|0),0,MW-VC), camY=clamp(D.py-((VR/2)|0),0,MH-VR);
+  const ox=(540-VC*TILE)/2, oy=70;
+  DVIEW={ox,oy,camX,camY};
+  const TS = D.tileset || buildTileset(D.floor);
+  for(let vy=0; vy<VR; vy++) for(let vx=0; vx<VC; vx++){
+    const x=camX+vx, y=camY+vy;
+    if(y>=MH||x>=MW||!D.seen[y][x]) continue;
+    const vis=Math.abs(x-D.px)<=6&&Math.abs(y-D.py)<=5;
+    const tx=ox+vx*TILE, ty=oy+vy*TILE;
+    const sp = D.map[y][x]===1 ? TS.wallTile : TS.floorTiles[tileVariant(x,y)];
+    ctx.drawImage(sp, 0,0,16,16, tx,ty, TILE,TILE);
+    if(!vis){ ctx.fillStyle="rgba(0,0,0,0.55)"; ctx.fillRect(tx,ty,TILE,TILE); }
+  }
+  const cell=(x,y)=>[ox+(x-camX)*TILE, oy+(y-camY)*TILE];
+  const inView=(x,y)=> x>=camX&&x<camX+VC&&y>=camY&&y<camY+VR;
+  // ボス階の赤みビネット(オクトパストラベラー風)
+  if(D.boss && !D.bossDown){
+    const vw=VC*TILE, vh=VR*TILE;
+    const vg=ctx.createRadialGradient(ox+vw/2,oy+vh/2,vh*0.25,ox+vw/2,oy+vh/2,vh*0.75);
+    vg.addColorStop(0,"rgba(120,10,20,0)"); vg.addColorStop(1,"rgba(120,10,20,0.35)");
+    ctx.fillStyle=vg; ctx.fillRect(ox,oy,vw,vh);
+  }
+  // プレイヤー周囲の暖色グロー
+  {
+    const gcx=ox+(D.px-camX)*TILE+TILE/2, gcy=oy+(D.py-camY)*TILE+TILE/2, rad=TILE*2.6;
+    const glow=ctx.createRadialGradient(gcx,gcy,4,gcx,gcy,rad);
+    glow.addColorStop(0,"rgba(255,200,120,0.22)"); glow.addColorStop(1,"rgba(255,200,120,0)");
+    ctx.fillStyle=glow; ctx.fillRect(gcx-rad,gcy-rad,rad*2,rad*2);
+  }
+  if(inView(D.stairs.x,D.stairs.y)&&D.seen[D.stairs.y][D.stairs.x]){ const p=cell(D.stairs.x,D.stairs.y);
+    ctx.fillStyle="#c9a44f"; ctx.fillRect(p[0]+6,p[1]+6,TILE-12,TILE-12); text("▼",p[0]+12,p[1]+28,17,"#0b0d12"); }
+  for(const it of D.items){ if(!inView(it.x,it.y)||!D.seen[it.y][it.x])continue; const p=cell(it.x,it.y);
+    if(it.t==="gold") px(SP_COIN, p[0]+8, p[1]+9+Math.sin(FRAME*0.1+it.x)*1.5, 3);
+    else px(SP_BANANA, p[0]+5, p[1]+6+Math.sin(FRAME*0.1+it.x)*1.5, 3); }
+  for(const e of D.enemies){ if(e.hp<=0||!inView(e.x,e.y)||!D.seen[e.y][e.x])continue; const p=cell(e.x,e.y);
+    const isBat = !e.boss && e.kind.sp===SP_BAT;
+    const sway = Math.sin(FRAME*0.09 + e.x*1.7 + e.y*0.6) * (isBat?6:2);
+    drawGroundShadow(p[0]+20, p[1]+36, e.boss?24:14);
+    px(e.boss?e.sp:e.kind.sp, p[0]+(e.boss?0:2), p[1]+(e.boss?-8:5)+sway, e.boss?1.6:2.2);
+    ctx.fillStyle="#40222a"; ctx.fillRect(p[0]+2,p[1]-5,TILE-4,4);
+    ctx.fillStyle="#d24a5e"; ctx.fillRect(p[0]+2,p[1]-5,(TILE-4)*clamp(e.hp/e.maxhp,0,1),4); }
+  for(const k of D.kids){ if(k.hp<=0||!inView(k.x,k.y))continue; const p=cell(k.x,k.y);
+    drawGroundShadow(p[0]+20,p[1]+38,13); px(SP_KID,p[0]+5,p[1]+3,1.9); }
+  const pp=cell(D.px,D.py);
+  drawGroundShadow(pp[0]+20,pp[1]+40,16);
+  px(SP_HERO,pp[0]+2,pp[1]-4+Math.sin(FRAME*0.08)*2,1.6);
+  // ダメージポップアップ
+  for(let i=FX.length-1;i>=0;i--){
+    const f=FX[i];
+    if(inView(f.gx,f.gy)){
+      const p=cell(f.gx,f.gy), t=f.age/f.maxAge;
+      ctx.globalAlpha=clamp(1-t,0,1);
+      text(f.txt, p[0]+20, p[1]+20-t*26, 16, f.color, "center");
+      ctx.globalAlpha=1;
+    }
+    f.age++;
+    if(f.age>f.maxAge) FX.splice(i,1);
+  }
+  ctx.fillStyle="rgba(10,12,18,0.9)"; ctx.fillRect(0,0,540,64);
+  ctx.fillStyle="#40222a"; ctx.fillRect(14,14,220,18);
+  ctx.fillStyle="#5fbf6f"; ctx.fillRect(14,14,220*clamp(S.hp/S.maxhp,0,1),18);
+  text("HP "+S.hp+"/"+S.maxhp,20,28,13,"#0b0d12");
+  text("地下"+D.floor+"階 "+S.gold+"G "+S.age+"さい"+(D.boss&&!D.bossDown?" ⚠ボス":""),250,29,15,"#e8b93e");
+  ctx.fillStyle="rgba(10,12,18,0.85)"; ctx.fillRect(10,676,520,72);
+  D.msg.slice(-3).forEach((m,i,arr)=>text(m.length>38? m.slice(0,37)+"…":m,20,698+i*21,13, i===arr.length-1?"#fff":"#998"));
+  btnDraw(122,756,96,62,"▲",()=>playerStep(0,-1),{size:24});
+  btnDraw(18,824,96,62,"◀",()=>playerStep(-1,0),{size:24});
+  btnDraw(122,824,96,62,"・",()=>endTurn(),{size:24,color:"#9aa"});
+  btnDraw(226,824,96,62,"▶",()=>playerStep(1,0),{size:24});
+  btnDraw(122,892,96,62,"▼",()=>playerStep(0,1),{size:24});
+  btnDraw(352,824,170,62,"にげる(帰還)",tryFlee,{size:15});
+}
+function drawEpilogue(){
+  ctx.fillStyle="#0b0d12"; ctx.fillRect(0,0,540,960);
+  const cur=S.epPages[S.epIdx];
+  const big = S.epIdx===S.epPages.length-2;
+  wrapText(cur, 45, 430, 450, big?24:19, big?"#e8b93e":"#f2efe9");
+  text((S.epIdx+1)+" / "+S.epPages.length,270,890,12,"#665","center");
+  text("▼ タップ/Enter",270,916,13,"#665","center");
+}
+function drawDialog(){
+  const cur=DIALOG.queue[DIALOG.idx];
+  const ch=cur.choices? cur.choices.length*56 : 0;
+  const h=130+ch;
+  const y0=960-h-200;
+  ctx.fillStyle="rgba(8,10,16,0.96)"; ctx.fillRect(10,y0,520,h);
+  ctx.strokeStyle="#c9a44f"; ctx.strokeRect(10,y0,520,h);
+  wrapText(cur.text,30,y0+34,478,17);
+  if(cur.choices) cur.choices.forEach((c,i)=>{
+    btnDraw(30,y0+h-ch-14+i*56,480,50,c.label,()=>{ DIALOG.choiceIdx=i; dialogInput("ok"); },
+      {size:16,bg:i===DIALOG.choiceIdx?"rgba(201,164,79,0.2)":"rgba(25,29,40,0.9)"});
+  });
+  else text("▼ タップですすむ",270,y0+h-16,12,"#886","center");
+}
+
+// ---------- 入力 ----------
+let hasSave=false;
+function titleStart(){
+  if(!(hasSave && load())) newGame();
+  hasSave=false;
+  S.mode="home"; save();
+}
+window.addEventListener("keydown", ev=>{
+  const k=ev.key;
+  if(["ArrowUp","ArrowDown","ArrowLeft","ArrowRight","Up","Down","Left","Right"," "].includes(k)) ev.preventDefault();
+  if(S===null || S.mode==="title"){ if(k==="Enter"||k===" ") titleStart(); return; }
+  if(S.mode==="epilogue"){
+    if(k==="Enter"||k===" "){ S.epIdx++; if(S.epIdx>=S.epPages.length){ S=null; hasSave=false; } }
+    return;
+  }
+  if(DIALOG){
+    if(k==="ArrowUp"||k==="Up"||k==="w") dialogInput("up");
+    else if(k==="ArrowDown"||k==="Down"||k==="s") dialogInput("down");
+    else if(k==="Enter"||k===" ") dialogInput("ok");
+    return;
+  }
+  if(S.mode==="home"){
+    const items=homeItems();
+    if(k==="ArrowUp"||k==="Up"||k==="w") HMENU.idx=(HMENU.idx+items.length-1)%items.length;
+    else if(k==="ArrowDown"||k==="Down"||k==="s") HMENU.idx=(HMENU.idx+1)%items.length;
+    else if(k==="Enter"||k===" ") items[HMENU.idx].fn();
+    return;
+  }
+  if(S.mode==="dungeon"){
+    if(k==="ArrowUp"||k==="Up"||k==="w") playerStep(0,-1);
+    else if(k==="ArrowDown"||k==="Down"||k==="s") playerStep(0,1);
+    else if(k==="ArrowLeft"||k==="Left"||k==="a") playerStep(-1,0);
+    else if(k==="ArrowRight"||k==="Right"||k==="d") playerStep(1,0);
+    else if(k==="."||k==="Enter") endTurn();       // 足ぶみ
+    else if(k==="b"||k==="B"){ tryFlee(); }
+  }
+});
+// タッチ: 画面内ボタン+タップ+スワイプ
+let tstart=null;
+function toCV(ev){ const r=cv.getBoundingClientRect(); return [(ev.clientX-r.left)*cv.width/r.width,(ev.clientY-r.top)*cv.height/r.height]; }
+cv.addEventListener("pointerdown", ev=>{ ev.preventDefault(); tstart=[ev.clientX,ev.clientY]; });
+cv.addEventListener("pointerup", ev=>{
+  if(!tstart) return;
+  const [cx,cy]=toCV(ev);
+  const dx=ev.clientX-tstart[0], dy=ev.clientY-tstart[1]; tstart=null;
+  const isTap = Math.abs(dx)<18 && Math.abs(dy)<18;
+  if(isTap){
+    for(let i=BTNS.length-1;i>=0;i--){ const b=BTNS[i];
+      if(cx>=b.x&&cx<=b.x+b.w&&cy>=b.y&&cy<=b.y+b.h){ b.fn(); return; } }
+  }
+  if(S===null || S.mode==="title"){ if(isTap) titleStart(); return; }
+  if(S.mode==="epilogue"){ if(isTap){ S.epIdx++; if(S.epIdx>=S.epPages.length){ S=null; hasSave=false; } } return; }
+  if(DIALOG){ if(isTap) dialogInput("ok"); else dialogInput(dy>0?"down":"up"); return; }
+  if(S.mode==="dungeon"){
+    if(isTap){
+      if(DVIEW && cy>=DVIEW.oy && cy<DVIEW.oy+VR*TILE && cx>=DVIEW.ox && cx<DVIEW.ox+VC*TILE){
+        const tx=DVIEW.camX+((cx-DVIEW.ox)/TILE|0), ty=DVIEW.camY+((cy-DVIEW.oy)/TILE|0);
+        const ddx=tx-D.px, ddy=ty-D.py;
+        if(ddx||ddy){ if(Math.abs(ddx)>=Math.abs(ddy)) playerStep(Math.sign(ddx),0); else playerStep(0,Math.sign(ddy)); }
+      }
+      return;
+    }
+    if(Math.abs(dx)>Math.abs(dy)) playerStep(Math.sign(dx),0); else playerStep(0,Math.sign(dy));
+  }
+});
+
+// ---------- 起動 ----------
+try{ hasSave = !!localStorage.getItem("gorilla-life"); }catch(e){}
+S=null;
+draw();
+</script>
+</body>
+</html>

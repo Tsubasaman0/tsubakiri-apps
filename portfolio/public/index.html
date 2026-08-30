@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ツバキリの基地</title>
+<meta name="description" content="34歳・子育て中の会社員が、AIと一緒にキャリアを作り直す実験場。自分専用のポートフォリオ基地。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&amp;display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0b0d12;
+    --bg-elev: #14171f;
+    --bg-card: #191d26;
+    --text: #f2efe9;
+    --text-dim: #a7a4a0;
+    --text-dim2: #78756f;
+    --accent: #e8a95c;
+    --accent-soft: rgba(232, 169, 92, 0.35);
+    --border: rgba(255, 255, 255, 0.08);
+    --radius-lg: 24px;
+    --radius-md: 16px;
+    --maxw: 980px;
+  }
+
+  * { box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Noto Sans JP", "Hiragino Kaku Gothic ProN", "Hiragino Sans", Meiryo, sans-serif;
+    line-height: 1.7;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+
+  img, svg { display: block; }
+
+  a { color: inherit; }
+
+  /* ==================== ふわっと出てくる ==================== */
+  .fade-in {
+    opacity: 0;
+    transform: translateY(28px);
+    transition: opacity 0.9s ease, transform 0.9s ease;
+    will-change: opacity, transform;
+  }
+  .fade-in.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* ==================== ヒーロー(HD-2Dジオラマ) ==================== */
+  .hero {
+    position: relative;
+    height: 100svh;
+    min-height: 560px;
+    overflow: hidden;
+    background: linear-gradient(180deg, #0a0c14 0%, #171227 45%, #2b1a24 75%, #3a2419 100%);
+  }
+
+  .hero-layer {
+    position: absolute;
+    left: 50%;
+    width: 200%;
+    transform: translate3d(-50%, 0, 0);
+    will-change: transform;
+    pointer-events: none;
+  }
+
+  .layer-stars {
+    top: 0;
+    height: 60%;
+    width: 220%;
+  }
+  .layer-stars i {
+    position: absolute;
+    top: 0; left: 0;
+    width: 2px; height: 2px;
+    background: transparent;
+    border-radius: 50%;
+    box-shadow:
+      1309px 57px 0 rgba(255,255,255,0.42),
+      563px 125px 0 rgba(255,255,255,0.53),
+      1508px 52px 0 rgba(255,255,255,0.81),
+      1116px 44px 0 rgba(255,255,255,0.75),
+      65px 15px 0 rgba(255,255,255,0.46),
+      476px 258px 0 rgba(255,255,255,0.76),
+      1149px 101px 0 rgba(255,255,255,0.83),
+      1436px 279px 0 rgba(255,255,255,0.65),
+      919px 301px 0 rgba(255,255,255,0.57),
+      1780px 3px 0 rgba(255,255,255,0.86),
+      326px 357px 0 rgba(255,255,255,0.65),
+      569px 79px 0 rgba(255,255,255,0.53),
+      1563px 172px 0 rgba(255,255,255,0.46),
+      778px 49px 0 rgba(255,255,255,0.62),
+      704px 309px 0 rgba(255,255,255,0.56),
+      88px 373px 0 rgba(255,255,255,0.68),
+      255px 193px 0 rgba(255,255,255,0.45),
+      600px 321px 0 rgba(255,255,255,0.77),
+      1764px 185px 0 rgba(255,255,255,0.75),
+      1442px 35px 0 rgba(255,255,255,0.43),
+      466px 395px 0 rgba(255,255,255,0.57),
+      163px 119px 0 rgba(255,255,255,0.92),
+      778px 142px 0 rgba(255,255,255,0.67),
+      1708px 186px 0 rgba(255,255,255,0.5),
+      727px 107px 0 rgba(255,255,255,0.8),
+      1437px 349px 0 rgba(255,255,255,0.79),
+      1247px 325px 0 rgba(255,255,255,0.5),
+      1493px 125px 0 rgba(255,255,255,0.5),
+      777px 138px 0 rgba(255,255,255,0.99),
+      1310px 352px 0 rgba(255,255,255,0.73),
+      1402px 166px 0 rgba(255,255,255,0.91),
+      1589px 28px 0 rgba(255,255,255,0.54),
+      65px 412px 0 rgba(255,255,255,0.59),
+      548px 33px 0 rgba(255,255,255,0.53),
+      1161px 367px 0 rgba(255,255,255,0.59),
+      1342px 255px 0 rgba(255,255,255,0.64),
+      1316px 234px 0 rgba(255,255,255,0.49),
+      285px 126px 0 rgba(255,255,255,0.85),
+      1103px 134px 0 rgba(255,255,255,0.85),
+      877px 298px 0 rgba(255,255,255,0.64),
+      449px 70px 0 rgba(255,255,255,0.71),
+      186px 386px 0 rgba(255,255,255,0.43),
+      224px 78px 0 rgba(255,255,255,0.78),
+      1622px 348px 0 rgba(255,255,255,0.65),
+      130px 197px 0 rgba(255,255,255,0.63),
+      958px 270px 0 rgba(255,255,255,0.55),
+      1133px 5px 0 rgba(255,255,255,0.81),
+      234px 349px 0 rgba(255,255,255,0.93),
+      1537px 136px 0 rgba(255,255,255,0.86),
+      696px 57px 0 rgba(255,255,255,0.58),
+      323px 232px 0 rgba(255,255,255,0.4),
+      1478px 368px 0 rgba(255,255,255,0.56),
+      1025px 390px 0 rgba(255,255,255,0.51),
+      217px 320px 0 rgba(255,255,255,0.58),
+      1308px 259px 0 rgba(255,255,255,0.77),
+      313px 191px 0 rgba(255,255,255,0.86),
+      1104px 398px 0 rgba(255,255,255,0.95),
+      1px 306px 0 rgba(255,255,255,0.59),
+      39px 57px 0 rgba(255,255,255,0.96),
+      1799px 413px 0 rgba(255,255,255,0.58),
+      118px 123px 0 rgba(255,255,255,0.93),
+      161px 43px 0 rgba(255,255,255,0.84),
+      1671px 35px 0 rgba(255,255,255,0.99),
+      1090px 392px 0 rgba(255,255,255,0.48),
+      1351px 243px 0 rgba(255,255,255,0.97),
+      338px 135px 0 rgba(255,255,255,0.72),
+      1242px 216px 0 rgba(255,255,255,0.98),
+      1104px 386px 0 rgba(255,255,255,0.84),
+      411px 365px 0 rgba(255,255,255,0.59),
+      1375px 332px 0 rgba(255,255,255,0.62);
+    animation: twinkle 4.5s ease-in-out infinite alternate;
+  }
+  @keyframes twinkle {
+    from { opacity: 0.55; }
+    to   { opacity: 1; }
+  }
+
+  .layer-mountains {
+    bottom: 22%;
+    height: 30%;
+    background:
+      linear-gradient(180deg, rgba(58,36,54,0) 0%, #3a2436 100%);
+    clip-path: polygon(
+      0% 100%, 0% 62%, 4% 48%, 9% 58%, 14% 30%, 19% 52%, 24% 40%,
+      29% 60%, 34% 44%, 39% 66%, 45% 36%, 50% 58%, 55% 46%,
+      60% 24%, 65% 50%, 70% 40%, 75% 62%, 80% 48%, 85% 58%,
+      90% 34%, 95% 54%, 100% 46%, 100% 100%
+    );
+  }
+
+  .layer-city {
+    bottom: 16%;
+    height: 18%;
+    display: flex;
+    align-items: flex-end;
+    width: 220%;
+  }
+  .layer-city .building {
+    width: 2.6%;
+    margin-right: 0.35%;
+    background: #1c1420;
+    position: relative;
+    image-rendering: pixelated;
+  }
+  .layer-city .building::after {
+    content: "";
+    position: absolute;
+    top: 22%; left: 30%;
+    width: 22%; height: 14%;
+    background: var(--accent);
+    opacity: 0.85;
+    box-shadow: 0 160% 0 var(--accent), 0 320% 0 var(--accent);
+  }
+  .layer-city .building:nth-child(1)  { height: 40%; }
+  .layer-city .building:nth-child(2)  { height: 65%; }
+  .layer-city .building:nth-child(3)  { height: 30%; }
+  .layer-city .building:nth-child(4)  { height: 80%; }
+  .layer-city .building:nth-child(5)  { height: 50%; }
+  .layer-city .building:nth-child(6)  { height: 35%; }
+  .layer-city .building:nth-child(7)  { height: 70%; }
+  .layer-city .building:nth-child(8)  { height: 45%; }
+  .layer-city .building:nth-child(9)  { height: 60%; }
+  .layer-city .building:nth-child(10) { height: 28%; }
+  .layer-city .building:nth-child(11) { height: 75%; }
+  .layer-city .building:nth-child(12) { height: 42%; }
+  .layer-city .building:nth-child(13) { height: 55%; }
+  .layer-city .building:nth-child(14) { height: 33%; }
+  .layer-city .building:nth-child(15) { height: 68%; }
+  .layer-city .building:nth-child(16) { height: 48%; }
+  .layer-city .building:nth-child(17) { height: 38%; }
+  .layer-city .building:nth-child(18) { height: 62%; }
+  .layer-city .building:nth-child(19) { height: 30%; }
+  .layer-city .building:nth-child(20) { height: 58%; }
+  .layer-city .building:nth-child(21) { height: 44%; }
+  .layer-city .building:nth-child(22) { height: 72%; }
+  .layer-city .building:nth-child(23) { height: 36%; }
+  .layer-city .building:nth-child(24) { height: 52%; }
+
+  .layer-ground {
+    bottom: 0;
+    height: 22%;
+    background: linear-gradient(180deg, #241419 0%, #140b0e 100%);
+    border-top: 2px solid rgba(232, 169, 92, 0.15);
+  }
+  .layer-ground::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+      90deg,
+      rgba(255,255,255,0.03) 0px,
+      rgba(255,255,255,0.03) 2px,
+      transparent 2px,
+      transparent 24px
+    );
+  }
+
+  .lantern-glow {
+    position: absolute;
+    left: 50%;
+    bottom: 20%;
+    width: 420px;
+    height: 420px;
+    transform: translate(-50%, 30%);
+    background: radial-gradient(circle, rgba(232,169,92,0.55) 0%, rgba(232,169,92,0.18) 35%, rgba(232,169,92,0) 70%);
+    filter: blur(2px);
+    pointer-events: none;
+    animation: lantern-breathe 5s ease-in-out infinite;
+  }
+  @keyframes lantern-breathe {
+    0%, 100% { opacity: 0.85; }
+    50% { opacity: 1; }
+  }
+
+  .hero-vignette-top,
+  .hero-vignette-bottom {
+    position: absolute;
+    left: 0; right: 0;
+    height: 14%;
+    pointer-events: none;
+    z-index: 5;
+  }
+  .hero-vignette-top {
+    top: 0;
+    background: linear-gradient(180deg, var(--bg) 0%, rgba(11,13,18,0) 100%);
+  }
+  .hero-vignette-bottom {
+    bottom: 0;
+    background: linear-gradient(0deg, var(--bg) 0%, rgba(11,13,18,0) 100%);
+  }
+
+  .sprite-wrap {
+    position: absolute;
+    left: 50%;
+    bottom: 24%;
+    transform: translateX(-50%);
+    z-index: 4;
+    animation: sprite-float 2.6s ease-in-out infinite;
+  }
+  @keyframes sprite-float {
+    0%, 100% { transform: translateX(-50%) translateY(0); }
+    50%      { transform: translateX(-50%) translateY(-10px); }
+  }
+  .sprite-wrap img {
+    width: 144px;
+    height: 168px;
+    image-rendering: pixelated;
+    shape-rendering: crispEdges;
+    filter: drop-shadow(0 12px 18px rgba(0,0,0,0.5));
+  }
+
+  .hero-copy {
+    position: absolute;
+    top: 12%;
+    left: 0; right: 0;
+    text-align: center;
+    z-index: 6;
+    padding: 0 24px;
+  }
+  .hero-copy .eyebrow {
+    display: inline-block;
+    font-size: 13px;
+    letter-spacing: 0.14em;
+    color: var(--accent);
+    background: rgba(232, 169, 92, 0.12);
+    border: 1px solid var(--accent-soft);
+    padding: 6px 16px;
+    border-radius: 999px;
+    margin-bottom: 20px;
+  }
+  .hero-copy h1 {
+    font-size: clamp(2.4rem, 7vw, 4.6rem);
+    font-weight: 900;
+    margin: 0 0 18px;
+    letter-spacing: 0.02em;
+    text-shadow: 0 4px 24px rgba(0,0,0,0.6);
+  }
+  .hero-copy p {
+    font-size: clamp(1rem, 2.4vw, 1.25rem);
+    color: var(--text-dim);
+    max-width: 34em;
+    margin: 0 auto;
+  }
+
+  .hero-scroll-cue {
+    position: absolute;
+    bottom: 3%;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 6;
+    font-size: 12px;
+    color: var(--text-dim2);
+    letter-spacing: 0.1em;
+    animation: cue-bounce 2s ease-in-out infinite;
+  }
+  @keyframes cue-bounce {
+    0%, 100% { transform: translateX(-50%) translateY(0); opacity: 0.6; }
+    50%      { transform: translateX(-50%) translateY(6px); opacity: 1; }
+  }
+
+  /* ==================== Appleミニマルな本文 ==================== */
+  main {
+    max-width: var(--maxw);
+    margin: 0 auto;
+    padding: 0 24px;
+  }
+
+  section {
+    padding: 120px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  section:last-of-type { border-bottom: none; }
+
+  .section-head {
+    margin-bottom: 56px;
+  }
+  .section-head .kicker {
+    display: block;
+    font-size: 13px;
+    letter-spacing: 0.16em;
+    color: var(--accent);
+    margin-bottom: 12px;
+  }
+  .section-head h2 {
+    font-size: clamp(1.8rem, 4vw, 2.6rem);
+    font-weight: 900;
+    margin: 0;
+    letter-spacing: 0.01em;
+  }
+
+  /* カード */
+  .card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 20px;
+  }
+
+  .card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    transition: transform 0.35s ease, border-color 0.35s ease;
+  }
+  .card:hover {
+    transform: translateY(-4px);
+    border-color: rgba(232, 169, 92, 0.3);
+  }
+  .card h3 {
+    margin: 0;
+    font-size: 1.15rem;
+    font-weight: 700;
+  }
+  .card p {
+    margin: 0;
+    color: var(--text-dim);
+    font-size: 0.95rem;
+    flex-grow: 1;
+  }
+  .badge {
+    align-self: flex-start;
+    font-size: 12px;
+    letter-spacing: 0.04em;
+    color: var(--text-dim2);
+    background: rgba(255,255,255,0.05);
+    border: 1px solid var(--border);
+    padding: 5px 12px;
+    border-radius: 999px;
+  }
+  .btn-link {
+    align-self: flex-start;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--bg);
+    background: var(--accent);
+    padding: 10px 18px;
+    border-radius: 999px;
+    text-decoration: none;
+    transition: opacity 0.2s ease;
+  }
+  .btn-link:hover { opacity: 0.85; }
+
+  /* 発信している場所 */
+  .link-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 20px;
+  }
+  .link-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 28px;
+    text-decoration: none;
+    color: var(--text);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    transition: transform 0.35s ease, border-color 0.35s ease;
+  }
+  .link-card:hover {
+    transform: translateY(-4px);
+    border-color: rgba(232, 169, 92, 0.3);
+  }
+  .link-card .platform {
+    font-size: 13px;
+    letter-spacing: 0.08em;
+    color: var(--accent);
+  }
+  .link-card h3 { margin: 0; font-size: 1.2rem; }
+  .link-card p { margin: 0; color: var(--text-dim); font-size: 0.95rem; }
+
+  /* あゆみ(タイムライン) */
+  .timeline {
+    position: relative;
+    margin: 0;
+    padding: 0 0 0 28px;
+    list-style: none;
+    border-left: 2px solid var(--border);
+  }
+  .timeline li {
+    position: relative;
+    padding-bottom: 40px;
+  }
+  .timeline li:last-child { padding-bottom: 0; }
+  .timeline li::before {
+    content: "";
+    position: absolute;
+    left: -34px;
+    top: 4px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 0 4px rgba(232, 169, 92, 0.15);
+  }
+  .timeline .date {
+    display: block;
+    font-size: 13px;
+    color: var(--accent);
+    letter-spacing: 0.06em;
+    margin-bottom: 6px;
+  }
+  .timeline .desc {
+    font-size: 1.05rem;
+    color: var(--text);
+  }
+
+  /* フッター */
+  footer {
+    max-width: var(--maxw);
+    margin: 0 auto;
+    padding: 60px 24px 100px;
+    text-align: center;
+    color: var(--text-dim);
+  }
+  footer p.made-with {
+    font-size: 0.95rem;
+    margin-bottom: 24px;
+  }
+  .footer-links {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+  .footer-links a {
+    text-decoration: none;
+    color: var(--text-dim);
+    border: 1px solid var(--border);
+    padding: 8px 18px;
+    border-radius: 999px;
+    font-size: 0.9rem;
+    transition: color 0.25s ease, border-color 0.25s ease;
+  }
+  .footer-links a:hover {
+    color: var(--accent);
+    border-color: rgba(232, 169, 92, 0.3);
+  }
+
+  /* ==================== スマホ幅対応 ==================== */
+  @media (max-width: 480px) {
+    section { padding: 80px 0; }
+    .section-head { margin-bottom: 36px; }
+    .sprite-wrap img { width: 96px; height: 112px; }
+    .hero-copy { top: 14%; }
+    .lantern-glow { width: 280px; height: 280px; }
+    .card, .link-card { padding: 22px; }
+    footer { padding: 48px 20px 80px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="hero" id="hero">
+  <div class="hero-layer layer-stars"><i></i></div>
+  <div class="hero-layer layer-mountains" data-speed="0.15"></div>
+  <div class="hero-layer layer-city" data-speed="0.28">
+    <div class="building"></div><div class="building"></div><div class="building"></div>
+    <div class="building"></div><div class="building"></div><div class="building"></div>
+    <div class="building"></div><div class="building"></div><div class="building"></div>
+    <div class="building"></div><div class="building"></div><div class="building"></div>
+    <div class="building"></div><div class="building"></div><div class="building"></div>
+    <div class="building"></div><div class="building"></div><div class="building"></div>
+    <div class="building"></div><div class="building"></div><div class="building"></div>
+    <div class="building"></div><div class="building"></div><div class="building"></div>
+  </div>
+  <div class="hero-layer layer-ground" data-speed="0.45"></div>
+  <div class="lantern-glow"></div>
+
+  <div class="sprite-wrap" id="sprite">
+    <img src="data:image/png;base64,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" alt="ドット絵のツーブロックゴリラ" width="392" height="448">
+  </div>
+
+  <div class="hero-copy">
+    <span class="eyebrow">TSUBAKIRI BASE</span>
+    <h1>ツバキリの基地</h1>
+    <p>34歳・子育て中の会社員が、AIと一緒にキャリアを作り直す実験場</p>
+  </div>
+
+  <div class="hero-scroll-cue">SCROLL ▾</div>
+  <div class="hero-vignette-top"></div>
+  <div class="hero-vignette-bottom"></div>
+</div>
+
+<main>
+
+  <section id="works">
+    <div class="section-head fade-in">
+      <span class="kicker">WORKS</span>
+      <h2>つくったもの</h2>
+    </div>
+    <div class="card-grid">
+
+      <div class="card fade-in">
+        <h3>心の職業診断</h3>
+        <p>6軸18問で価値観から「心の職業」を診断する</p>
+        <a class="btn-link" href="https://kokoro-no-shokugyo.kachikan-shindan.workers.dev" target="_blank" rel="noopener">開く ↗</a>
+      </div>
+
+      <div class="card fade-in">
+        <h3>ゴリラファミリーダンジョン</h3>
+        <p>かせいで、そだてて、みとどける。家族ローグライク</p>
+        <a class="btn-link" href="https://gorilla-family-dungeon.kachikan-shindan.workers.dev" target="_blank" rel="noopener">遊ぶ ↗</a>
+      </div>
+
+      <div class="card fade-in">
+        <h3>育休のお金シミュレーター</h3>
+        <p>育休給付の手取り変化を月別に計算する</p>
+        <a class="btn-link" href="https://ikukyu-money.kachikan-shindan.workers.dev" target="_blank" rel="noopener">開く ↗</a>
+      </div>
+
+      <div class="card fade-in">
+        <h3>PDF→Markdown</h3>
+        <p>PDFや画像をオフラインでMarkdown化する</p>
+        <span class="badge">ローカルのみ</span>
+      </div>
+
+      <div class="card fade-in">
+        <h3>スクショ自動記録ツール</h3>
+        <p>ページ自動めくり撮影+OCR</p>
+        <span class="badge">ローカルのみ</span>
+      </div>
+
+      <div class="card fade-in">
+        <h3>ここメモ</h3>
+        <p>自分専用のローカル情報メモアプリ</p>
+        <span class="badge">ローカルのみ</span>
+      </div>
+
+      <div class="card fade-in">
+        <h3>FC風RPG</h3>
+        <p>Canvasで作るドット絵RPG</p>
+        <span class="badge">試作中</span>
+      </div>
+
+      <div class="card fade-in">
+        <h3>仮想通貨の計算ソフト</h3>
+        <p>取引記録の自動取得と損益計算</p>
+        <span class="badge">開発中</span>
+      </div>
+
+    </div>
+  </section>
+
+  <section id="voice">
+    <div class="section-head fade-in">
+      <span class="kicker">VOICE</span>
+      <h2>発信している場所</h2>
+    </div>
+    <div class="link-grid">
+      <a class="link-card fade-in" href="https://note.com/prime_duck982" target="_blank" rel="noopener">
+        <span class="platform">note</span>
+        <h3>note.com/prime_duck982</h3>
+        <p>育休の実体験とAI活用の記録</p>
+      </a>
+      <a class="link-card fade-in" href="https://x.com/tsubakirigosan" target="_blank" rel="noopener">
+        <span class="platform">X</span>
+        <h3>@tsubakirigosan</h3>
+        <p>AI実験の過程を毎日ぽつぽつ</p>
+      </a>
+    </div>
+  </section>
+
+  <section id="history">
+    <div class="section-head fade-in">
+      <span class="kicker">HISTORY</span>
+      <h2>あゆみ</h2>
+    </div>
+    <ul class="timeline">
+      <li class="fade-in">
+        <span class="date">2026.08.10</span>
+        <div class="desc">AI秘書をDiscordに常駐させる</div>
+      </li>
+      <li class="fade-in">
+        <span class="date">2026.08.19</span>
+        <div class="desc">心の職業診断を公開(初めての自作アプリ公開)</div>
+      </li>
+      <li class="fade-in">
+        <span class="date">2026.08.24</span>
+        <div class="desc">育休のお金シミュレーターを公開</div>
+      </li>
+      <li class="fade-in">
+        <span class="date">2026.08.25</span>
+        <div class="desc">ここメモ完成、収益化計画始動</div>
+      </li>
+      <li class="fade-in">
+        <span class="date">2026.08.26</span>
+        <div class="desc">LINEスタンプ制作開始</div>
+      </li>
+      <li class="fade-in">
+        <span class="date">2026.08.29</span>
+        <div class="desc">noteで発信開始・Xの発信を本格化</div>
+      </li>
+    </ul>
+  </section>
+
+</main>
+
+<footer>
+  <p class="made-with fade-in">このサイトも AI(むすび)と一緒に作りました</p>
+  <div class="footer-links fade-in">
+    <a href="#works">つくったもの</a>
+    <a href="https://note.com/prime_duck982" target="_blank" rel="noopener">note</a>
+    <a href="https://x.com/tsubakirigosan" target="_blank" rel="noopener">X</a>
+  </div>
+</footer>
+
+<script>
+(function () {
+  "use strict";
+
+  /* ふわっと出てくる演出(IntersectionObserver) */
+  var fadeEls = document.querySelectorAll(".fade-in");
+  if ("IntersectionObserver" in window) {
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (entry.isIntersecting) {
+          entry.target.classList.add("is-visible");
+          io.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.15 });
+    fadeEls.forEach(function (el) { io.observe(el); });
+  } else {
+    fadeEls.forEach(function (el) { el.classList.add("is-visible"); });
+  }
+
+  /* ヒーローの多層パララックス(スクロール + マウス) */
+  var hero = document.getElementById("hero");
+  var sprite = document.getElementById("sprite");
+  var layers = document.querySelectorAll(".hero-layer[data-speed]");
+  var ticking = false;
+  var mouseX = 0;
+
+  function update() {
+    var scrollY = window.scrollY || window.pageYOffset;
+    var heroHeight = hero.offsetHeight;
+
+    if (scrollY < heroHeight) {
+      layers.forEach(function (layer) {
+        var speed = parseFloat(layer.getAttribute("data-speed")) || 0;
+        var offsetY = scrollY * speed;
+        var offsetX = mouseX * speed * 40;
+        layer.style.transform = "translate3d(calc(-50% + " + offsetX + "px), " + offsetY + "px, 0)";
+      });
+      if (sprite) {
+        sprite.style.marginTop = (scrollY * 0.05) + "px";
+      }
+    }
+    ticking = false;
+  }
+
+  function requestTick() {
+    if (!ticking) {
+      window.requestAnimationFrame(update);
+      ticking = true;
+    }
+  }
+
+  window.addEventListener("scroll", requestTick, { passive: true });
+
+  hero.addEventListener("mousemove", function (e) {
+    var rect = hero.getBoundingClientRect();
+    mouseX = ((e.clientX - rect.left) / rect.width - 0.5) * 2; /* -1〜1 */
+    requestTick();
+  });
+
+  hero.addEventListener("mouseleave", function () {
+    mouseX = 0;
+    requestTick();
+  });
+
+  update();
+})();
+</script>
+
+</body>
+</html>

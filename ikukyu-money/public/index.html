@@ -1,0 +1,1429 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>パパの育休、お金はどうなる？</title>
+<meta name="description" content="育休を取ると世帯の手取りがどう変わるかを計算します。2026年8月1日改定の給付額に対応。受給資格や会社の給与の扱いまで確認したうえで金額を出します。">
+<style>
+  :root{
+    --bg1:#FBF7F1; --bg2:#F1F2F7;
+    --card:#FFFFFF; --ink:#2A2622; --ink-soft:#5C544C; --ink-faint:#6E655D;
+    --line:#E2D9CD; --accent:#B35F38; --accent-soft:#F7EAE3;
+    --papa:#33689A; --papa-soft:#E4EEF6;
+    --mama:#A85675; --mama-soft:#F7EBF0;
+    --good:#2F7443; --good-soft:#E5F1E8;
+    --warn:#9A5A21; --warn-soft:#FBEFE1;
+    --stop:#A33A3A; --stop-soft:#FBEAEA;
+    --shadow:0 10px 30px rgba(60,45,35,.08), 0 2px 6px rgba(60,45,35,.04);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg1:#1C1A18; --bg2:#1E2025;
+      --card:#26232A; --ink:#F2EEE8; --ink-soft:#C4BBB1; --ink-faint:#ADA298;
+      --line:#413B46; --accent:#EC9C76; --accent-soft:#3A2E29;
+      --papa:#8FBEDF; --papa-soft:#25333E;
+      --mama:#E9A9BE; --mama-soft:#3A2A31;
+      --good:#8CC79A; --good-soft:#23342A;
+      --warn:#E3AC77; --warn-soft:#3A2E22;
+      --stop:#EC9393; --stop-soft:#3B2626;
+      --shadow:0 10px 30px rgba(0,0,0,.35), 0 2px 6px rgba(0,0,0,.2);
+    }
+  }
+  :root[data-theme="dark"]{
+      --bg1:#1C1A18; --bg2:#1E2025;
+      --card:#26232A; --ink:#F2EEE8; --ink-soft:#C4BBB1; --ink-faint:#ADA298;
+      --line:#413B46; --accent:#EC9C76; --accent-soft:#3A2E29;
+      --papa:#8FBEDF; --papa-soft:#25333E;
+      --mama:#E9A9BE; --mama-soft:#3A2A31;
+      --good:#8CC79A; --good-soft:#23342A;
+      --warn:#E3AC77; --warn-soft:#3A2E22;
+      --stop:#EC9393; --stop-soft:#3B2626;
+      --shadow:0 10px 30px rgba(0,0,0,.35), 0 2px 6px rgba(0,0,0,.2);
+  }
+  :root{color-scheme:light dark}
+  :root[data-theme="light"]{color-scheme:light}
+  :root[data-theme="dark"]{color-scheme:dark}
+
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    font-family:system-ui,-apple-system,"Hiragino Sans","Noto Sans JP",sans-serif;
+    background:linear-gradient(165deg,var(--bg1) 0%,var(--bg2) 100%);
+    background-attachment:fixed;
+    color:var(--ink); line-height:1.75;
+    -webkit-font-smoothing:antialiased;
+    padding:env(safe-area-inset-top) 0 calc(48px + env(safe-area-inset-bottom));
+  }
+  .wrap{max-width:600px;margin:0 auto;padding:0 20px}
+  @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+  :focus-visible{outline:3px solid var(--accent);outline-offset:2px;border-radius:4px}
+
+  .hero{text-align:center;padding:48px 0 6px}
+  .hero .mark{font-size:38px;line-height:1;margin-bottom:16px}
+  h1{font-size:26px;line-height:1.45;margin:0 0 14px;font-weight:700;
+     text-wrap:balance;word-break:auto-phrase;line-break:strict}
+  .lead{color:var(--ink-soft);font-size:15px;margin:0 auto 22px;max-width:24em;
+        text-wrap:balance;word-break:auto-phrase;line-break:strict}
+  .chips{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:28px}
+  .chip{font-size:12.5px;color:var(--ink-soft);background:var(--card);
+        border:1px solid var(--line);border-radius:999px;padding:6px 13px}
+
+  .card{background:var(--card);border:1px solid var(--line);border-radius:16px;
+        padding:22px 20px;box-shadow:var(--shadow);margin-bottom:16px}
+  .card h2{font-size:17px;margin:0 0 4px;font-weight:700;display:flex;align-items:center;gap:9px}
+  .card h2 .step{font-size:11.5px;font-weight:700;color:#fff;background:var(--accent);
+                 border-radius:999px;padding:3px 9px;letter-spacing:.03em;flex:none}
+  .card .sub{font-size:13.5px;color:var(--ink-soft);margin:8px 0 18px;
+             text-wrap:pretty;word-break:auto-phrase;line-break:strict}
+
+  .field{margin-bottom:22px}
+  .field:last-child{margin-bottom:0}
+  .flabel{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:9px}
+  .flabel .name{font-size:14.5px;font-weight:700;display:flex;align-items:center;gap:7px}
+  .flabel .name::before{content:"";width:9px;height:9px;border-radius:50%;
+                        background:var(--dot,var(--accent));flex:none}
+  .flabel .hint{font-size:12px;color:var(--ink-faint);font-weight:400}
+  .numrow{display:flex;align-items:center;gap:10px}
+  .numrow input[type=number]{
+    flex:1;min-width:0;font:inherit;font-size:19px;font-weight:700;text-align:right;
+    padding:12px 13px;border:1.5px solid var(--line);border-radius:11px;
+    background:var(--bg1);color:var(--ink);-moz-appearance:textfield}
+  .numrow input[type=number]::-webkit-outer-spin-button,
+  .numrow input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+  .numrow input:focus{outline:none;border-color:var(--dot,var(--accent));
+                      box-shadow:0 0 0 3px color-mix(in srgb,var(--dot,var(--accent)) 22%,transparent)}
+  .numrow .unit{font-size:14px;color:var(--ink-soft);flex:none}
+  .yomi{font-size:12.5px;color:var(--ink-faint);text-align:right;margin:6px 0 0;min-height:1.2em}
+  input[type=range]{width:100%;margin:12px 0 0;accent-color:var(--dot,var(--accent));height:44px}
+  .rangeends{display:flex;justify-content:space-between;font-size:11.5px;color:var(--ink-faint);margin-top:-6px}
+
+  /* 選択式（セグメント） */
+  .seg{display:flex;gap:7px;flex-wrap:wrap}
+  .seg button{flex:1 1 auto;min-width:calc(50% - 4px);border:1.5px solid var(--line);
+    background:var(--card);color:var(--ink-soft);border-radius:11px;padding:13px 10px;
+    font:inherit;font-size:13.5px;font-weight:700;cursor:pointer;line-height:1.4;
+    transition:background-color .15s ease,border-color .15s ease,color .15s ease;
+    min-height:48px}
+  .seg button small{display:block;font-size:11px;font-weight:400;color:var(--ink-faint);margin-top:2px}
+  .seg button[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft);color:var(--ink)}
+  .seg button[aria-pressed="true"] small{color:var(--accent)}
+  .seg.three button{min-width:calc(33.333% - 5px)}
+
+  .btn{display:block;width:100%;border:0;border-radius:14px;padding:18px 20px;
+       font:inherit;font-size:16.5px;font-weight:700;cursor:pointer;
+       background:var(--accent);color:#fff;box-shadow:var(--shadow);min-height:56px;
+       transition:filter .12s ease}
+  .btn:active{filter:brightness(.94)}
+  .btn[disabled]{opacity:.5;cursor:not-allowed}
+
+  .tabs{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin:0 0 6px}
+  .tab{border:1.5px solid var(--line);background:var(--card);color:var(--ink-soft);
+       border-radius:11px;padding:11px 1px;font:inherit;font-size:12.5px;font-weight:700;
+       cursor:pointer;line-height:1.3;min-height:52px;white-space:nowrap;
+       letter-spacing:-.02em;
+       transition:background-color .15s ease,border-color .15s ease,color .15s ease}
+  .tab small{display:block;font-size:11px;font-weight:400;color:var(--ink-faint);margin-top:2px}
+  .tab[aria-selected="true"]{border-color:var(--papa);background:var(--papa-soft);color:var(--ink)}
+  .tab[aria-selected="true"] small{color:var(--papa)}
+
+  .verdict{text-align:center;padding:6px 0 4px}
+  .verdict .eyebrow{font-size:13px;color:var(--ink-soft);font-weight:700;margin-bottom:10px;
+                    text-wrap:balance;word-break:auto-phrase}
+  .verdict .big{font-size:clamp(30px,9vw,42px);font-weight:800;line-height:1.15;margin:0 0 6px}
+  .verdict .big.up{color:var(--good)} .verdict .big.down{color:var(--warn)}
+  .permonth{background:var(--bg1);border:1.5px solid var(--line);border-radius:12px;
+            padding:13px 15px;margin:12px 0 14px;text-align:left}
+  .pm-label{font-size:12.5px;color:var(--ink-faint);font-weight:700;margin:0 0 7px}
+  .pm-row{display:flex;justify-content:space-between;align-items:baseline;gap:10px;padding:6px 0}
+  .pm-row + .pm-row{border-top:1px dashed var(--line)}
+  .pm-row span{font-size:13.5px;color:var(--ink-soft);line-height:1.5;flex:1;min-width:0;
+               text-wrap:pretty;word-break:auto-phrase}
+  .pm-row span small{display:block;font-size:11.5px;color:var(--ink-faint)}
+  .pm-row b{font-size:20px;font-weight:800;white-space:nowrap;font-variant-numeric:tabular-nums;
+            flex:none}
+  .pm-val{flex:none;text-align:right;white-space:nowrap}
+  .pm-val b{display:block;color:var(--ink)}
+  .pm-diff{display:block;font-size:12px;font-weight:700;color:var(--warn);
+           font-variant-numeric:tabular-nums;margin-top:1px}
+  .pm-single{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+  .pm-single span{font-size:14px;color:var(--ink-soft);font-weight:700}
+  .pm-single b{font-size:25px;font-weight:800;white-space:nowrap;font-variant-numeric:tabular-nums}
+  .timeline{position:relative;padding-left:26px;margin:0 0 14px;text-align:left}
+  .timeline::before{content:"";position:absolute;left:7px;top:10px;bottom:10px;width:2px;
+                    background:var(--line)}
+  .tl-step{position:relative;padding-bottom:18px}
+  .tl-step:last-child{padding-bottom:0}
+  .tl-dot{position:absolute;left:-26px;top:2px;width:16px;height:16px;border-radius:50%;
+          background:var(--card);border:3px solid var(--c);box-sizing:border-box}
+  .tl-step.hot .tl-dot{background:var(--c)}
+  .tl-when{font-size:11.5px;font-weight:700;color:var(--ink-faint)}
+  .tl-step.hot .tl-when{color:var(--warn)}
+  .tl-what{font-size:14.5px;font-weight:700;margin:1px 0 7px;
+           text-wrap:pretty;word-break:auto-phrase}
+  .tl-body{background:var(--bg);border-radius:11px;padding:11px 13px}
+  .tl-step.hot .tl-body{border:1.5px solid var(--bd)}
+  .tl-main{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+  .tl-main>span{font-size:12.5px;color:var(--ink-soft);line-height:1.5;flex:1;min-width:0;
+                text-wrap:pretty;word-break:auto-phrase}
+  .tl-amt{flex:none;text-align:right;white-space:nowrap}
+  .tl-amt b{display:block;font-size:19px;font-weight:800;font-variant-numeric:tabular-nums}
+  .tl-amt small{display:block;font-size:11.5px;font-weight:700;color:var(--warn);
+                font-variant-numeric:tabular-nums;margin-top:1px}
+  .tl-note{font-size:12px;color:var(--ink-soft);margin:8px 0 0;line-height:1.65;
+           text-wrap:pretty;word-break:auto-phrase}
+  .tl-step.hot .tl-note{color:var(--ink)}
+  .tl-who{display:flex;gap:12px;margin-top:9px;padding-top:9px;
+          border-top:1px solid var(--line)}
+  .tl-who>div{flex:1;min-width:0}
+  .tl-who span{display:block;font-size:11px;color:var(--ink-faint)}
+  .tl-who b{font-size:13.5px;font-weight:700;font-variant-numeric:tabular-nums}
+  .totalbox{background:var(--bg1);border:1.5px solid var(--line);border-radius:12px;
+            padding:14px 15px;margin:0 0 14px;text-align:left}
+  .totalbox span{display:block;font-size:13.5px;color:var(--ink-soft);line-height:1.55;
+                 text-wrap:pretty;word-break:auto-phrase}
+  .totalbox span small{display:block;font-size:11.5px;color:var(--ink-faint);margin-top:1px}
+  .totalbox b{display:block;font-size:22px;font-weight:800;margin-top:6px;
+              font-variant-numeric:tabular-nums}
+  .wallet{background:var(--bg1);border:1.5px solid var(--line);border-radius:12px;
+          padding:13px 15px;margin:0 0 14px;text-align:left}
+  .wallet table{width:100%;min-width:0;font-size:13px;margin-top:4px}
+  .wallet th,.wallet td{padding:8px 4px;border-bottom:1px solid var(--line);white-space:nowrap}
+  .wallet th{font-size:11.5px;color:var(--ink-soft)}
+  .wallet tbody tr:last-child td{border-bottom:0}
+  .wallet td:first-child,.wallet th:first-child{text-align:left;font-weight:700;font-size:13px}
+  .wallet td b{font-weight:800}
+  .wallet .drop{display:block;font-size:11px;font-weight:400;color:var(--warn)}
+  .ideas{margin-top:12px;padding:13px 15px 15px}
+  .ideas summary{padding:0;min-height:0;font-size:12.5px;color:var(--accent);font-weight:700}
+  .ideas ul{margin:10px 0 0;padding:0;list-style:none}
+  .ideas li{display:flex;gap:14px;font-size:12.5px;
+            color:var(--ink-soft);padding:5px 0;border-bottom:1px dashed var(--line)}
+  .ideas li span{flex:1;min-width:0}
+  .ideas li:last-child{border-bottom:0}
+  .ideas li b{white-space:nowrap;font-variant-numeric:tabular-nums}
+  .ideas .rest{margin:9px 0 0;font-size:12.5px;color:var(--ink);font-weight:700}
+  .pm-hint{font-size:12.5px;color:var(--ink-soft);margin:9px 0 0;padding-top:9px;
+           border-top:1px solid var(--line);text-wrap:pretty;word-break:auto-phrase}
+  .verdict .say{font-size:14.5px;color:var(--ink-soft);margin:0;
+                text-wrap:balance;word-break:auto-phrase;line-break:strict}
+  .verdict .say b{color:var(--ink)}
+  .assume{background:var(--bg1);border:1px solid var(--line);border-radius:11px;
+          padding:12px 14px;margin:16px 0 0;font-size:13px;color:var(--ink-soft);
+          text-wrap:pretty;word-break:auto-phrase}
+  .assume b{color:var(--ink)}
+
+  .breakdown{margin-top:18px;border-top:1px solid var(--line);padding-top:14px}
+  .brow{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;
+        padding:9px 0;font-size:14px}
+  .brow + .brow{border-top:1px dashed var(--line)}
+  .brow .bl{color:var(--ink-soft);display:flex;align-items:flex-start;gap:8px;
+            text-wrap:pretty;word-break:auto-phrase;line-break:strict}
+  .brow .bl small{display:block;font-size:12px;color:var(--ink-faint);line-height:1.55}
+  .brow .bv{font-weight:700;white-space:nowrap;font-variant-numeric:tabular-nums;padding-top:1px}
+  .brow.total{border-top:1.5px solid var(--line);margin-top:6px;padding-top:13px;font-size:15px}
+  .brow.total .bv{font-size:18px}
+  .pos{color:var(--good)} .neg{color:var(--warn)}
+  .tagdot{width:9px;height:9px;border-radius:50%;flex:none;margin-top:8px}
+
+  .chartwrap{overflow-x:auto;-webkit-overflow-scrolling:touch;position:relative}
+  .chart{min-width:100%;padding:0 2px}
+  .plot{position:relative;display:flex;align-items:flex-end;gap:4px;height:152px}
+  .bar{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:flex-end;height:100%}
+  .bar .seg2{width:100%;border-radius:3px 3px 0 0}
+  .bar .seg2.pay{background:var(--ink-faint);opacity:.42}
+  .bar .seg2.tea{background:var(--mama);opacity:.5}
+  .bar .seg2.benM{background:var(--mama)}
+  .bar .seg2.benP{background:var(--papa)}
+  .baseline{position:absolute;left:0;right:0;height:0;border-top:2px dashed var(--accent);
+            pointer-events:none}
+  .halfline{position:absolute;top:0;bottom:0;border-left:2px dotted var(--ink-faint);
+            pointer-events:none}
+  .halflabel{position:absolute;font-size:10.5px;color:var(--ink-faint);white-space:nowrap;
+             transform:translateX(-50%)}
+  .xaxis{display:flex;gap:4px;margin-top:6px}
+  .xaxis span{flex:1;min-width:0;text-align:center;font-size:10.5px;color:var(--ink-faint);
+              font-variant-numeric:tabular-nums}
+  .legend{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-top:14px;
+          font-size:12.5px;color:var(--ink-soft)}
+  .legend span{display:flex;align-items:center;gap:6px}
+  .legend i{width:12px;height:12px;border-radius:3px;display:block;flex:none}
+
+  .note{border-radius:13px;padding:15px 17px;margin-bottom:12px;
+        border:1.5px solid var(--line);background:var(--card)}
+  .note.warn{border-color:var(--warn);background:var(--warn-soft)}
+  .note.stop{border-color:var(--stop);background:var(--stop-soft)}
+  .note.good{border-color:var(--good);background:var(--good-soft)}
+  .note .nt{font-size:14.5px;font-weight:700;margin:0 0 6px;display:flex;gap:8px;align-items:flex-start}
+  .note .nb{font-size:13.5px;color:var(--ink-soft);margin:0;
+            text-wrap:pretty;word-break:auto-phrase;line-break:strict}
+  .note.warn .nb,.note.stop .nb,.note.good .nb{color:var(--ink)}
+  .note .nb small{font-size:12px;color:var(--ink-faint);display:block;margin-top:6px}
+
+  .steps{counter-reset:st}
+  .steps li{list-style:none;position:relative;padding:0 0 16px 38px;font-size:14px;
+            text-wrap:pretty;word-break:auto-phrase}
+  .steps li::before{counter-increment:st;content:counter(st);position:absolute;left:0;top:2px;
+    width:26px;height:26px;border-radius:50%;background:var(--accent);color:#fff;
+    font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center}
+  .steps li b{display:block;margin-bottom:2px}
+  .steps li small{color:var(--ink-faint);font-size:12.5px}
+  ul.steps{margin:0;padding:0}
+
+  details{background:var(--card);border:1px solid var(--line);border-radius:14px;
+          margin-bottom:16px;overflow:hidden}
+  summary{padding:16px 18px;font-size:14.5px;font-weight:700;cursor:pointer;list-style:none;
+          display:flex;justify-content:space-between;align-items:center;gap:10px;min-height:52px}
+  summary::-webkit-details-marker{display:none}
+  summary::after{content:"▾";color:var(--ink-faint);font-size:13px;transition:transform .2s;flex:none}
+  details[open] summary::after{transform:rotate(180deg)}
+  details .body{padding:2px 18px 20px;border-top:1px solid var(--line)}
+  details .body a{color:var(--accent)}
+
+  .tablewrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .scrollhint{font-size:12px;color:var(--ink-faint);margin:0 0 8px}
+  table{width:100%;border-collapse:collapse;font-size:13px;min-width:400px}
+  th,td{padding:10px 8px;text-align:right;border-bottom:1px solid var(--line);
+        font-variant-numeric:tabular-nums;white-space:nowrap}
+  th{font-size:12px;color:var(--ink-soft);font-weight:700;text-align:right}
+  td:first-child,th:first-child{text-align:left}
+  tbody tr:last-child td{border-bottom:0}
+  .tag{display:inline-block;font-size:11px;padding:1px 7px;border-radius:999px;
+       background:var(--papa-soft);color:var(--papa);font-weight:700;margin-left:5px}
+  .tag.m{background:var(--mama-soft);color:var(--mama)}
+
+  .foot{font-size:13px;color:var(--ink-soft);text-align:left;line-height:1.9;
+        margin-top:24px;text-wrap:pretty;word-break:auto-phrase;
+        background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px}
+  .foot b{color:var(--ink)}
+  .author{background:var(--card);border:1px solid var(--line);border-radius:14px;
+          padding:20px 18px;margin-top:16px}
+  .author h3{font-size:14.5px;margin:0 0 12px;font-weight:700}
+  .author p{font-size:13.5px;color:var(--ink-soft);margin:0 0 12px;line-height:1.85;
+            text-wrap:pretty;word-break:auto-phrase;line-break:strict}
+  .author p:last-child{margin-bottom:0}
+  .author b{color:var(--ink)}
+  h2.sec{font-size:15px;color:var(--ink);font-weight:700;margin:30px 0 12px;text-align:center}
+  #result{display:none}
+  #result.on{display:block;animation:rise .45s cubic-bezier(.2,.7,.3,1) both}
+  @keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+  .vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="hero">
+    <div class="mark" aria-hidden="true">👶</div>
+    <h1>パパが育休を取ると、<br>家のお金はどうなる？</h1>
+    <p class="lead">取った場合と取らなかった場合で、世帯の手取りがいくら変わるかを計算します。もらえない条件に当てはまっていないかも、先に確認します。</p>
+    <div class="chips">
+      <span class="chip">2026年8月1日 改定の額</span>
+      <span class="chip">登録なし・保存なし</span>
+    </div>
+  </header>
+
+  <div class="card">
+    <h2><span class="step">STEP 1</span>ふたりの月収</h2>
+    <p class="sub">育休に入る前の<b>総支給額</b>（基本給だけでなく、残業代や手当も含んだ、引かれる前の金額）。直近6か月の平均が近いです。賞与は含めません。</p>
+
+    <div class="field" style="--dot:var(--papa)">
+      <div class="flabel">
+        <label class="name" for="papaPay">パパの月収</label>
+        <span class="hint">総支給額・賞与を除く</span>
+      </div>
+      <div class="numrow">
+        <input type="number" id="papaPay" value="350000" min="0" max="2000000" step="10000" inputmode="numeric">
+        <span class="unit">円</span>
+      </div>
+      <p class="yomi" id="papaPayYomi"></p>
+      <input type="range" id="papaPayR" value="350000" min="0" max="1000000" step="10000" aria-label="パパの月収スライダー">
+      <div class="rangeends"><span>0円</span><span>100万円</span></div>
+    </div>
+
+    <div class="field" style="--dot:var(--mama)">
+      <div class="flabel">
+        <label class="name" for="mamaPay">ママの月収</label>
+        <span class="hint">育休前・総支給額</span>
+      </div>
+      <div class="numrow">
+        <input type="number" id="mamaPay" value="280000" min="0" max="2000000" step="10000" inputmode="numeric">
+        <span class="unit">円</span>
+      </div>
+      <p class="yomi" id="mamaPayYomi"></p>
+      <input type="range" id="mamaPayR" value="280000" min="0" max="1000000" step="10000" aria-label="ママの月収スライダー">
+      <div class="rangeends"><span>0円</span><span>100万円</span></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2><span class="step">STEP 2</span>もらえる条件を確認</h2>
+    <p class="sub">ここが外れていると、金額がまるごと変わります。4つだけ答えてください。</p>
+
+    <div class="field">
+      <div class="flabel"><span class="name" id="q1label">① 育休を始める前の2年間に、月11日以上働いた月が12か月以上ありますか</span></div>
+      <div class="seg three" role="group" aria-labelledby="q1label" id="q-shikaku">
+        <button type="button" data-v="yes" aria-pressed="true">ある<small>ふつうはこちら</small></button>
+        <button type="button" data-v="no" aria-pressed="false">ない<small>転職直後など</small></button>
+        <button type="button" data-v="unknown" aria-pressed="false">わからない</button>
+      </div>
+    </div>
+
+    <div class="field">
+      <div class="flabel"><span class="name" id="q2label">② 育休中、会社から給料は出ますか</span></div>
+      <div class="seg three" role="group" aria-labelledby="q2label" id="q-wage">
+        <button type="button" data-v="none" aria-pressed="true">出ない<small>いちばん多い</small></button>
+        <button type="button" data-v="part" aria-pressed="false">一部出る</button>
+        <button type="button" data-v="full" aria-pressed="false">満額出る</button>
+      </div>
+      <div id="wageAmount" style="display:none;margin-top:12px">
+        <div class="flabel"><label class="name" for="paidWage" style="font-size:13.5px">育休中に会社から出る額（月）</label></div>
+        <div class="numrow">
+          <input type="number" id="paidWage" value="50000" min="0" max="1000000" step="10000" inputmode="numeric">
+          <span class="unit">円</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="field">
+      <div class="flabel"><span class="name" id="q3label">③ パパの育休は、赤ちゃんが生まれてから8週間以内に取りますか</span></div>
+      <div class="seg" role="group" aria-labelledby="q3label" id="q-window">
+        <button type="button" data-v="in" aria-pressed="true">8週間以内に取る<small>13％の上乗せの条件</small></button>
+        <button type="button" data-v="out" aria-pressed="false">それより後に取る</button>
+      </div>
+    </div>
+
+    <div class="field">
+      <div class="flabel"><span class="name" id="q4label">④ ママの働き方は</span></div>
+      <div class="seg three" role="group" aria-labelledby="q4label" id="q-mama">
+        <button type="button" data-v="employee" aria-pressed="true">会社員・パート<small>雇用保険あり</small></button>
+        <button type="button" data-v="self" aria-pressed="false">自営・フリー</button>
+        <button type="button" data-v="none" aria-pressed="false">働いていない</button>
+      </div>
+    </div>
+  </div>
+
+  <button class="btn" id="calcBtn">結果を見る</button>
+
+  <div id="result" aria-live="polite">
+    <div id="blocker"></div>
+
+    <h2 class="sec">パパが育休を取る長さ</h2>
+    <div class="tabs" role="tablist" id="tabs">
+      <button class="tab" role="tab" data-days="14"  aria-selected="false">2週間<small>14日</small></button>
+      <button class="tab" role="tab" data-days="30"  aria-selected="false">1か月<small>30日</small></button>
+      <button class="tab" role="tab" data-days="90"  aria-selected="true">3か月<small>90日</small></button>
+      <button class="tab" role="tab" data-days="180" aria-selected="false">半年<small>180日</small></button>
+      <button class="tab" role="tab" data-days="365" aria-selected="false">1年<small>365日</small></button>
+    </div>
+
+    <div class="card">
+      <div class="verdict">
+        <p class="eyebrow" id="eyebrow"></p>
+        <p class="big" id="deltaBig">＋0円</p>
+        <div class="permonth" id="deltaPer"></div>
+        <div id="perPerson"></div>
+        <div class="totalbox" id="totalBox"></div>
+        <p class="say" id="verdictSay"></p>
+      </div>
+      <div class="assume" id="assume"></div>
+      <div class="breakdown" id="breakdown"></div>
+    </div>
+
+    <div class="card">
+      <h2>世帯の毎月の手取り</h2>
+      <p class="sub" id="chartSub"></p>
+      <div class="chartwrap"><div class="chart" id="chart"></div></div>
+      <div class="legend">
+        <span><i style="background:var(--ink-faint);opacity:.42"></i>お給料</span>
+        <span><i style="background:var(--mama);opacity:.5"></i>出産手当金</span>
+        <span><i style="background:var(--mama)"></i>ママの給付</span>
+        <span><i style="background:var(--papa)"></i>パパの給付</span>
+      </div>
+    </div>
+
+    <h2 class="sec">見落とすと家計が詰まるところ</h2>
+    <div id="pitfalls"></div>
+
+    <div class="card">
+      <h2>取ると決めたら、やること</h2>
+      <ul class="steps">
+        <li><b>会社に申し出る</b><small>産後パパ育休（出生時育児休業）は<b>開始の2週間前まで</b>、ふつうの育児休業は<b>1か月前まで</b>が原則です。ここを過ぎると希望日から取れないことがあります。</small></li>
+        <li><b>会社に確認する</b><small>「育休中に給料は出ますか」「賞与の扱いは」「社会保険料の免除の手続きはしてもらえますか」。この3つで金額が大きく変わります。</small></li>
+        <li><b>給付の申請は会社経由が原則</b><small>ハローワークへの申請は会社がまとめて行います。初回の振込までは2〜3か月かかります。</small></li>
+      </ul>
+    </div>
+
+    <details>
+      <summary>月ごとの内訳を見る</summary>
+      <div class="body">
+        <p class="scrollhint">→ 横にスクロールできます</p>
+        <div class="tablewrap"><table id="monthTable"></table></div>
+      </div>
+    </details>
+
+    <details>
+      <summary>もっと正確にする（手取り率・ママの育休日数・住民税）</summary>
+      <div class="body">
+        <div class="field">
+          <div class="flabel">
+            <label class="name" for="netRate">ふだんの手取り率</label>
+            <span class="hint">額面に対して</span>
+          </div>
+          <div class="numrow">
+            <input type="number" id="netRate" value="80" min="50" max="100" step="1" inputmode="numeric">
+            <span class="unit">％</span>
+          </div>
+          <input type="range" id="netRateR" value="80" min="50" max="100" step="1" aria-label="手取り率スライダー">
+          <p class="sub" style="margin:6px 0 0;font-size:12.5px">給与明細の「差引支給額 ÷ 総支給額」です。<b>この数字で結果が変わります</b>。わかるなら入れてください。</p>
+        </div>
+        <div class="field">
+          <div class="flabel"><label class="name" for="mamaDays">ママが休む日数（出生から）</label></div>
+          <div class="numrow">
+            <input type="number" id="mamaDays" value="365" min="0" max="730" step="1" inputmode="numeric">
+            <span class="unit">日</span>
+          </div>
+          <p class="sub" style="margin:6px 0 0;font-size:12.5px"><b>産後休業（8週間）を含めた日数</b>です。「1歳まで」なら365日。母親が取れる休業は産後休業を含めて1年が上限です。1歳を超えて延長するには保育所に入れなかったなどの条件があり、<b>申込みを忘れると延長は認められません</b>。</p>
+        </div>
+        <div class="field">
+          <div class="flabel">
+            <label class="name" for="residentTax">住民税（ふたり合計・月額）</label>
+            <span class="hint">育休中も払います</span>
+          </div>
+          <div class="numrow">
+            <input type="number" id="residentTax" value="" placeholder="自動" min="0" max="300000" step="1000" inputmode="numeric">
+            <span class="unit">円</span>
+          </div>
+          <p class="sub" style="margin:6px 0 0;font-size:12.5px">空欄なら月収から概算します（年収のおよそ4％）。</p>
+        </div>
+        <div class="field">
+          <div class="flabel"><label class="name" for="lagMonths">給付金の初回振込までの月数</label></div>
+          <div class="numrow">
+            <input type="number" id="lagMonths" value="3" min="1" max="6" step="1" inputmode="numeric">
+            <span class="unit">か月</span>
+          </div>
+        </div>
+      </div>
+    </details>
+
+    <details>
+      <summary>この計算で使っている数字と、その出どころ</summary>
+      <div class="body" id="basis"></div>
+    </details>
+
+    <div class="foot">
+      <b>この計算は概算です。</b>実際の支給額はハローワークが決定します。会社の制度・健康保険組合・自治体によっても変わります。大事な判断の前に、会社の担当部署かハローワークで確認してください。<br><br>
+      <b>賞与（ボーナス）は計算に入れていません。</b>育休中に賞与が出ない会社では、実際の減りかたはここより大きくなります。<br><br>
+      出産育児一時金（50万円）、配偶者控除、年末調整の還付も入れていません。これらは世帯にプラスに働きます。<br><br>
+      給付の上限額は毎年8月1日に改定されます。このページは<b>2026年8月1日</b>改定の額（2027年7月31日まで有効）で計算しています。
+    </div>
+
+    <section class="author">
+      <h3>このページを作った人</h3>
+      <p>育児休業を1年取った父親です。数字は厚生労働省の資料から取りましたが、手続きの窓口は会社とハローワークです。<b>まずそちらに聞いてください。</b></p>
+      <p>会社との交渉のコツは持っていません。うちは理解のある職場だったので、最後に残ったのは「自分が言い出せるかどうか」だけでした。</p>
+      <p>話せるのは、<b>取ったあとに実際どうだったか</b>です。1日がどう過ぎるのか。何がいちばんきつかったか。大人と一日誰とも話さない日が続くとどうなるか。「イクメンだね」と言われて、なぜ素直に喜べなかったか。</p>
+      <p>このページで「お金は何とかなりそうだ」と思えた人が、次に詰まるのは、たぶんそこだと思います。</p>
+    </section>
+  </div><!-- /#result -->
+</div>
+<script>
+"use strict";
+/* =========================================================
+   育休のお金 計算エンジン v2
+   制度の出典（すべて一次資料で確認済み・2026-08-23）
+   - 厚労省 令和8年8月1日から支給限度額が変更になります（LL080731保02）
+     https://www.mhlw.go.jp/content/001728499.pdf
+   - 厚労省 育児休業等給付の内容と支給申請手続 令和8年8月1日改訂（PL080801保03）
+     https://www.mhlw.go.jp/content/11600000/001461102.pdf
+   - 厚労省 出生後休業支援給付金（LL070106保03）
+   - 日本年金機構 育児休業等期間中の社会保険料免除要件の見直し
+   ※支給限度額は令和9年7月31日まで有効。毎年8月1日に改定される
+   ========================================================= */
+var C = {
+  effective: "2026年8月1日",
+  validUntil: "2027年7月31日",
+  wageMonthCap: 496200, wageMonthFloor: 96090,
+  dayCap: 16540, dayFloor: 3203,
+  r67: 0.67, r50: 0.50, r13: 0.13, r80: 0.80,
+  rate67Days: 180,
+  shienMaxDays: 28, shienMinDays: 14,
+  sangoStart: 0,          // シミュレーションの0日目は出生日の翌日
+  sangoDays: 56,          // 出生日の翌日から56日間 https://www.kyoukaikenpo.or.jp/benefit/childbirth/001/index.html
+  shienWindowDays: 56,    // 父の対象期間（出生日から8週間）
+  capIku67: 332454, capIku50: 248100, capShien: 60205, capShusseiji: 310290,
+  SHAHO: 0.141,           // 健康保険＋厚生年金の本人負担（育休中は免除される）
+  KOYOU: 0.0055,          // 雇用保険（賃金に対してかかる。免除されない）
+  shussanTeate: 2/3       // 出産手当金の給付率
+};
+
+function clamp(v,lo,hi){ return Math.min(Math.max(v,lo),hi); }
+function num(v){ return (typeof v === "number" && isFinite(v)) ? v : 0; }
+function wholeDays(v){ return Math.max(0, Math.floor(num(v))); }
+
+/* 休業開始時賃金日額 */
+function dailyWage(monthlyPay){
+  var m = num(monthlyPay);
+  if(m <= 0) return 0;
+  return clamp(Math.floor(m / 30), C.dayFloor, C.dayCap);
+}
+
+/* 育児休業給付金（通算180日まで67%、以降50%）
+   会社から賃金が支払われる場合の減額・不支給ルールを含む */
+function ikujiBenefit(daily, days, cumBefore, paidWage){
+  daily = Math.max(0, num(daily)); days = wholeDays(days); cumBefore = wholeDays(cumBefore);
+  if(daily <= 0 || days <= 0) return { amount:0, reason:null };
+  var d67 = Math.max(0, Math.min(days, C.rate67Days - cumBefore));
+  var d50 = days - d67;
+  var full = daily * d67 * C.r67 + daily * d50 * C.r50;
+  var base = daily * days;                 // 賃金日額×支給日数
+  var w = Math.max(0, num(paidWage));      // その期間に会社から支払われた賃金
+  if(w >= base * C.r80) return { amount:0, reason:"賃金80%以上" };
+  var limit = base * C.r80 - w;            // 賃金と合わせて80%が上限
+  var rateThreshold = daily * d67 * C.r13 + daily * d50 * 0.30;
+  if(w > rateThreshold) return { amount:Math.floor(Math.min(full, limit)), reason:"賃金により減額" };
+  return { amount:Math.floor(Math.min(full, limit)), reason:null };
+}
+
+/* 出生後休業支援給付金（13%・最大28日）
+   支給要件は呼び出し側で判定する */
+function shienBenefit(daily, days){
+  daily = Math.max(0, num(daily)); days = wholeDays(days);
+  if(daily <= 0 || days <= 0) return 0;
+  return Math.floor(daily * Math.min(days, C.shienMaxDays) * C.r13);
+}
+
+/* 出産手当金（産後休業中・健康保険から。標準報酬日額の2/3） */
+function shussanTeate(monthlyPay, days){
+  var m = Math.max(0, num(monthlyPay)), d = wholeDays(days);
+  if(m <= 0 || d <= 0) return 0;
+  return Math.floor((m / 30) * C.shussanTeate * d);
+}
+
+/* 給料の手取り
+   社会保険料は標準報酬月額が基礎なので、働いた日数で日割りされない。
+   免除されるのは健康保険・厚生年金だけで、雇用保険料は賃金にかかる。 */
+function netSalary(fullMonthly, gross, exempt, netRate){
+  fullMonthly = num(fullMonthly); gross = num(gross);
+  netRate = clamp(num(netRate) || 0.8, 0.5, 1);
+  if(gross <= 0) return 0;
+  var other = Math.max(0, 1 - netRate - C.SHAHO - C.KOYOU);  // 所得税・住民税など
+  var tax   = gross * other;
+  var koyou = gross * C.KOYOU;
+  var shaho = exempt ? 0 : fullMonthly * C.SHAHO;
+  return Math.max(0, Math.floor(gross - tax - koyou - shaho));
+}
+
+/* 出生後休業支援給付金の支給要件
+   父: 実子なら配偶者の取得は要件にならない（判定時点で母は産後休業中のため）
+   母: 配偶者(父)が14日以上取得、または父が例外に該当する場合 */
+function shienEligible(who, myDays, spouseDays, spouseType, inWindow, spouseInWindow){
+  myDays = wholeDays(myDays); spouseDays = wholeDays(spouseDays);
+  if(myDays < C.shienMinDays) return { ok:false, why:"自分が14日未満" };
+  if(!inWindow) return { ok:false, why:"対象期間外" };
+  if(who === "father") return { ok:true, why:null };
+  // 母の場合：配偶者(父)が対象期間内に14日以上取ったか、父が例外に該当するか
+  if(spouseType !== "employee") return { ok:true, why:null };   // 父が自営・無業など＝例外
+  if(spouseDays >= C.shienMinDays && spouseInWindow) return { ok:true, why:null };
+  if(spouseDays >= C.shienMinDays && !spouseInWindow) return { ok:false, why:"配偶者が対象期間外" };
+  return { ok:false, why:"配偶者が14日未満" };
+}
+
+/* 月額保険料の免除：月末を含むか、開始と終了翌日が同じ月内で14日以上。
+   ここでは日付入力がないため30日を1か月とした同じ規則で概算する。
+   https://www.nenkin.go.jp/section/faq/kounen/hokenryo/20140912.html */
+function insuranceExempt(leaveStart, leaveEnd, blockStart, blockEnd){
+  leaveStart = wholeDays(leaveStart); leaveEnd = wholeDays(leaveEnd);
+  if(leaveEnd <= leaveStart) return false;
+  var includesMonthEnd = leaveStart < blockEnd && leaveEnd >= blockEnd;
+  var startsAndEndsHere = leaveStart >= blockStart && leaveEnd < blockEnd &&
+                         leaveEnd - leaveStart >= 14;
+  return includesMonthEnd || startsAndEndsHere;
+}
+
+/* =========================================================
+   本体
+   時間軸の起点は「赤ちゃんが生まれた日の翌日」。1ブロック=30日。
+   ママは産後56日は産後休業（出産手当金）で、育児休業給付はその後から。
+   ========================================================= */
+function simulate(o){
+  var papaDays = clamp(wholeDays(o.papaDays), 0, 730);
+  var mamaDays = clamp(wholeDays(o.mamaDays), 0, 730);
+  var papaPay  = Math.max(0, num(o.papaPay));
+  var mamaPay  = Math.max(0, num(o.mamaPay));
+  var netRate  = clamp(num(o.netRate) || 0.8, 0.5, 1);
+  // ママが雇用保険の被保険者か。月収0なら給付も出産手当金も0円なので、
+  // 育休の当事者としては数えない（段階の区切りにも使わない）
+  var mamaWorks = o.mamaType === "employee" && mamaPay > 0;
+  var papaInWindow = o.papaInWindow !== false;    // パパが出生後8週以内に取るか
+  var paidWagePapa = Math.max(0, num(o.paidWagePapa));  // 育休中に会社から出る月額
+  var paidWageMama = Math.max(0, num(o.paidWageMama));
+
+  var pd = dailyWage(papaPay);
+  var md = mamaWorks ? dailyWage(mamaPay) : 0;
+
+  // ママの育休は産後休業のあと。パパは出生直後から
+  // mamaDays は「出生から休む日数」。産後休業8週間はこの中に含まれる。
+  // （母親が取得できる休業期間の上限1年は、産後休業期間を含んで数える）
+  var mamaSango = mamaWorks && mamaPay > 0 ? Math.min(C.sangoDays, mamaDays) : 0;
+  var mamaLeaveStart = C.sangoStart + mamaSango;   // 育児休業が始まる日
+  var mamaIkuji = Math.max(0, mamaDays - mamaSango); // 育児休業給付の対象になる日数
+
+  // minDays: 比較する2つのシナリオで期間をそろえるための下限（表示側から渡す）
+  var totalDays = Math.max(papaDays, C.sangoStart + mamaDays, 360, Math.max(0, num(o.minDays)));
+  var blocks = Math.ceil(totalDays / 30);
+
+  // 出生後休業支援給付金
+  // 13%給付には、同じ休業について育児休業給付等が支給されることも必要。
+  // https://www.mhlw.go.jp/stf/seisakunitsuite/bunya/0000158500.html
+  var papaWindowDays = Math.min(papaDays, papaInWindow ? C.shienWindowDays : 0);
+  var papaWindowBenefit = ikujiBenefit(pd, papaWindowDays, 0,
+                            paidWagePapa * papaWindowDays / 30).amount;
+  var papaQualifyingDays = papaWindowBenefit > 0 ? papaWindowDays : 0;
+  var papaShien = shienEligible("father", papaQualifyingDays, mamaDays, o.mamaType, papaInWindow);
+  var mamaShien = shienEligible("mother", mamaIkuji, papaQualifyingDays,
+                                o.papaType || "employee", true, papaInWindow);
+  var shienP = papaShien.ok ? shienBenefit(pd, papaWindowDays) : 0;
+  var shienM = (mamaShien.ok && mamaWorks) ? shienBenefit(md, mamaIkuji) : 0;
+
+  // 住民税（月額）
+  var taxP, taxM;
+  if(num(o.residentTax) > 0){
+    var s = papaPay + mamaPay;
+    taxP = s > 0 ? Math.floor(o.residentTax * papaPay / s) : 0;
+    taxM = o.residentTax - taxP;
+  }else{
+    taxP = Math.floor(papaPay * 0.04);
+    taxM = Math.floor(mamaPay * 0.04);
+  }
+
+  var rows = [], pCum = 0, mCum = 0, shienMPaid = false;
+  var sum = { salary:0, ikuji:0, shien:0, teate:0, tax:0, net:0, exempt:0 };
+  var reasons = {};
+
+  for(var b = 0; b < blocks; b++){
+    var from = b * 30, to = Math.min(from + 30, totalDays);
+    var span = to - from;                    // 最後のブロックは30日未満になることがある
+
+    var pl = clamp(papaDays - from, 0, 30);                       // パパの育休日数
+    var ms = clamp(Math.min(to, C.sangoStart + mamaSango) - Math.max(from, C.sangoStart), 0, 30);
+    var ml = clamp(Math.min(to, mamaLeaveStart + mamaIkuji) - Math.max(from, mamaLeaveStart), 0, 30);
+    if(!mamaWorks) ml = 0;
+
+    // 育児休業給付金
+    var pr = ikujiBenefit(pd, pl, pCum, paidWagePapa * pl / 30); pCum += pl;
+    var mr = ikujiBenefit(md, ml, mCum, paidWageMama * ml / 30); mCum += ml;
+    if(pr.reason) reasons[pr.reason] = true;
+    if(mr.reason) reasons[mr.reason] = true;
+    var pBen = pr.amount, mBen = mr.amount;
+    if(b === 0) pBen += shienP;
+    if(ml > 0 && !shienMPaid){ mBen += shienM; shienMPaid = true; }
+
+    // 出産手当金
+    var teate = shussanTeate(mamaPay, ms);
+
+    // 社会保険料の免除（月末ルール／同月内の14日ルール）
+    var pEx = insuranceExempt(0, papaDays, from, to);
+    // mamaDays は産後休業を含む「出生から休む日数」なので、これが休業の終わり。
+    // mamaLeaveStart(=産後休業明け)に足すと56日ぶん二重になる
+    var mEx = mamaWorks && insuranceExempt(C.sangoStart, mamaDays, from, to);
+    var pGross = papaPay * (span - pl) / 30 + paidWagePapa * pl / 30;
+    var mGross = mamaPay * (span - ml - ms) / 30 + paidWageMama * ml / 30;
+    var pSal = netSalary(papaPay, pGross, pEx, netRate);
+    var mSal = netSalary(mamaPay, mGross, mEx, netRate);
+    // 内訳には、上限0円の影響も含めた「実際に手取りへ効いた差額」を積む。
+    sum.exempt += pSal - netSalary(papaPay, pGross, false, netRate) +
+                  mSal - netSalary(mamaPay, mGross, false, netRate);
+
+    // 住民税（給料から引けないぶんを自分で払う）。財布別の表示のため個人ごとに分ける
+    var pTax = Math.floor(taxP * pl / 30);
+    var mTax = Math.floor(taxM * (ml + ms) / 30);
+    var tax = pTax + mTax;
+    var pNet = pSal + pBen - pTax;              // パパひとりの手取り
+    var mNet = mSal + mBen + teate - mTax;      // ママひとりの手取り
+
+    var net = pSal + mSal + pBen + mBen + teate - tax;
+    rows.push({ b:b+1, span:span, pl:pl, ml:ml, ms:ms, pSal:pSal, mSal:mSal,
+                pBen:pBen, mBen:mBen, teate:teate, tax:tax, net:net,
+                pNet:pNet, mNet:mNet });
+
+    sum.salary += pSal + mSal;
+    sum.ikuji += pr.amount + mr.amount;
+    sum.teate += teate; sum.tax += tax; sum.net += net;
+  }
+  sum.shien = shienP + shienM;
+  sum.shienP = shienP; sum.shienM = shienM;
+  sum.blocks = blocks; sum.days = totalDays;
+  sum.mamaSango = mamaSango; sum.mamaIkuji = mamaIkuji;
+  sum.papaShienWhy = papaShien.why; sum.mamaShienWhy = mamaShien.why;
+  sum.reasons = Object.keys(reasons);
+  sum.capped = (papaPay / 30) > C.dayCap || (mamaWorks && (mamaPay / 30) > C.dayCap);
+
+  var basePapa = netSalary(papaPay, papaPay, false, netRate);
+  var baseMama = netSalary(mamaPay, mamaPay, false, netRate);
+  return { rows:rows, sum:sum,
+           basePapa: basePapa, baseMama: baseMama,
+           baseline: basePapa + baseMama };
+}
+
+
+/* ================= 表示 ================= */
+var $ = function(id){ return document.getElementById(id); };
+function yen(n){ return isFinite(n) ? Math.round(n).toLocaleString("ja-JP") + "円" : "—"; }
+function man(n, sign){
+  if(!isFinite(n)) return "—";
+  var s = n < 0 ? "−" : (sign ? "＋" : "");
+  var a = Math.abs(Math.round(n));
+  if(a >= 10000){
+    var v = (a/10000).toFixed(1).replace(/\.0$/, "");
+    return s + v + "万円";
+  }
+  return s + a.toLocaleString("ja-JP") + "円";
+}
+function manYomi(v){
+  if(!(v > 0)) return "";
+  if(v >= 10000) return "＝ " + (v/10000).toFixed(v % 10000 === 0 ? 0 : 1) + "万円";
+  return "";
+}
+
+function avgOf(a){
+  if(!a.length) return 0;
+  var t = 0; for(var i = 0; i < a.length; i++) t += a[i];
+  return t / a.length;
+}
+
+/* 育休の期間を、実際に起きる順の3段階に分ける。
+   ① 産後休業（ママ・出産手当金）② 給付67％のあいだ ③ 給付50％になってから
+   端数の月（30日に満たないブロック）は平均が狂うので入れない。 */
+function stagesOf(rows){
+  var sango = [], r67 = [], r50 = [], pCum = 0, mCum = 0;
+  for(var i = 0; i < rows.length; i++){
+    var r = rows[i];
+    if(r.pl <= 0 && r.ml <= 0 && r.ms <= 0) continue;
+    if(r.span < 30) continue;
+    // 休みが数日しかない月は、ほぼ働いている月。段階の平均に入れると実態より高く出る
+    if(Math.max(r.pl, r.ml + r.ms) < 15){ pCum += r.pl; mCum += r.ml; continue; }
+    if(r.ms >= 15 && r.ml < 15){
+      sango.push(r);                                    // その月の大半が産後休業
+    }else{
+      // 給付率はパパ・ママそれぞれの通算日数で下がる。
+      // その月に休んでいる人のうち、まだ180日に達していない人がいれば67％の段階とする
+      var pOn = r.pl > 0, mOn = r.ml > 0;
+      var still67 = (pOn && pCum < C.rate67Days) || (mOn && mCum < C.rate67Days);
+      (still67 ? r67 : r50).push(r);
+    }
+    pCum += r.pl;
+    mCum += r.ml;
+  }
+  return { sango:sango, r67:r67, r50:r50 };
+}
+function stageStat(list, key){
+  if(!list.length) return null;
+  var t = 0;
+  for(var i = 0; i < list.length; i++) t += list[i][key];
+  return { avg: t / list.length, from: list[0].b, to: list[list.length-1].b, n: list.length };
+}
+
+/* 育休中の月を「前半（給付67％）」と「後半（50％）」に分ける。
+   who を渡すと、その人自身が50％に下がる時期で分ける（パパとママでは時期が違う）。
+   30日に満たない端数の月は、1か月として平均すると数字が狂うので除く。 */
+function splitMonths(rows, who){
+  // 世帯（who省略）のときは、長く休むほう＝給付が50％に下がるのが遅いほうを基準にする。
+  // こうしないと、先に復帰した人の給料が戻ることで「後半のほうが楽」に見えてしまう。
+  var household = !who;
+  if(household){
+    var pTotal = 0, mTotal = 0;
+    for(var k = 0; k < rows.length; k++){ pTotal += rows[k].pl; mTotal += rows[k].ml; }
+    who = pTotal > mTotal ? "p" : "m";
+  }
+  var cum = 0, first = [], second = [];
+  for(var i = 0; i < rows.length; i++){
+    var r = rows[i];
+    // 世帯なら誰かが休んでいる月、個人ならその人が休んでいる月だけを見る
+    var off = household ? (r.pl + r.ml + r.ms)
+            : who === "p" ? r.pl : (r.ml + r.ms);
+    if(off <= 0) continue;
+    if(r.span < 30) continue;                            // 端数の月は平均に入れない
+    (cum < C.rate67Days ? first : second).push(r);
+    cum += who === "p" ? r.pl : r.ml;
+  }
+  return { first: first, second: second };
+}
+
+/* ひとりずつの手取り（財布を分けている家庭向け）。
+   給付が67％の期間と50％の期間に分けて、それぞれの月の平均を出す。 */
+function walletTable(withP, days, mamaWorks){
+  function seg(who){
+    var sp = splitMonths(withP.rows, who);   // その人が50％に下がる時期で分ける
+    var key = who === "p" ? "pNet" : "mNet";
+    var a = sp.first.map(function(r){ return r[key]; });
+    var b = sp.second.map(function(r){ return r[key]; });
+    return { a:avgOf(a), b:avgOf(b), hasA:a.length > 0, hasB:b.length > 0 };
+  }
+  var P = seg("p"), M = seg("m");
+  if(!P.hasA && !M.hasA) return "";
+  var showB = P.hasB || M.hasB;
+
+  function cell(base, v, has){
+    if(!has) return '<td>—</td>';
+    var d = v - base;
+    return '<td><b>' + man(v) + '</b>' +
+      (Math.round(d) !== 0 ? '<span class="drop">' + man(d, true) + '</span>' : '') + '</td>';
+  }
+  function line(name, base, S){
+    return '<tr><td>' + name + '</td><td>' + man(base) + '</td>' +
+      cell(base, S.a, S.hasA) + (showB ? cell(base, S.b, S.hasB) : '') + '</tr>';
+  }
+  return '<div class="wallet">' +
+    '<p class="pm-label">ひとりずつの手取り（月あたり）</p>' +
+    '<div class="tablewrap"><table><thead><tr><th></th><th>ふだん</th>' +
+      '<th>' + (showB ? "育休 前半" : "育休中") + '</th>' +
+      (showB ? '<th>そのあと</th>' : '') + '</tr></thead><tbody>' +
+    line("パパ", withP.basePapa, P) +
+    (mamaWorks ? line("ママ", withP.baseMama, M) : "") +
+    '</tbody></table></div>' +
+    '<p class="pm-hint" style="border:0;padding:0;margin-top:9px">' +
+    '財布を分けているご家庭は、こちらのほうが実感に近いはずです。' +
+    (showB ? '前半は給付67％、そのあとは50％。<b>50％に下がる時期はパパとママで違う</b>ため、' +
+             'それぞれの時期で分けています（上の世帯の数字とは足し算が合いません）。' : '') +
+    '</p></div>';
+}
+
+/* 足りない分をどうつくるか。押しつけにならないよう、たたんでおく */
+var IDEAS = [
+  { n:"携帯を格安SIMに変える",        v:5000 },
+  { n:"使わないサブスクを解約",        v:2000 },
+  { n:"電気・ガスの会社を見直す",      v:2000 },
+  { n:"生命保険を見直す",              v:5000 },
+  { n:"外食を月2回減らす",             v:8000 },
+  { n:"外食をさらに月2回減らす",       v:8000 },
+  { n:"車を1台手放す（維持費）",       v:15000 }
+];
+function ideasBox(need){
+  need = Math.round(need);
+  if(need <= 0) return "";
+  var got = 0, li = [];
+  for(var i = 0; i < IDEAS.length && got < need; i++){
+    li.push('<li><span>' + IDEAS[i].n + '</span><b>−' + yen(IDEAS[i].v) + '</b></li>');
+    got += IDEAS[i].v;
+  }
+  var rest = need - got;
+  var html = '<details class="ideas"><summary>月' + man(need) + 'を、どうやってつくるか</summary><ul>' +
+    li.join("") + '</ul>';
+  if(rest > 0){
+    html += '<p class="rest">ここまでで月' + man(got) + '。' +
+      '残りの<b>' + man(rest) + '</b>は、貯金を取り崩すか、賞与でまかなうことになります。</p>';
+  }else{
+    html += '<p class="rest">ここまでで月' + man(got) + '。これで届きます。</p>';
+  }
+  html += '<p style="font-size:11.5px;color:var(--ink-faint);margin:8px 0 0">' +
+    '金額はよくある目安です。ご家庭によって変わります。</p></details>';
+  return html;
+}
+
+/* 起きる順に3段階で見せるタイムライン。
+   「いつ」「何が起きて」「毎月いくらになるか」を順に読めるようにする。 */
+function timeline(withP, mamaWorks){
+  var st = stagesOf(withP.rows);
+  var base = withP.baseline;
+  var out = [];
+
+  function block(list, opts){
+    var w = stageStat(list, "net");
+    if(!w) return "";
+    var d = w.avg - base;
+    var p = stageStat(list, "pNet"), m = stageStat(list, "mNet");
+    var span = w.from === w.to ? w.from + "か月目" : w.from + "〜" + w.to + "か月目";
+    return '<div class="tl-step' + (opts.hot ? " hot" : "") + '">' +
+      '<i class="tl-dot" style="--c:' + opts.color + '"></i>' +
+      '<div class="tl-when">' + span + '</div>' +
+      '<div class="tl-what">' + opts.title + '</div>' +
+      '<div class="tl-body" style="--bg:' + opts.bg + ';--bd:' + opts.color + '">' +
+        '<div class="tl-main"><span>毎月の平均の手取り</span>' +
+          '<div class="tl-amt"><b>' + man(w.avg) + '</b>' +
+          (Math.round(d) !== 0 ? '<small>' + man(d, true) + '</small>' : '') + '</div></div>' +
+        (opts.note ? '<p class="tl-note">' + opts.note + '</p>' : '') +
+        ((p || m) ? '<div class="tl-who">' +
+          (p ? '<div><span>パパ</span><b>' + man(p.avg) + '</b></div>' : '') +
+          (m && mamaWorks ? '<div><span>ママ</span><b>' + man(m.avg) + '</b></div>' : '') +
+        '</div>' : '') +
+      '</div></div>';
+  }
+
+  out.push(block(st.sango, {
+    color: "var(--mama)", bg: "var(--mama-soft)", title: "産後休業（ママ）",
+    note: "この間のママは出産手当金（給料のおよそ3分の2）。育児休業給付はまだ始まりません。"
+  }));
+  out.push(block(st.r67, {
+    color: "var(--papa)", bg: "var(--papa-soft)", title: "給付67％のあいだ",
+    // 通算180日は月の途中で来るので、最後の月は67％と50％が混ざる
+    note: st.r50.length
+      ? "通算180日を過ぎると50％に下がります。切り替わりは月の途中で起きるため、この期間の最後の月は両方が混ざります。"
+      : null
+  }));
+  out.push(block(st.r50, {
+    color: "var(--warn)", bg: "var(--warn-soft)", hot: true, title: "給付が50％に下がってから",
+    note: "<b>ここがいちばん厳しくなります。</b>"
+  }));
+
+  var body = out.join("");
+  if(!body) return "";
+  return '<div class="timeline">' + body + '</div>';
+}
+
+/* 「育休中、世帯の手取りは月いくらになるか」を組み立てる。
+   下の「ひとりずつの手取り」と同じ基準（ふだんの手取りとの差）にそろえてある。 */
+function timelineBox(withP, noP, days, mamaWorks){
+  var st = stagesOf(withP.rows);
+  var base = withP.baseline;
+  var body = timeline(withP, mamaWorks);
+  if(!body) return "";
+
+  var html = '<p class="pm-label">ふだんは月' + man(base) + '。育休中はこう動きます</p>' + body;
+
+  // いちばん厳しい段階（ふつうは給付50％の時期）で、埋める額を出す
+  var late = stageStat(st.r50, "net") || stageStat(st.r67, "net") || stageStat(st.sango, "net");
+  var worst = late ? late.avg - base : 0;
+
+  var delta = withP.sum.net - noP.sum.net;
+  if(Math.abs(delta) >= 100){
+    html += '<p class="pm-hint">なおこのうち、<b>パパが育休を取ったことによる変化は' +
+      man(delta, true) + '</b>（全期間の合計）です。' +
+      (delta >= 0 ? 'パパが取ったほうが世帯の手取りは増えます。'
+                  : 'ママの育休による減りは、パパが取っても取らなくても起きます。') + '</p>';
+  }
+  if(worst < 0){
+    var v = Math.abs(worst);
+    var msg = v < 10000
+      ? "サブスクや外食を少し見直せば埋まる範囲です。"
+      : v < 30000
+        ? "食費や外食の見直しで届く範囲です。固定費も一度見ておくと安心です。"
+        : "食費を削るだけでは届きにくい額です。固定費（通信・保険・住居）の見直しか、貯金からの取り崩しを前提に考えるのが現実的です。";
+    html += '<p class="pm-hint"><b>いちばん厳しい時期は1日あたり約' +
+      yen(Math.round(v / 30 / 10) * 10) + '</b>。' + msg + '</p>';
+    html += ideasBox(v);
+  }else{
+    html += '<p class="pm-hint">毎月の手取りは減りません。</p>';
+  }
+  return html;
+}
+
+var papaDays = 90;
+var ans = { shikaku:"yes", wage:"none", window:"in", mama:"employee" };
+
+function readOpts(){
+  var mamaType = ans.mama;
+  var paid = ans.wage === "full" ? Math.max(+$("papaPay").value || 0, 0)
+           : ans.wage === "part" ? Math.max(+$("paidWage").value || 0, 0) : 0;
+  var rt = $("residentTax").value === "" ? 0 : Math.max(0, +$("residentTax").value || 0);
+  return {
+    papaPay: Math.max(0, +$("papaPay").value || 0),
+    mamaPay: Math.max(0, +$("mamaPay").value || 0),
+    netRate: Math.min(Math.max((+$("netRate").value || 80)/100, 0.5), 1),
+    mamaDays: Math.min(Math.max(+$("mamaDays").value || 0, 0), 730),
+    mamaType: mamaType,
+    papaType: "employee",
+    papaInWindow: ans.window === "in",
+    paidWagePapa: paid,
+    paidWageMama: 0,
+    residentTax: rt,
+    lagMonths: Math.min(Math.max(+$("lagMonths").value || 3, 1), 6)
+  };
+}
+
+function render(){
+  var o = readOpts();
+  var showMoney = ans.shikaku !== "no";
+  var valid = o.papaPay >= 50000;
+
+  /* --- 入口のブロック --- */
+  var bl = [];
+  if(ans.shikaku === "no"){
+    bl.push('<div class="note stop"><p class="nt">⛔ このままだと、給付金は出ません</p>' +
+      '<p class="nb">育児休業給付金には「育休を始める前の2年間に、月11日以上働いた月が12か月以上」という条件があります。' +
+      'ここを満たしていないと<b>1円も支給されません</b>。<br>' +
+      'ただし、前の会社の期間が通算できる場合や、病気・出産で働けなかった期間を除いて数える特例もあります。' +
+      '<b>自己判断せず、ハローワークで確認してください。</b>金額の計算はここでは出しません。</p></div>');
+  }else if(ans.shikaku === "unknown"){
+    bl.push('<div class="note warn"><p class="nt">⚠️ まず受給資格を確かめてください</p>' +
+      '<p class="nb">「育休を始める前の2年間に、月11日以上働いた月が12か月以上」が条件です。' +
+      '転職して1年たっていない方は要注意です。以下の金額は<b>条件を満たしている前提</b>の概算です。</p></div>');
+  }
+  if(!valid && showMoney){
+    bl.push('<div class="note warn"><p class="nt">パパの月収を入れてください</p>' +
+      '<p class="nb">5万円以上の金額を入れると計算します。</p></div>');
+  }
+  $("blocker").innerHTML = bl.join("");
+  ["tabs","chartSub"].forEach(function(){});
+  var hide = !showMoney || !valid;
+  [].forEach.call(document.querySelectorAll("#result > *:not(#blocker)"), function(el){
+    el.style.display = hide ? "none" : "";
+  });
+  if(hide) return;
+
+  // 取る場合と取らない場合を、必ず同じ期間で比べる
+  var span  = Math.max(papaDays, o.mamaDays, 360);
+  var withP = simulate(Object.assign({}, o, { papaDays: papaDays, minDays: span }));
+  var noP   = simulate(Object.assign({}, o, { papaDays: 0,        minDays: span }));
+  var delta = withP.sum.net - noP.sum.net;
+  var months = withP.sum.blocks, days = withP.sum.days;
+
+  /* --- 結論 --- */
+  $("eyebrow").innerHTML = "育休のあいだ、世帯の<b>毎月の平均の手取り</b>は<br>ふだんより";
+  if(papaDays === 0){
+    var ref = simulate(Object.assign({}, o, { papaDays: 14 }));
+    $("deltaBig").textContent = man(noP.sum.net);
+    $("deltaBig").className = "big";
+    $("eyebrow").innerHTML = "パパが取らない場合の<br>世帯の手取り（" + months + "か月の合計）";
+    $("deltaPer").innerHTML = '<div class="pm-single"><span>いまの毎月の手取り</span>' +
+      '<b>' + yen(noP.sum.net / months) + '</b></div>' +
+      '<p class="pm-hint">' + months + 'か月をならした平均です。' +
+      'ママの育休で、ふだんより下がっています。</p>';
+    $("perPerson").innerHTML = walletTable(noP, 0, o.mamaType === "employee");
+    $("totalBox").innerHTML = "";
+    $("verdictSay").innerHTML = "2週間だけ取ると、この合計は<b>" +
+      man(ref.sum.net - noP.sum.net, true) + "</b>になります。上のタブで見くらべてください。";
+  }else{
+    var normal = withP.baseline * (days / 30);        // ふだんどおり働いた場合の同期間の手取り
+    var lose = withP.sum.net - normal;
+    // 最初の結論は「月あたり」。育休中の月をならした平均で出す
+    var sp0 = splitMonths(withP.rows);
+    var allM = sp0.first.concat(sp0.second);
+    var avgNet = avgOf(allM.map(function(r){ return r.net; }));
+    var monthly = avgNet - withP.baseline;
+    $("deltaBig").textContent = man(monthly, true);
+    $("deltaBig").className = "big " + (monthly >= 0 ? "up" : "down");
+    // 合計はいちばん最後に置く
+    $("totalBox").innerHTML =
+      '<span>赤ちゃんが生まれてから' + days + '日の合計では' +
+      '<small>ふだんどおり働いた場合とくらべて</small></span>' +
+      '<b class="' + (lose >= 0 ? "pos" : "neg") + '">' + man(lose, true) + '</b>';
+    $("deltaPer").innerHTML = timelineBox(withP, noP, papaDays, o.mamaType === "employee");
+    $("perPerson").innerHTML = "";   // ひとりずつはタイムラインの各段階に入っている
+    $("verdictSay").innerHTML = "この減りの<b>大半はママの育休によるもの</b>です。" +
+      "パパが" + papaDays + "日取ったことによる変化は、このうち<b>" + man(delta, true) + "</b>です。";
+  }
+
+  /* --- 前提 --- */
+  var mamaLabel = { employee:"会社員・パート", self:"自営・フリーランス", none:"働いていない" }[ans.mama];
+  var wageLabel = { none:"出ない", part:"一部出る（月" + yen(o.paidWagePapa) + "）", full:"満額出る" }[ans.wage];
+  $("assume").innerHTML = "<b>この結果の前提</b><br>" +
+    "ママは出生から<b>" + o.mamaDays + "日</b>休む" +
+    (withP.sum.mamaSango > 0
+      ? "（うち最初の<b>" + withP.sum.mamaSango + "日</b>は産後休業。育児休業は<b>" +
+        withP.sum.mamaIkuji + "日</b>）" : "") + "／ママは<b>" + mamaLabel + "</b>／" +
+    "育休中に会社から出る給料は<b>" + wageLabel + "</b>／パパは生まれてから<b>" +
+    (o.papaInWindow ? "8週間以内" : "8週間より後") + "</b>に取る／手取り率<b>" +
+    Math.round(o.netRate*100) + "％</b>";
+
+  /* --- 内訳 --- */
+  var exemptDiff = withP.sum.exempt - noP.sum.exempt;
+  var salDiff    = withP.sum.salary - noP.sum.salary;
+  var pureSal    = salDiff - exemptDiff;
+  var ikujiDiff  = withP.sum.ikuji - noP.sum.ikuji;
+  var taxDiff    = withP.sum.tax - noP.sum.tax;
+
+  function row(label, note, val, dot, cls){
+    return '<div class="brow"><span class="bl">' +
+      (dot ? '<i class="tagdot" style="background:' + dot + '"></i>' : '') +
+      '<span>' + label + (note ? '<small>' + note + '</small>' : '') + '</span></span>' +
+      '<span class="bv ' + (cls || "") + '">' + man(val, true) + '</span></div>';
+  }
+  var b = [];
+  if(papaDays > 0){
+    b.push(row("パパの育児休業給付金", papaDays + "日ぶん（休む前の給料の67％。180日を過ぎた分は50％）",
+               ikujiDiff, "var(--papa)", ikujiDiff >= 0 ? "pos" : "neg"));
+    if(withP.sum.shienP > 0){
+      b.push(row("パパの出生後休業支援給付金",
+                 "13％の上乗せ。" + Math.min(papaDays, 28) + "日ぶん（上限28日）",
+                 withP.sum.shienP, "var(--papa)", "pos"));
+    }
+    var shienMDiff = withP.sum.shienM - noP.sum.shienM;
+    if(shienMDiff > 0){
+      b.push(row("ママの出生後休業支援給付金",
+                 "パパが14日以上取ったことで、ママの分も出るようになった額",
+                 shienMDiff, "var(--mama)", "pos"));
+    }
+    if(exemptDiff !== 0){
+      b.push(row("社会保険料の免除（概算）", "月末ルールと同月内14日ルールを、30日単位の期間に当てはめた概算です",
+                 exemptDiff, "", "pos"));
+    }
+    b.push(row("休んだぶんのお給料", "免除ぶんは上の行に分けています",
+               pureSal, "", pureSal >= 0 ? "pos" : "neg"));
+    if(taxDiff !== 0){
+      b.push(row("住民税", "給料から引けないぶんを自分で払う", -taxDiff, "", "neg"));
+    }
+    b.push('<div class="brow total"><span class="bl"><span>世帯の手取りの変化</span></span>' +
+           '<span class="bv ' + (delta >= 0 ? "pos" : "neg") + '">' + man(delta, true) + '</span></div>');
+  }else{
+    var lost = simulate(Object.assign({}, o, { papaDays: 14 }));
+    b.push(row("受け取れない出生後休業支援給付金",
+               "パパが14日取れば、パパの分は必ず出ます（ママの取得は関係ありません）",
+               -(lost.sum.shien), "", "neg"));
+    b.push('<div class="brow total"><span class="bl"><span>いまの選択</span></span>' +
+           '<span class="bv">パパは取らない</span></div>');
+  }
+  $("breakdown").innerHTML = b.join("");
+
+  /* --- グラフ --- */
+  $("chartSub").innerHTML = "点線は、ふたりとも働き続けた場合の毎月の手取りです。" +
+    "<b>ママが育休を取るので、パパが取っても取らなくても、この線には届きません。</b>" +
+    "パパの取得で変わるのは青い部分だけです。";
+  var maxV = withP.baseline;
+  withP.rows.forEach(function(r){ maxV = Math.max(maxV, r.net); });
+  maxV = (maxV * 1.08) || 1;
+  var bars = withP.rows.map(function(r){
+    var gross = r.pSal + r.mSal + r.pBen + r.mBen + r.teate;
+    var k = gross > 0 ? r.net / gross : 0;
+    var h = function(v){ return (v * k / maxV) * 100; };
+    return '<div class="bar" title="' + r.b + 'か月目 手取り ' + yen(r.net) + '">' +
+      '<div class="seg2 benP" style="height:' + h(r.pBen) + '%"></div>' +
+      '<div class="seg2 benM" style="height:' + h(r.mBen) + '%"></div>' +
+      '<div class="seg2 tea"  style="height:' + h(r.teate) + '%"></div>' +
+      '<div class="seg2 pay"  style="height:' + h(r.pSal + r.mSal) + '%"></div></div>';
+  }).join("");
+  var labels = withP.rows.map(function(r){ return '<span>' + r.b + '</span>'; }).join("");
+  var baseH = (withP.baseline / maxV) * 100;
+  // 67%→50%に落ちる位置（ママの育休の通算180日目）
+  var halfBlock = o.mamaDays > 180 && o.mamaType === "employee"
+                ? (C.sangoStart + C.sangoDays + 180) / 30 : 0;
+  var halfMark = halfBlock > 0 && halfBlock < withP.sum.blocks
+    ? '<div class="halfline" style="left:' + (halfBlock / withP.sum.blocks * 100) + '%"></div>' : "";
+  $("chart").innerHTML =
+    '<div class="plot" role="img" aria-label="' +
+      withP.rows.map(function(r){ return r.b + "か月目" + Math.round(r.net/10000) + "万円"; }).join("、") +
+    '">' + bars + halfMark +
+    '<div class="baseline" style="bottom:calc(' + baseH + '% - 1px)"></div></div>' +
+    '<div class="xaxis">' + labels + '</div>' +
+    (halfBlock > 0 && halfBlock < withP.sum.blocks
+      ? '<p class="scrollhint" style="margin-top:8px">点線の縦線＝ここから給付が67％→50％に下がります（通算180日）</p>' : "");
+
+  /* --- 落とし穴 --- */
+  var lagTotal = 0;
+  for(var i = 0; i < Math.min(o.lagMonths, withP.rows.length); i++){
+    lagTotal += withP.rows[i].pBen + withP.rows[i].mBen;
+  }
+  var taxMonthly = o.residentTax > 0 ? o.residentTax
+                 : Math.floor(o.papaPay * 0.04) + Math.floor(o.mamaPay * 0.04);
+  var p = [];
+
+  if(ans.wage === "full"){
+    p.push('<div class="note stop"><p class="nt">⛔ 給料が満額出ると、給付金は0円です</p>' +
+      '<p class="nb">育休中に「賃金日額×休業日数の80％以上」の給料が支払われると、育児休業給付金も13％の上乗せも' +
+      '<b>まったく支給されません</b>。上の金額は、給付金なしで社会保険料の免除だけを受けた場合の数字です。' +
+      '<small>会社の制度がこの形なら、手取りはむしろ増えます。ただし賞与の扱いは別途確認してください。</small></p></div>');
+  }else if(ans.wage === "part" && withP.sum.reasons.indexOf("賃金により減額") >= 0){
+    p.push('<div class="note warn"><p class="nt">⚠️ 会社から給料が出るぶん、給付金が減っています</p>' +
+      '<p class="nb">育休中の給料が「賃金日額×休業日数」の13％（通算181日目以降は30％）を超えると、給付金は' +
+      '<b>「80％－会社からの給料」</b>まで減らされます。80％以上になると全額が出ません。' +
+      '上の金額はこの減額を反映しています。</p></div>');
+  }
+
+  p.push('<div class="note warn"><p class="nt">⚠️ 育休中に働く予定がある方へ</p>' +
+    '<p class="nb">この計算は、育休中の<b>就業日数・時間を入力できません</b>。支給単位期間ごとに、就業が原則10日を超え、かつ80時間を超えると、その期間の育児休業給付金は支給されません。' +
+    '働く予定がある場合は、この表示額を使わず会社かハローワークに確認してください。' +
+    '<small>出典：<a href="https://www.mhlw.go.jp/content/11600000/001461102.pdf" target="_blank" rel="noopener">厚生労働省「育児休業等給付の内容と支給申請手続」</a></small></p></div>');
+
+  p.push('<div class="note"><p class="nt">📅 社会保険料の免除額は概算です</p>' +
+    '<p class="nb">実際は暦月で、<b>月末に育休中</b>ならその月が免除されます。同じ月内で始まり終わる休業は、14日以上なら免除です。' +
+    'このページは日付を入力しないため、30日を1か月として同じ規則を当てはめています。開始日によって実額とずれることがあります。</p></div>');
+
+  p.push('<div class="note warn"><p class="nt">💸 給付金は、すぐには振り込まれません</p>' +
+    '<p class="nb">申請から初回の振込まで、ふつう2〜3か月かかります。この間<b>給付金の入金はありません</b>' +
+    '（お給料が出ている月は、お給料は通常どおり入ります）。<br>' +
+    '最初の' + o.lagMonths + 'か月ぶんにあたる<b>' + yen(lagTotal) + '</b>が後からまとめて届きます。' +
+    '<small>そのあとも、給付は原則2か月にいちど、2か月ぶんまとめての振込です。毎月入るわけではありません。</small></p></div>');
+
+  p.push('<div class="note"><p class="nt">🏛 住民税だけは、育休中も請求が来ます</p>' +
+    '<p class="nb">給付金そのものは非課税です。でも住民税は<b>前の年の所得</b>にかかるので、' +
+    '収入が減っている育休中にも支払いが続きます。世帯でおよそ<b>月' + yen(taxMonthly) + '</b>。' +
+    '給料から引けないぶんは、自分で納めるか会社に振り込むことになります。</p></div>');
+
+  if(papaDays > 0 && papaDays < C.shienMinDays){
+    p.push('<div class="note warn"><p class="nt">⚠️ あと' + (C.shienMinDays - papaDays) + '日で、13％の上乗せが付きます</p>' +
+      '<p class="nb">出生後休業支援給付金は<b>14日以上</b>取らないと出ません。' +
+      'しかもパパが14日取らないと、<b>ママの分も出ません</b>。</p></div>');
+  }
+  if(!o.papaInWindow && papaDays > 0){
+    p.push('<div class="note warn"><p class="nt">⚠️ 8週間を過ぎると、13％の上乗せは付きません</p>' +
+      '<p class="nb">出生後休業支援給付金には期限があります。パパは<b>赤ちゃんが生まれてから8週間以内</b>に' +
+      '14日以上取ることが条件です。この期間を外すと、<b>パパの分もママの分も</b>受け取れません。' +
+      '同じ14日でも、取る時期で数万円変わります。</p></div>');
+  }
+  if(withP.sum.capped){
+    p.push('<div class="note"><p class="nt">📌 給付には上限があります</p>' +
+      '<p class="nb">月収が<b>' + yen(C.wageMonthCap) + '</b>を超える分は、給付の計算に入りません' +
+      '（賃金日額の上限は' + yen(C.dayCap) + '）。収入が高い人ほど、休んだときの減りは大きくなります。</p></div>');
+  }
+  $("pitfalls").innerHTML = p.join("");
+
+  /* --- 月別テーブル --- */
+  var t = ['<thead><tr><th>月</th><th>お給料</th><th>給付・手当</th><th>住民税</th><th>手取り</th></tr></thead><tbody>'];
+  withP.rows.forEach(function(r){
+    var mark = (r.pl > 0 ? '<span class="tag">パパ育休' + r.pl + '日</span>' : '') +
+               (r.ms > 0 ? '<span class="tag m">ママ産休' + r.ms + '日</span>' : '');
+    t.push('<tr><td>' + r.b + 'か月目' + mark + '</td>' +
+      '<td>' + yen(r.pSal + r.mSal) + '</td>' +
+      '<td>' + yen(r.pBen + r.mBen + r.teate) + '</td>' +
+      '<td>−' + yen(r.tax) + '</td>' +
+      '<td><b>' + yen(r.net) + '</b></td></tr>');
+  });
+  t.push('</tbody>');
+  $("monthTable").innerHTML = t.join("");
+
+  /* --- 根拠 --- */
+  $("basis").innerHTML =
+    '<p style="font-size:13px;color:var(--ink-soft);margin:0 0 12px">' +
+    C.effective + '改定の額です（' + C.validUntil + 'まで有効。毎年8月1日に変わります）。</p>' +
+    '<div class="tablewrap"><table><tbody>' +
+    '<tr><td>休業開始時賃金月額の上限<small style="display:block;color:var(--ink-faint);font-size:11.5px">休む前6か月の給料の平均</small></td><td>' + yen(C.wageMonthCap) + '</td></tr>' +
+    '<tr><td>同 下限</td><td>' + yen(C.wageMonthFloor) + '</td></tr>' +
+    '<tr><td>育児休業給付金（通算180日目まで）</td><td>67％</td></tr>' +
+    '<tr><td>同（181日目から）</td><td>50％</td></tr>' +
+    '<tr><td>育児休業給付金の上限（67％）</td><td>' + yen(C.capIku67) + '</td></tr>' +
+    '<tr><td>同（50％）</td><td>' + yen(C.capIku50) + '</td></tr>' +
+    '<tr><td>出生後休業支援給付金<small style="display:block;color:var(--ink-faint);font-size:11.5px">14日以上休んだときの上乗せ</small></td><td>13％・最大28日</td></tr>' +
+    '<tr><td>同 上限</td><td>' + yen(C.capShien) + '</td></tr>' +
+    '<tr><td>出産手当金（産後8週間）</td><td>3分の2</td></tr>' +
+    '<tr><td>あなたの賃金日額（パパ）</td><td>' + yen(dailyWage(o.papaPay)) + '</td></tr>' +
+    '<tr><td>同（ママ）</td><td>' + yen(o.mamaType === "employee" ? dailyWage(o.mamaPay) : 0) + '</td></tr>' +
+    '</tbody></table></div>' +
+    '<p style="font-size:12.5px;margin:14px 0 0;color:var(--ink-soft)">出典：' +
+    '<a href="https://www.mhlw.go.jp/content/001728499.pdf" target="_blank" rel="noopener">厚生労働省 令和8年8月1日から支給限度額が変更になります</a>／' +
+    '<a href="https://www.mhlw.go.jp/content/11600000/001461102.pdf" target="_blank" rel="noopener">同 育児休業等給付の内容と支給申請手続</a>／' +
+    '<a href="https://www.nenkin.go.jp/oshirase/topics/2022/0729.files/ikukyu-chirashi.pdf" target="_blank" rel="noopener">日本年金機構 育児休業等期間中の社会保険料免除</a><br><br>' +
+    '社会保険料の本人負担は、健康保険と厚生年金をあわせて概算' + (C.SHAHO*100).toFixed(1) + '％（育休中は免除）、' +
+    '雇用保険を' + (C.KOYOU*100).toFixed(2) + '％（免除されません）として計算しています。' +
+    '1か月を30日として数えているため、実際の暦月とは少しずれます。</p>';
+}
+
+/* ================= 入力の同期 ================= */
+function syncYomi(){
+  $("papaPayYomi").textContent = manYomi(+$("papaPay").value);
+  $("mamaPayYomi").textContent = manYomi(+$("mamaPay").value);
+}
+var shown = false;
+var timer = null;
+function reRender(){
+  syncYomi();
+  if(!shown) return;
+  clearTimeout(timer);
+  timer = setTimeout(render, 250);
+}
+function link(numId, rangeId){
+  var n = $(numId), r = $(rangeId);
+  n.addEventListener("input", function(){
+    var v = Math.min(Math.max(+n.value || 0, +r.min), +r.max);
+    r.value = v;
+    reRender();
+  });
+  r.addEventListener("input", function(){ n.value = r.value; reRender(); });
+}
+link("papaPay","papaPayR"); link("mamaPay","mamaPayR"); link("netRate","netRateR");
+["mamaDays","residentTax","lagMonths","paidWage"].forEach(function(id){
+  $(id).addEventListener("input", reRender);
+});
+
+function segGroup(id, key, after){
+  $(id).addEventListener("click", function(e){
+    var btn = e.target.closest("button"); if(!btn) return;
+    ans[key] = btn.dataset.v;
+    [].forEach.call(this.querySelectorAll("button"), function(x){
+      x.setAttribute("aria-pressed", String(x === btn));
+    });
+    if(after) after();
+    // ボタンの選択は待たせずすぐ反映する（数値入力だけデバウンスする）
+    syncYomi();
+    if(shown){ clearTimeout(timer); render(); }
+  });
+}
+segGroup("q-shikaku","shikaku");
+segGroup("q-wage","wage", function(){
+  $("wageAmount").style.display = ans.wage === "part" ? "" : "none";
+});
+segGroup("q-window","window");
+segGroup("q-mama","mama");
+
+var tabs = $("tabs");
+tabs.addEventListener("click", function(e){
+  var t = e.target.closest(".tab"); if(!t) return;
+  selectTab(t);
+});
+tabs.addEventListener("keydown", function(e){
+  if(e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
+  var list = [].slice.call(tabs.querySelectorAll(".tab"));
+  var cur = list.indexOf(document.activeElement);
+  if(cur < 0) return;
+  e.preventDefault();
+  var next = list[(cur + (e.key === "ArrowRight" ? 1 : list.length - 1)) % list.length];
+  next.focus(); selectTab(next);
+});
+function selectTab(t){
+  papaDays = +t.dataset.days;
+  [].forEach.call(tabs.querySelectorAll(".tab"), function(x){
+    x.setAttribute("aria-selected", String(x === t));
+    x.tabIndex = x === t ? 0 : -1;
+  });
+  render();
+}
+[].forEach.call(tabs.querySelectorAll(".tab"), function(x){
+  x.tabIndex = x.getAttribute("aria-selected") === "true" ? 0 : -1;
+});
+
+$("calcBtn").addEventListener("click", function(){
+  shown = true;
+  render();
+  var r = $("result");
+  r.classList.add("on");
+  this.textContent = "計算しなおす";
+  setTimeout(function(){ r.scrollIntoView({ behavior:"smooth", block:"start" }); }, 60);
+});
+syncYomi();
+
+/* ---------- 自己検算 ---------- */
+window.__selftest = function(){
+  var out = [], ok = true;
+  function eq(name, got, want){
+    var pass = got === want; if(!pass) ok = false;
+    out.push((pass ? "OK  " : "NG  ") + name + " => " + got + " (期待 " + want + ")");
+  }
+  var d = dailyWage(600000);
+  eq("賃金日額の上限", d, C.dayCap);
+  eq("育休給付30日67%", ikujiBenefit(d,30,0,0).amount, C.capIku67);
+  eq("育休給付30日50%", ikujiBenefit(d,30,180,0).amount, C.capIku50);
+  eq("支援給付28日13%", shienBenefit(d,28), C.capShien);
+  eq("賃金80%以上で不支給", ikujiBenefit(d,30,0,d*30*0.8).amount, 0);
+  eq("67%期は賃金13%ちょうどなら満額", ikujiBenefit(10000,30,0,39000).amount, 201000);
+  eq("50%期は賃金30%ちょうどなら満額", ikujiBenefit(10000,30,180,90000).amount, 150000);
+  eq("180日をまたぐ2日", ikujiBenefit(10000,2,179,0).amount, 11700);
+  eq("日数の小数は切り捨て", ikujiBenefit(10000,14.9,0,0).amount, 93800);
+  eq("負の日数は0", shienBenefit(10000,-1), 0);
+  eq("月収0なら給付なし", dailyWage(0), 0);
+  eq("手取りが額面を超えない", netSalary(350000,350000,true,1) <= 350000, true);
+  var o = { papaPay:350000, mamaPay:280000, netRate:0.8, mamaDays:365,
+            mamaType:"employee", papaType:"employee", papaInWindow:true,
+            paidWagePapa:0, paidWageMama:0, residentTax:0 };
+  eq("パパの13%はママの日数に依存しない",
+     simulate(Object.assign({},o,{papaDays:14,mamaDays:0})).sum.shienP,
+     simulate(Object.assign({},o,{papaDays:14,mamaDays:365})).sum.shienP);
+  eq("8週を外すと13%が消える",
+     simulate(Object.assign({},o,{papaDays:14,papaInWindow:false})).sum.shien, 0);
+  eq("満額賃金なら父母の13%が消える",
+     simulate(Object.assign({},o,{papaDays:14,paidWagePapa:350000})).sum.shien, 0);
+  var b365 = simulate(Object.assign({},o,{papaDays:0,mamaDays:365}));
+  eq("産後休業は56日", b365.sum.mamaSango, 56);
+  eq("育児休業は残りの309日", b365.sum.mamaIkuji, 309);
+  eq("産休と育休の合計が入力どおり", b365.sum.mamaSango + b365.sum.mamaIkuji, 365);
+  var b30 = simulate(Object.assign({},o,{papaDays:0,mamaDays:30}));
+  eq("30日なら産後休業だけ", b30.sum.mamaIkuji, 0);
+  var a = simulate(Object.assign({},o,{papaDays:14}));
+  var z = simulate(Object.assign({},o,{papaDays:0}));
+  eq("内訳の差分合計", (a.sum.salary-z.sum.salary) + (a.sum.ikuji-z.sum.ikuji) +
+     (a.sum.shien-z.sum.shien) - (a.sum.tax-z.sum.tax), a.sum.net-z.sum.net);
+  console.log(out.join("\n"));
+  console.log(ok ? "すべて一致しました" : "ずれています");
+  return ok;
+};
+</script>
+</body>
+</html>

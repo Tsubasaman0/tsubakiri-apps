@@ -1,0 +1,831 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>幸せの価値観診断</title>
+<meta name="description" content="18の質問で、あなたの心がふだん引き受けている役目が「心の職業」としてわかる診断です。「向いてる仕事」を判定するものではありません。">
+<style>
+  :root{
+    --bg1:#FBF7F1; --bg2:#F3EFF7;
+    --card:#FFFFFF; --ink:#2F2A26; --ink-soft:#6E655D; --ink-faint:#A79C92;
+    --line:#EAE2D8; --accent:#C9714A; --accent-soft:#F6EAE3;
+    --ax-ach:#D9764A; --ax-con:#D4809A; --ax-fre:#5F9CC0;
+    --ax-gro:#77A85F; --ax-ctr:#C39544; --ax-sta:#8A82C0;
+    --shadow:0 10px 30px rgba(60,45,35,.08), 0 2px 6px rgba(60,45,35,.04);
+  }
+  /* OSがダーク（明示的にライトを選ばれていないとき） */
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg1:#1C1A18; --bg2:#211E25;
+      --card:#26232A; --ink:#F0EBE4; --ink-soft:#B5ABA1; --ink-faint:#7C726A;
+      --line:#3A353F; --accent:#E5906B; --accent-soft:#3A2E29;
+      --shadow:0 10px 30px rgba(0,0,0,.35), 0 2px 6px rgba(0,0,0,.2);
+    }
+  }
+  /* 閲覧側でダークを明示的に選んだとき */
+  :root[data-theme="dark"]{
+      --bg1:#1C1A18; --bg2:#211E25;
+      --card:#26232A; --ink:#F0EBE4; --ink-soft:#B5ABA1; --ink-faint:#7C726A;
+      --line:#3A353F; --accent:#E5906B; --accent-soft:#3A2E29;
+      --shadow:0 10px 30px rgba(0,0,0,.35), 0 2px 6px rgba(0,0,0,.2);
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0}
+  body{
+    font-family:system-ui,-apple-system,"Hiragino Sans","Noto Sans JP",sans-serif;
+    background:linear-gradient(165deg,var(--bg1) 0%,var(--bg2) 100%);
+    background-attachment:fixed;
+    color:var(--ink); line-height:1.75;
+    -webkit-font-smoothing:antialiased;
+    padding:env(safe-area-inset-top) 0 calc(32px + env(safe-area-inset-bottom));
+  }
+  .wrap{max-width:560px;margin:0 auto;padding:0 20px}
+  .screen{display:none;animation:rise .45s cubic-bezier(.2,.7,.3,1) both}
+  .screen.on{display:block}
+  @keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+  @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+  /* ---- intro ---- */
+  .hero{text-align:center;padding:56px 0 8px}
+  .hero .mark{font-size:40px;line-height:1;margin-bottom:18px}
+  h1{font-size:27px;line-height:1.45;margin:0 0 14px;letter-spacing:.01em;font-weight:700;
+    text-wrap:balance;word-break:auto-phrase;line-break:strict}
+  .lead{color:var(--ink-soft);font-size:15px;margin:0 auto 30px;max-width:22em;
+    text-align:center;text-wrap:balance;word-break:auto-phrase;line-break:strict}
+  .meta{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-bottom:32px}
+  .chip{font-size:12.5px;color:var(--ink-soft);background:var(--card);
+    border:1px solid var(--line);border-radius:999px;padding:6px 14px}
+  .action-teaser{text-align:center;font-size:13.5px;font-weight:600;color:var(--accent);
+    margin:0 0 20px;text-wrap:balance;word-break:auto-phrase;line-break:strict}
+  /* ---- 幸せの定義(マニフェスト) ---- */
+  .manifesto{text-align:center;margin:6px 0 34px}
+  .manifesto .eyebrow{font-size:12px;letter-spacing:.1em;color:var(--accent);
+    font-weight:700;margin-bottom:14px}
+  .manifesto .statement{font-size:23px;line-height:1.55;font-weight:700;color:var(--ink);
+    margin:0;text-wrap:balance;word-break:auto-phrase;line-break:strict}
+
+  /* ---- Before/After対比カード ---- */
+  .contrast{margin:26px 0 30px}
+  .c-row{border-radius:12px;padding:14px 18px;border:1.5px solid var(--line);background:var(--card)}
+  .c-label{font-size:11.5px;letter-spacing:.06em;color:var(--ink-faint);margin:0 0 4px;font-weight:700}
+  .c-line{margin:0;font-size:14px;color:var(--ink-soft);
+    text-wrap:pretty;word-break:auto-phrase;line-break:strict}
+  .c-arrow{text-align:center;color:var(--ink-faint);padding:6px 0;line-height:1;font-size:15px}
+  .c-after{border-color:var(--accent);background:var(--accent-soft)}
+  .c-after .c-label{color:var(--accent)}
+  .c-after .c-line{color:var(--ink);font-weight:600}
+
+  /* ---- 6つの入り口(名前だけ。定義は結果画面まで見せない) ---- */
+  .axes-lead{font-size:13px;color:var(--ink-faint);margin:0 0 12px;text-align:center}
+  .axes-peek{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin:0 0 30px}
+  .axtag{display:inline-flex;align-items:center;gap:7px;font-size:13px;font-weight:600;
+    color:var(--ink);background:var(--card);border:1px solid var(--line);
+    border-radius:999px;padding:7px 14px 7px 11px}
+  .axtag::before{content:"";display:block;width:8px;height:8px;border-radius:50%;
+    background:var(--c);flex:none}
+
+  /* ---- buttons ---- */
+  .btn{display:block;width:100%;border:0;border-radius:14px;padding:17px 20px;
+    font:inherit;font-size:16.5px;font-weight:600;cursor:pointer;
+    background:var(--accent);color:#fff;box-shadow:var(--shadow);
+    transition:transform .12s ease, opacity .12s ease}
+  .btn:active{transform:scale(.98)}
+  .btn.ghost{background:var(--card);color:var(--ink);border:1px solid var(--line);box-shadow:none}
+  .note{text-align:center;font-size:12.5px;color:var(--ink-faint);margin-top:16px}
+
+  /* ---- quiz ---- */
+  .bar-area{padding:26px 0 20px;position:sticky;top:0;
+    background:linear-gradient(180deg,var(--bg1) 70%,rgba(0,0,0,0));z-index:5}
+  .bar-top{display:flex;justify-content:space-between;align-items:baseline;
+    font-size:12.5px;color:var(--ink-faint);margin-bottom:9px;letter-spacing:.04em}
+  .bar{height:5px;background:var(--line);border-radius:99px;overflow:hidden}
+  .bar span{display:block;height:100%;width:0;border-radius:99px;
+    background:linear-gradient(90deg,var(--ax-ach),var(--accent));
+    transition:width .4s cubic-bezier(.2,.7,.3,1)}
+  .qcard{background:var(--card);border:1px solid var(--line);border-radius:20px;
+    padding:32px 24px;box-shadow:var(--shadow);margin-bottom:18px}
+  .qnum{font-size:12px;color:var(--accent);font-weight:700;letter-spacing:.1em;margin-bottom:12px}
+  .qtext{font-size:19px;line-height:1.7;font-weight:600;margin:0;min-height:3.4em;
+    display:flex;align-items:center}
+  /* 日本語の折り返し:文節で折る/行の長さを揃える/禁則を厳しめに */
+  .qtext span{text-wrap:balance;word-break:auto-phrase;line-break:strict}
+  .opts{display:grid;gap:9px}
+  .opt{display:flex;align-items:center;gap:13px;width:100%;text-align:left;line-break:strict;
+    background:var(--card);border:1.5px solid var(--line);border-radius:14px;
+    padding:14px 17px;font:inherit;font-size:15.5px;color:var(--ink);cursor:pointer;
+    transition:border-color .15s ease, background .15s ease, transform .12s ease}
+  .opt:active{transform:scale(.985)}
+  .opt .dot{width:15px;height:15px;border-radius:50%;border:2px solid var(--line);flex:none;
+    display:flex;align-items:center;justify-content:center;
+    transition:border-color .15s ease, background .15s ease}
+  .opt.sel,.opt:hover{border-color:var(--accent);background:var(--accent-soft)}
+  .opt.sel{border-width:2px}
+  .opt.sel .dot{border-color:var(--accent);background:var(--accent)}
+  .opt.sel .dot::after{content:"✓";color:#fff;font-size:10px;font-weight:800;line-height:1}
+  .opt.sel span:last-child{font-weight:700;color:var(--accent)}
+  .opt:disabled{cursor:default}
+  .opt:disabled:not(.sel){opacity:.5}
+  .back{margin-top:18px;background:none;border:0;font:inherit;font-size:14px;
+    color:var(--ink-faint);cursor:pointer;padding:8px 4px}
+  .back[disabled]{opacity:.3;cursor:default}
+
+  /* ---- result ---- */
+  .rtop{text-align:center;padding:44px 0 8px}
+  .rlabel{font-size:12.5px;letter-spacing:.16em;color:var(--ink-faint);margin-bottom:14px}
+  .rname{font-size:29px;line-height:1.4;font-weight:700;margin:0 0 12px;letter-spacing:.01em;
+    text-wrap:balance;word-break:auto-phrase;line-break:strict}
+  .rcopy{font-size:15.5px;color:var(--accent);font-weight:600;margin:0 0 16px;
+    text-wrap:balance;word-break:auto-phrase;line-break:strict}
+  .rnote{font-size:12.5px;color:var(--ink-faint);margin:0 auto;max-width:23em;line-height:1.8;
+    text-wrap:balance;word-break:auto-phrase;line-break:strict}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:20px;
+    padding:26px 22px;box-shadow:var(--shadow);margin-top:20px}
+  .card h2{font-size:14px;letter-spacing:.08em;color:var(--ink-faint);margin:0 0 16px;font-weight:700}
+  .rdesc{font-size:15.5px;margin:0;color:var(--ink);
+    text-wrap:pretty;word-break:auto-phrase;line-break:strict}
+  .radar{display:block;width:100%;max-width:330px;margin:0 auto}
+  .radar .poly{transition:transform 1s cubic-bezier(.2,.8,.25,1),opacity .8s ease;
+    transform-origin:50% 50%}
+  .bars{display:grid;gap:13px}
+  .row{display:grid;grid-template-columns:4.6em 1fr 3.2em;align-items:center;gap:11px;font-size:14px}
+  .row b{font-weight:600}
+  .track{height:8px;background:var(--line);border-radius:99px;overflow:hidden;position:relative}
+  .avg{position:absolute;top:0;bottom:0;width:2px;background:var(--ink);
+    opacity:.3;border-radius:1px;z-index:2}
+  .barread{margin:16px 0 0;font-size:14.5px;color:var(--ink);
+    text-wrap:pretty;word-break:auto-phrase;line-break:strict}
+  .barnote{margin:10px 0 0;font-size:12.5px;color:var(--ink-faint);line-height:1.8;
+    text-wrap:pretty;word-break:auto-phrase;line-break:strict}
+  .fill{height:100%;width:0;border-radius:99px;transition:width .9s cubic-bezier(.2,.8,.25,1)}
+  .row i{font-style:normal;color:var(--ink-faint);font-size:12.5px;text-align:right;
+    font-variant-numeric:tabular-nums}
+  ul.moments{list-style:none;margin:0;padding:0;display:grid;gap:11px}
+  ul.moments li{position:relative;padding-left:24px;font-size:15px;
+    text-wrap:pretty;word-break:auto-phrase;line-break:strict}
+  ul.moments li::before{content:"";position:absolute;left:4px;top:.72em;
+    width:7px;height:7px;border-radius:50%;background:var(--accent)}
+  .caution{font-size:15px;margin:0;color:var(--ink);
+    text-wrap:pretty;word-break:auto-phrase;line-break:strict}
+  /* ---- 今日できる一歩(結果を眺めて終わらせないための1枚) ---- */
+  .card-action{border-color:var(--accent);background:var(--accent-soft)}
+  .card-action h2{color:var(--accent)}
+  .actline{font-size:15.5px;margin:0;color:var(--ink);font-weight:600;
+    text-wrap:pretty;word-break:auto-phrase;line-break:strict}
+  .subaxis{margin-top:16px;padding-top:16px;border-top:1px dashed var(--line);
+    font-size:14.5px;color:var(--ink-soft);line-height:2;
+    text-wrap:pretty;word-break:auto-phrase;line-break:strict}
+  .subaxis b{color:var(--ink)}
+  .actions{display:grid;gap:10px;margin-top:24px}
+  .foot{text-align:center;font-size:12px;color:var(--ink-faint);margin-top:28px;line-height:1.9}
+  .toast{position:fixed;left:50%;bottom:32px;transform:translate(-50%,20px);
+    background:var(--ink);color:var(--bg1);font-size:14px;padding:11px 22px;border-radius:99px;
+    opacity:0;pointer-events:none;transition:all .3s ease;z-index:20}
+  .toast.on{opacity:1;transform:translate(-50%,0)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- ============ intro ============ -->
+  <section class="screen on" id="s-intro">
+    <div class="hero">
+      <div class="mark">✦</div>
+      <h1>あなたが<br>幸せを感じるのは、<br>どんなときですか</h1>
+    </div>
+
+    <div class="manifesto">
+      <div class="eyebrow">この診断が考える「幸せ」</div>
+      <p class="statement">幸せのかたちは、<br>人によって違う。</p>
+    </div>
+
+    <div class="contrast">
+      <div class="c-row">
+        <p class="c-label">同じ出来事でも</p>
+        <p class="c-line">何に心が動くかは、人それぞれ違います。</p>
+      </div>
+      <div class="c-arrow">↓</div>
+      <div class="c-row c-after">
+        <p class="c-label">だから</p>
+        <p class="c-line">あなたに合う入り口を、6つの中から探します。</p>
+      </div>
+    </div>
+
+    <p class="axes-lead">その入り口は、6つあります。</p>
+    <div class="axes-peek" aria-label="達成・つながり・自由・成長・貢献・安心">
+      <span class="axtag" style="--c:var(--ax-ach)">達成</span>
+      <span class="axtag" style="--c:var(--ax-con)">つながり</span>
+      <span class="axtag" style="--c:var(--ax-fre)">自由</span>
+      <span class="axtag" style="--c:var(--ax-gro)">成長</span>
+      <span class="axtag" style="--c:var(--ax-ctr)">貢献</span>
+      <span class="axtag" style="--c:var(--ax-sta)">安心</span>
+    </div>
+
+    <p class="lead">それぞれが何かは、あえて先に説明しません。<br>18の質問に、思ったとおり答えてみてください。</p>
+    <div class="meta">
+      <span class="chip">所要 約3分</span>
+      <span class="chip">全18問</span>
+      <span class="chip">登録なし</span>
+      <span class="chip">今日の一歩つき</span>
+    </div>
+
+    <p class="action-teaser">診断して終わりにしません。今日から試せる、小さな一歩もひとつお渡しします。</p>
+    <button class="btn" id="start">はじめる</button>
+    <p class="note">「向いてる仕事」ではなく、今のあなたが幸せを感じやすい場所の話です。<br>答えも保存されません。この場だけの診断です。</p>
+  </section>
+
+  <!-- ============ quiz ============ -->
+  <section class="screen" id="s-quiz">
+    <div class="bar-area">
+      <div class="bar-top"><span id="prog-n">Q1 / 18</span><span id="prog-p">0%</span></div>
+      <div class="bar"><span id="prog-fill"></span></div>
+    </div>
+    <div class="qcard">
+      <div class="qnum" id="qnum">QUESTION 01</div>
+      <p class="qtext" id="qtext"><span></span></p>
+    </div>
+    <div class="opts" id="opts"></div>
+    <button class="back" id="back" disabled>← ひとつ前にもどる</button>
+  </section>
+
+  <!-- ============ result ============ -->
+  <section class="screen" id="s-result">
+    <div class="rtop">
+      <div class="rlabel">あなたの心の職業</div>
+      <h1 class="rname" id="r-name"></h1>
+      <p class="rcopy" id="r-copy"></p>
+      <p class="rnote">向き不向きを測ったわけではありません。あなたの心が、ふだん静かに引き受けている役目に、いちばん近い言葉を選びました。</p>
+    </div>
+
+    <div class="card">
+      <h2>あなたの価値観のかたち</h2>
+      <svg class="radar" id="radar" viewBox="0 0 300 300" aria-hidden="true"></svg>
+    </div>
+
+    <div class="card">
+      <h2>この職業について</h2>
+      <p class="rdesc" id="r-desc"></p>
+      <div class="subaxis" id="r-sub"></div>
+    </div>
+
+    <div class="card">
+      <h2>幸せを感じやすい瞬間</h2>
+      <ul class="moments" id="r-moments"></ul>
+    </div>
+
+    <div class="card">
+      <h2>気をつけたいこと</h2>
+      <p class="caution" id="r-caution"></p>
+    </div>
+
+    <div class="card card-action">
+      <h2>今日できる、小さな一歩</h2>
+      <p class="actline" id="r-action"></p>
+    </div>
+
+    <div class="card">
+      <h2>あなたの中の配分</h2>
+      <div class="bars" id="r-bars"></div>
+      <p class="barread" id="r-barread"></p>
+      <p class="barnote">6つを合わせて100%になる割合です。縦線は、6つが均等だった場合の位置（16.7%）。
+        ここより長いものが、あなたの中で比重が大きい価値観です。</p>
+    </div>
+
+    <div class="actions">
+      <button class="btn" id="save-image">結果を画像で保存</button>
+      <button class="btn ghost" id="copy">結果をコピーする</button>
+      <button class="btn ghost" id="again">もう一度やってみる</button>
+    </div>
+    <p class="foot">この診断は、自分の傾向を眺めるための<br>ささやかな道具です。答えは保存されません。</p>
+  </section>
+
+</div>
+<div class="toast" id="toast">コピーしました</div>
+
+<script>
+/* ========== 価値観の6軸 ========== */
+const AXES = [
+  {k:'ach', name:'達成', color:'var(--ax-ach)', hex:'#D9764A', gist:'目標を立てて、登りきることに燃える'},
+  {k:'con', name:'つながり', color:'var(--ax-con)', hex:'#D4809A', gist:'人との関係の温かさが幸せの中心にある'},
+  {k:'fre', name:'自由', color:'var(--ax-fre)', hex:'#5F9CC0', gist:'自分で決められる状態が何より心地いい'},
+  {k:'gro', name:'成長', color:'var(--ax-gro)', hex:'#77A85F', gist:'昨日できなかったことができる喜びで動く'},
+  {k:'ctr', name:'貢献', color:'var(--ax-ctr)', hex:'#C39544', gist:'誰かの役に立った実感で深く満たされる'},
+  {k:'sta', name:'安心', color:'var(--ax-sta)', hex:'#8A82C0', gist:'穏やかで整った日常そのものが幸せ'}
+];
+
+/* ========== 質問18問（各軸3問・軸が続かない順に配置） ========== */
+const QUESTIONS = [
+  /* 前半：答えやすい、具体的な質問から入る */
+  {a:'ach', t:'決めた目標をやりきった<br>ときが、いちばん満たされる'},
+  {a:'con', t:'その日がいい一日だったかは、<br>誰と過ごしたかに<br>大きく左右される'},
+  {a:'fre', t:'予定は、誰かに決められるより<br>自分で組み立てたい'},
+  {a:'gro', t:'新しいことを覚えている<br>時間そのものが楽しい'},
+  {a:'ctr', t:'予定を変えてでも、困っている人<br>を手伝ったことがある'},
+  {a:'sta', t:'先の予定が見えていると、<br>安心して過ごせる'},
+  /* 中盤：考えさせる質問はここに集める */
+  {a:'ach', t:'自分がどれだけできたかを、<br>数字や結果で確かめたい'},
+  {a:'con', t:'気を許せる人がそばにいる。<br>それだけで幸せだと思える'},
+  {a:'fre', t:'何をするかを自分で決められる<br>ことが、何より大事だ'},
+  {a:'gro', t:'少し難しいことのほうが、<br>やりがいを感じる'},
+  {a:'ctr', t:'誰かのためだと思うと、<br>いつもより本気になれた'},
+  {a:'sta', t:'特別なことがなくても、<br>いつもの毎日が幸せだと思う'},
+  /* 終盤：短く軽い質問で走り切ってもらう */
+  {a:'ach', t:'「よくやったな」と<br>自分で思える瞬間がほしい'},
+  {a:'con', t:'嬉しいことがあったら、<br>まず誰かに話したくなる'},
+  {a:'fre', t:'自分のペースで動けている<br>ときが、いちばん気分がいい'},
+  {a:'gro', t:'最近、あえて少し苦手なことに<br>挑戦してみた'},
+  {a:'ctr', t:'頼まれる前に、自分から誰かに<br>声をかけたことがある'},
+  {a:'sta', t:'毎日が穏やかに過ぎていく<br>ことが、何よりありがたい'}
+];
+
+const OPTIONS = [
+  {t:'すごくそう思う', v:4},
+  {t:'まあそう思う', v:3},
+  {t:'どちらとも言えない', v:2},
+  {t:'あまり思わない', v:1},
+  {t:'まったく思わない', v:0}
+];
+
+/* ========== 主軸 × 副軸 = 30タイプ ========== */
+const COMBOS = {
+  'ach|con':{n:'遠征隊の隊長', c:'ひとりの勝ちより、みんなの勝ち。',
+    d:'やりきることに強く惹かれる人ですが、その先にはいつも誰かの顔があります。自分ひとりで登りきっても、どこか物足りません。喜んでくれる仲間がいて、隣で一緒に肩を叩き合える相手がいて、はじめて「やり遂げた」という実感になるタイプです。', m:['決めた目標に、仲間を誘って一緒に向かえたとき', '頂上で、誰かと同じ景色を見られたとき', '「ついてきてよかった」と言われたとき'], cau:'達成と人を同時に背負っているぶん、「自分が引っぱらなきゃ」という気負いが抜けにくいタイプです。たまには先頭を誰かに譲って、あなた自身がついていく側になってみてください。', act:'今日、一緒に頑張っている人に「ありがとう」を伝えてみてください。'},
+  'ach|fre':{n:'単独行のクライマー', c:'誰かに決められた頂上には、登りたくない。',
+    d:'成し遂げたい気持ちが強い一方で、その目標が自分で選んだものかどうかをとても気にします。人に与えられた課題だと途端に熱が冷めるのに、自分で決めたことなら驚くほど粘れます。登るルートを自分で選べるとき、いちばん力が出る人です。', m:['誰にも相談せず、自分だけでルートを決められたとき', '難しい一手を、自力で越えられたとき', '頂上に、まだ誰の足跡もなかったとき'], cau:'ひとりで登れてしまうぶん、助けを求めるタイミングを逃しがちです。ロープを結ぶ相手は、自由を奪う存在ではなく、落ちたときに支えてくれる存在だと思ってください。', act:'今日、誰にも相談せず、自分のやり方でひとつ物事を進めてみてください。'},
+  'ach|gro':{n:'自己ベストを狙う長距離ランナー', c:'去年の自分がいちばんのライバル。',
+    d:'やりきることが好きで、しかもゴールした瞬間にはもう次のコースを見ています。同じ距離を同じペースで走ることにはあまり興味がなく、前回より少し厳しいコースに惹かれます。タイムという結果と、走るたびに更新される自己ベストの両方を追いかけられる人です。', m:['自己ベストを、コンマ1秒でも更新できたとき', '苦しい区間を、去年の自分より軽く走れたとき', 'ゴールした瞬間、もう次のレースを考えている自分に気づいたとき'], cau:'記録が伸び続けることを前提に走っているぶん、伸び悩む時期を「後退」だと感じて苦しくなりがちです。タイムが動かない期間も、走り方そのものは磨かれています。', act:'今日は、いつもより一駅分だけ歩いてみてください。'},
+  'ach|ctr':{n:'現場を仕上げる棟梁', c:'成果は、届けたい相手がいるから意味を持つ。',
+    d:'成し遂げる力を持ちながら、その動機が自分の名誉ではないところにあります。誰の役に立つ現場かがはっきりしていると力が湧き、逆に受け取り手の見えない仕事には熱が入りにくいタイプです。任された持ち場で、静かに強さを発揮する人です。', m:['引き渡した現場で、住む人が笑ってくれたとき', '難しい注文を、期限どおりに仕上げられたとき', '名前が出ない仕事でも、仲間から「助かった」と言われたとき'], cau:'自分の手柄より現場の完成を優先するぶん、疲れを言い出すタイミングをいつも後回しにしがちです。棟梁が倒れたら現場も止まる、ということを忘れないでください。', act:'今日、頼まれたことをひとつ、期限より早く終わらせてみてください。'},
+  'ach|sta':{n:'石を積む石工', c:'派手さより、崩れないこと。',
+    d:'やりきることを大事にしながら、そのやり方は驚くほど地に足がついています。一発逆転より、毎日同じ手順を繰り返して確実に高さを出すほうを選びます。時間はかかっても、あなたが積んだものは簡単には崩れません。', m:['積み上げてきた石が、まっすぐ揃っているのを見返したとき', '派手さはなくても、頼まれた仕事をきっちり終えられたとき', '何年も前に積んだ壁が、まだそのままの形で残っていたとき'], cau:'確実さを優先するぶん、周りの速いペースに焦らされがちです。あなたの積み方は遅いのではなく、崩れない積み方だと思ってください。', act:'今日、机の上をひとつだけ片付けてみてください。'},
+
+  'con|ach':{n:'チームの監督', c:'人が好きで、前に進むのも好き。',
+    d:'関係の温かさが幸せの中心にありながら、その輪をどこかへ連れて行きたい気持ちも持っています。集まって終わりにせず、一緒に何かを成し遂げたいタイプです。人が自然と集まってきて、しかも物事が前に進んでいきます。', m:['バラバラだったメンバーが、同じ方向を向いた瞬間', 'チーム全体で、目標に手が届いたとき', '誰かの成長を、自分のことのように喜べたとき'], cau:'チームの結果に責任を感じすぎて、うまくいかないときに全部自分のせいだと抱え込みがちです。監督ひとりの采配で決まる試合は、ひとつもありません。', act:'今日、頑張っている人に「お疲れ様」と声をかけてみてください。'},
+  'con|fre':{n:'同窓会の幹事', c:'久しぶりでも、昨日の続きから話せる。',
+    d:'人といる時間が好きなのに、べったりした関係は少し息苦しく感じます。ちょうどいい距離で、久しぶりに会っても昨日の続きのように話せる関係を大事にするタイプです。その距離感を、自分から選んで保っています。', m:['久しぶりに集まったのに、すぐに昔の空気に戻れたとき', '誘った人たちが、心から楽しそうにしているのを見たとき', '誰も気を遣わずに、自然に解散できたとき'], cau:'場を仕切る役回りが板についているぶん、自分が主役になる場面をつい遠慮しがちです。たまには誘われる側に回ってみてください。', act:'今日、久しぶりの人にLINEを送ってみてください。'},
+  'con|gro':{n:'勉強会の言い出しっぺ', c:'人と会うたび、自分が少し更新される。',
+    d:'人との関わりを学びの入口としても味わっているタイプです。話していて自分の考えが変わる瞬間が好きで、変わっていく相手を見るのも好きです。何年も同じ場所に留まる関係より、お互い変化していける関係に心が動きます。', m:['「言い出してよかった」と思える回になったとき', '参加した人の考え方が、目の前で変わっていくのを見られたとき', '自分が話したことで、誰かが新しいことを始めたと知ったとき'], cau:'新しい輪をつくるのは得意なぶん、続けることへの熱量が続かず、自分から始めた集まりを気まずく手放しがちです。始めた責任は、終わらせ方を決める責任とセットです。', act:'今日知ったことをひとつ、誰かに話してみてください。'},
+  'con|ctr':{n:'保健室の先生', c:'なにも解決しなくても、話せば軽くなる。',
+    d:'人との関係が幸せの中心にあり、その関係の中で相手の力になれたときに深く満たされます。前に出て引っぱるより、隣に座って話を聞く役回りが自然な人です。誰かの話を聞くとき、口を挟まずに最後まで受け止めようとします。', m:['話を聞いただけなのに、相手の顔が少し軽くなったとき', '「ここに来てよかった」と言われたとき', '誰にも言えなかったことを、あなたにだけ話してくれたとき'], cau:'人の重たい話を引き受けやすいぶん、自分の中に溜め込んだものを誰にも預けられていないことが多いです。あなたにも、話を聞いてもらう相手が必要です。', act:'今日、誰かの「大丈夫?」に、正直に答えてみてください。'},
+  'con|sta':{n:'灯台守', c:'変わらずそこにある関係がいちばん贅沢。',
+    d:'人とのつながりと、穏やかな日常。あなたの幸せは、この二つが重なるところにあります。刺激的な出会いより、何年も続いている関係が静かに続いていくことに価値を感じます。まわりの人にとって、あなたは帰ってこられる場所です。', m:['何年ぶりかの連絡でも、変わらない距離で話せたとき', '誰かが「ここに戻ってくると安心する」と言ってくれたとき', '特別なことがなくても、いつもの関係が続いているとき'], cau:'変わらないことを大事にするぶん、相手の変化に気づくのが遅れがちです。灯りは同じでも、海のほうは毎日違う顔をしています。', act:'今日、しばらく連絡していない人に「元気?」と送ってみてください。'},
+
+  'fre|ach':{n:'一人親方', c:'自分で決めた道なら、どこまでも歩ける。',
+    d:'自分で選べることを何より大事にしながら、選んだ以上はやりきりたい人です。人に指示された瞬間にやる気が消えるのに、自分で決めた仕事なら夜通しでも動けます。手綱を自分で握っていられる環境が、あなたのいちばんの燃料です。', m:['誰の指図も受けず、自分のやり方で仕事を仕上げられたとき', '全部自分で決めた段取りが、思いどおりに進んだとき', '「あなたに頼んでよかった」と、結果で認められたとき'], cau:'何でも自分で決めたいぶん、人に頼ることを「負け」のように感じてしまうことがあります。手を借りることは、自由を手放すこととは違います。', act:'今日、誰かに頼らず、自分の手だけでひとつ仕上げてみてください。'},
+  'fre|con':{n:'屋台の店主', c:'一緒にいたいから、一緒にいる。',
+    d:'自由でいたい気持ちと、人が好きな気持ちを両方持っています。義務や役割で人とつながるのは苦手なのに、自分から選んだ関係にはとても温かいタイプです。深追いしない、その距離感を大事にしています。', m:['ふらっと来た常連と、特に用もなく話し込めたとき', '自分の裁量で、その日だけの特別なひと皿を出せたとき', '「またここに寄りたい」と言われたとき'], cau:'縛られない関係を好むぶん、深く踏み込まれることを避けて、少し寂しい思いをすることがあります。常連さんは、あなたが思うより深く関わりたがっているかもしれません。', act:'今日、いつも会う人に、いつもより少しだけ長く話しかけてみてください。'},
+  'fre|gro':{n:'行き先を決めない旅人', c:'寄り道こそが本編。',
+    d:'決められた道を真っ直ぐ歩くより、面白そうな方向へ曲がりたい人です。しかも、その寄り道で毎回何かを持ち帰ってきます。計画通りに進まないことをあまり損失だと思っておらず、そのぶん人より広い景色を見ています。', m:['予定になかった道で、思いがけないものに出会えたとき', '寄り道した先で、旅の目的以上のものを見つけたとき', '「予定通り」より「思ったより良かった」で一日が終わったとき'], cau:'寄り道を楽しめるぶん、腰を据えて同じ場所に留まることに苦手意識が出やすいです。旅を続けるための拠点は、自由を縛るものではありません。', act:'今日、いつもと違う道を歩いてみてください。'},
+  'fre|ctr':{n:'草野球の助っ人', c:'呼ばれたら行く。それ以上は背負わない。',
+    d:'縛られるのは苦手なのに、人の役に立ちたい気持ちはしっかりあります。だからあなたの助け方は恩着せがましくなく、いつのまにか終わっています。責任として背負うのではなく、自分から差し出すぶんには惜しまないタイプです。', m:['呼ばれた場所で、思った以上に力になれたとき', '見返りを考えずに手伝ったことを、あとで感謝されたとき', '「また次も来てほしい」と言われたとき'], cau:'「助っ人」と言われて、いてもいなくてもいい存在みたいに聞こえたかもしれません。でも、本当に困ったときに声をかけられる相手は、誰でもいいわけではありません。呼ばれる、ということ自体が、信頼の証です。', act:'今日、頼まれごとをひとつ、断らずに引き受けてみてください。'},
+  'fre|sta':{n:'山小屋の主', c:'誰にも侵されない、静かな場所。',
+    d:'自由と安心という、一見別々のものが同じ方向を向いています。あなたにとっての自由は、飛び回ることではなく、誰にも邪魔されない自分の時間と場所を持つことです。その山小屋が守られているかぎり、外の世界にも出ていけます。', m:['誰にも邪魔されない時間が、丸ごと自分のものだったとき', '疲れて訪れた誰かに、静かな時間を渡せたとき', '山を降りても、いつでも戻れる場所があると思えたとき'], cau:'自分の場所を大事にするぶん、そこに人を招き入れることに臆病になりがちです。山小屋は、閉じるためではなく、迎え入れるためにもあります。', act:'今日、5分だけスマホを置いて、何もしない時間を作ってみてください。'},
+
+  'gro|ach':{n:'腕を上げつづける料理人', c:'山の高さより、登れる自分になること。',
+    d:'腕が上がっていく実感が幸せの中心にあり、その伸びを一皿の仕上がりで確かめたい人です。レシピを覚えるだけでは物足りず、実際につくって、誰かの口に届いて、はじめて身についた気がします。新しい腕前と、出した皿の両方に手応えがあるとき、いちばんいい顔をしています。', m:['新しく覚えた技術が、一皿の中でちゃんと生きたとき', '「前より美味しくなった」と言われたとき', '難しいレシピを、失敗せずに仕上げきれたとき'], cau:'腕を上げ続けることに慣れているぶん、同じ皿を作り続ける日々を「停滞」だと感じて焦りがちです。同じレシピでも、作るたびに手が少しずつ変わっています。', act:'今日、いつもの料理にひと手間だけ加えてみてください。'},
+  'gro|con':{n:'本をすすめてくる本屋さん', c:'面白かったから、あなたにも。',
+    d:'新しいことを知る喜びが強く、しかもそれをひとりで抱えておけない人です。話すことで自分の理解も深まると知っています。知ったことは、誰かに話してはじめて自分の中に定着する感覚があります。', m:['すすめた一冊を、相手が本当に気に入ってくれたとき', '自分が知ったことを話したら、相手の目の色が変わったとき', '「あなたに教わったことがきっかけで」と言われたとき'], cau:'知る喜びを人と分け合いたいぶん、相手が求めていないタイミングでも教えたくなってしまいます。渡す前に、相手が今それを欲しがっているか確かめてみてください。', act:'今日、最近読んだ本や見た動画をひとつ、誰かにすすめてみてください。'},
+  'gro|fre':{n:'独学の研究者', c:'カリキュラムのない学び方が好き。',
+    d:'学ぶことは好きなのに、決められた順番で学ぶのは苦手です。今日気になったことを今日調べる、その自由さがあってこそ続く人です。バラバラに見えても、その一つひとつはいつか勝手につながっていきます。', m:['誰にも頼まれていないのに、気になったことを調べ尽くせたとき', 'バラバラだった知識が、ふとつながって見えた瞬間', '自分だけの理解の仕方に、誰よりも早くたどり着けたとき'], cau:'自分のペースで学べるぶん、人に説明する練習が後回しになりがちです。あなたの理解は正しくても、それを渡す言葉はまだ育っていないかもしれません。', act:'今日、気になっていたことをひとつ、調べてみてください。'},
+  'gro|ctr':{n:'教えたがりの先生', c:'覚えたそばから、誰かに渡したくなる。',
+    d:'成長したい気持ちの奥に、誰かの力になりたいという動機があります。自分のためだけの学びだと途中で息切れするのに、渡す相手がいると驚くほど深くまで潜れます。教える立場になると本領を発揮するタイプです。', m:['教えたことを、相手が自分の力で使えるようになったとき', '「あなたの説明が一番分かりやすかった」と言われたとき', '誰かの「わかった」という顔を、目の前で見られたとき'], cau:'教えることに没頭しやすいぶん、自分自身が生徒でいる時間を後回しにしがちです。教える人にも、教わる時間は必要です。', act:'今日、知っていることをひとつ、誰かに教えてみてください。'},
+  'gro|sta':{n:'同じ畑を耕す農家', c:'派手に変わらなくても、確かに変わっている。',
+    d:'成長したい気持ちはありますが、自分のペースは崩しません。環境を頻繁に変えるより、同じ畑を少しずつ深く耕すほうが性に合います。数年単位で見たとき、いちばん遠くまで来ているタイプです。', m:['毎年同じ畑から、少しずつ良い実りが取れるようになったとき', '派手さはなくても、去年より土が育っているのを感じたとき', '長く続けてきたことが、ようやく形になったとき'], cau:'同じ場所で育つことを選ぶぶん、まわりが場所を変えて伸びていくのを見ると焦りやすいです。畑を変えなくても、土は年々深くなっています。', act:'今日、いつもの習慣をひとつ、いつも通り続けてみてください。'},
+
+  'ctr|ach':{n:'時間通りに届ける配達員', c:'引き受けたからには、ちゃんと着かせる。',
+    d:'人の役に立ちたい気持ちが土台にありながら、気持ちだけでは満足できない人です。実際に届いたか、ちゃんと結果になったかを確かめたいタイプです。責任を引き受ける場面で、静かに頼りになる人です。', m:['約束の時間に、きっちり届けきれたとき', '「時間通りで助かった」と言われたとき', '難しい道のりでも、荷物を無事に運びきれたとき'], cau:'「配達員」と言われて、指示されたものを運ぶだけの仕事だと思ったかもしれません。でも、約束した時間に、約束したものを、確実に届けきる。それだけのことが、実はいちばん難しく、いちばん信頼されることです。', act:'今日、約束の時間を、いつもより5分早く守ってみてください。'},
+  'ctr|con':{n:'町内会の世話役', c:'その場の空気が和らぐなら、それでいい。',
+    d:'誰かの役に立ちたい気持ちと、人との関係を大事にする気持ちが重なっています。大きな成果より、目の前の人が少し楽になることに幸せを感じます。あなたがいる場所は、たいてい少しだけ穏やかです。', m:['こじれかけていた話が、あなたのひと声で丸く収まったとき', '誰も気づかないところで、面倒ごとを片づけられたとき', '「あなたがいて助かった」とさりげなく言われたとき'], cau:'「世話役」と聞いて、便利屋みたいだと思ったかもしれません。でも、こじれかけた話をひと声で収められる人、誰も気づかない面倒ごとを先回りして片づけられる人は、実はどの町内にもいるわけではありません。', act:'今日、近所の人とすれ違ったら、自分から挨拶してみてください。'},
+  'ctr|fre':{n:'駆けつける消防団', c:'助けるけれど、抱え込まない。',
+    d:'人の力になりたい気持ちを持ちながら、相手にも自分にも自由を残しておける人です。見返りを求めず、相手の選択に口も出しません。だからあなたの手助けは、受け取る側にとっても軽いのです。', m:['呼ばれてすぐに駆けつけられたとき', '助けたあと、何も求めずにさっと引けたとき', '「あなたのおかげで助かった」と、あとから聞いたとき'], cau:'呼ばれたらすぐ動くことに慣れているぶん、自分の予定を後回しにする癖がついています。あなた自身の火も、たまには誰かに消してもらってください。', act:'今日、困っていそうな人に「大丈夫ですか」と声をかけてみてください。'},
+  'ctr|gro':{n:'近所の修理屋さん', c:'壊れたら、まずあなたに声がかかる。',
+    d:'誰かの役に立つために学び、学んだことをすぐ現場で試したくなる人です。役に立たない知識には興味が薄く、逆に人を助けられる技術には貪欲なタイプです。修理の数をこなすほど、腕がなじんでいきます。', m:['「もう直らないと思っていた」ものを、直せたとき', '覚えたばかりの技術が、実際に誰かの役に立ったとき', '「次もあなたに頼みたい」と言われたとき'], cau:'頼られることに慣れているぶん、自分の道具の手入れを後回しにしがちです。人を直す前に、自分のコンディションも見てあげてください。', act:'今日、誰かの「これ直せる?」に、まず「見てみる」と答えてみてください。'},
+  'ctr|sta':{n:'舞台の裏方', c:'続けられることを続ける。',
+    d:'人の役に立ちたい気持ちを、日常の中でこつこつ形にしている人です。特別な場面で目立つことより、毎日の小さな支えを切らさないことを選びます。あなたがいなくなってはじめて、まわりはその大きさに気づきます。', m:['誰も気づかないところで、舞台がちゃんと成立していたとき', '表には出ない自分の仕事が、誰かの晴れ舞台を支えていたと知ったとき', '「今日もいつも通りだった」と思ってもらえたとき'], cau:'「裏方」と言われて、地味だな、と思ったかもしれません。実際、目立つ仕事ではありません。でも、あなたがいなくなった瞬間に、舞台は成立しなくなります。目立たないことと、価値がないことは、まったく別の話です。', act:'今日、使った場所を、来たときよりきれいにして離れてみてください。'},
+
+  'sta|ach':{n:'土台を据える基礎屋', c:'走る前に、足元を固める。',
+    d:'穏やかさを大事にしながら、成し遂げたい気持ちもきちんと持っている人です。ただしその進み方は慎重で、崩れない準備ができてから動きます。勢いはないように見えて、始めたことは高い確率で完走します。', m:['慎重に準備した分だけ、あとの工程が滑らかに進んだとき', '誰にも見えない土台の部分を、きっちり仕上げられたとき', '「あなたが最初にやってくれたから安心できた」と言われたとき'], cau:'準備に時間をかけすぎて、動き出すタイミングを逃しがちです。完璧な土台より、動き出せる土台のほうが役に立つこともあります。', act:'今日、明日の準備をひとつ、前もって済ませてみてください。'},
+  'sta|con':{n:'町の銭湯の番台', c:'ここにいていいと思える場所を。',
+    d:'穏やかな日常と、人とのつながり。あなたはその二つを同時に守れる人です。誰かにとっての「安心して帰れる場所」を、意識せずにつくってしまいます。派手ではないけれど、代わりのきかない役割です。', m:['常連さんの「いつもの」を、何も言わずに分かっていたとき', '誰かが「ここに来るとほっとする」と言ってくれたとき', '何十年も、同じ場所で同じように人を迎え続けられているとき'], cau:'「番台」という言葉に、正直ちょっとがっかりしたかもしれません。でも、何十年も同じ場所に立ち続けて、誰かの「いつもの」を黙って見守れる人は、実はそう多くありません。地味なのではなく、代わりがいないのです。', act:'今日、いつも会う人に「いつもの」と声をかけてみてください。'},
+  'sta|fre':{n:'図書館の司書', c:'静かさは自分で守るもの。',
+    d:'落ち着いた毎日を求めながら、それを人任せにはしない人です。自分のペースを乱されることに敏感で、必要なら距離を取ることもためらいません。守りたいものがはっきりしているぶん、実は芯の強いタイプです。', m:['静かな時間の中で、自分のペースを崩さず過ごせたとき', '探していた一冊を、迷っている人にそっと手渡せたとき', '誰にも急かされない一日を、最後まで守りきれたとき'], cau:'静けさを守ることを優先するぶん、助けを求める声を後回しにしてしまうことがあります。静かな場所ほど、小さな声はよく届きます。', act:'今日、10分だけ、誰にも邪魔されない時間を確保してみてください。'},
+  'sta|gro':{n:'暮らしを直す日曜大工', c:'一気には変えない。でも、止まらない。',
+    d:'安定を大事にしながら、同じ場所に留まりきることもできない人です。生活を壊さない範囲で、少しずつ新しいことを取り入れていきます。急激な変化を選ばないぶん、身についたものは剥がれません。', m:['自分の手で直したところが、前よりずっと使いやすくなったとき', '小さな不便を、誰に頼らず解消できたとき', '「これ、あなたが直したの」と驚かれたとき'], cau:'「日曜大工」と聞くと、素人の趣味みたいで拍子抜けしたかもしれません。でも、プロを呼ぶほどでもない小さな不便を、自分の手で一つずつ直していける人は、実は暮らしを一番支えています。派手さがないだけで、腕はちゃんと本物です。', act:'今日、放っておいた小さな不便をひとつ、直してみてください。'},
+  'sta|ctr':{n:'マンションの管理人さん', c:'いつも通りが続くのは、誰かが支えているから。',
+    d:'穏やかな日常を大事にし、その日常を人のためにも整えられる人です。目立つ働きではないけれど、気づいたところに、そっと手をかけずにはいられないタイプです。', m:['誰も気づかないうちに、共有部分がきれいに保たれていたとき', '「いつもありがとうございます」と、すれ違いざまに言われたとき', 'トラブルが起きる前に、小さな異変に気づけたとき'], cau:'「管理人さん」と言われて、脇役みたいだと感じたかもしれません。でも、あなたが毎朝気にかけている共有部分も、見逃さない小さな異変も、誰かがやらなければ誰も気づかないまま崩れていくものです。目立たない仕事は、手を抜いても気づかれない仕事でもあります。それでも、手を抜かなかった、ということです。', act:'今日、共有スペースのゴミをひとつ、拾ってみてください。'},
+};
+
+/* ========== 状態 ========== */
+const $ = id => document.getElementById(id);
+let idx = 0;
+const answers = new Array(QUESTIONS.length).fill(null);
+
+function show(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on'));
+  $(id).classList.add('on');
+  window.scrollTo({top:0,behavior:'instant'});
+}
+
+/* ========== 質問の描画 ========== */
+function renderQ(){
+  const q = QUESTIONS[idx];
+  $('qnum').textContent = 'QUESTION ' + String(idx+1).padStart(2,'0');
+  $('qtext').firstElementChild.innerHTML = q.t;   // qは固定値のみ。<br>で改行位置を固定するためinnerHTML
+  const left = QUESTIONS.length - idx;
+  $('prog-n').textContent = left <= 5
+    ? 'のこり ' + left + '問'
+    : 'Q' + (idx+1) + ' / ' + QUESTIONS.length;
+  const pct = Math.round(idx / QUESTIONS.length * 100);
+  $('prog-p').textContent = pct + '%';
+  $('prog-fill').style.width = pct + '%';
+  $('back').disabled = idx === 0;
+
+  const box = $('opts');
+  box.innerHTML = '';
+  OPTIONS.forEach(o=>{
+    const b = document.createElement('button');
+    b.className = 'opt' + (answers[idx] === o.v ? ' sel' : '');
+    b.innerHTML = '<span class="dot"></span><span>' + o.t + '</span>';
+    b.onclick = ()=>choose(o.v, b);
+    box.appendChild(b);
+  });
+}
+
+let choosing = false, choosingTimer = null;   // 連打で質問がスキップされるのを防ぐロック
+function choose(v, el){
+  if(choosing) return;
+  choosing = true;
+  answers[idx] = v;
+  el.parentNode.querySelectorAll('.opt').forEach(x=>{ x.classList.remove('sel'); x.disabled = true; });
+  el.classList.add('sel');
+  choosingTimer = setTimeout(()=>{
+    choosing = false; choosingTimer = null;
+    if(idx < QUESTIONS.length - 1){ idx++; renderQ(); window.scrollTo({top:0,behavior:'smooth'}); }
+    else { finish(); }
+  }, 200);
+}
+// 選択直後(200ms以内)に「戻る」が押されたときは、保留中の自動進行を止めてから戻す
+function cancelPendingAdvance(){
+  if(choosingTimer){ clearTimeout(choosingTimer); choosingTimer = null; }
+  choosing = false;
+}
+
+/* ========== 集計 ========== */
+function stats(){
+  const s={}, c4={}, c3={};
+  AXES.forEach(a=>{ s[a.k]=0; c4[a.k]=0; c3[a.k]=0; });
+  QUESTIONS.forEach((q,i)=>{
+    const v = answers[i] ?? 2;
+    s[q.a] += v;
+    if(v===4) c4[q.a]++;
+    if(v===3) c3[q.a]++;
+  });
+  return {s, c4, c3};   // 各軸 0〜12 ＋「すごくそう思う」「まあそう思う」の本数
+}
+
+/* 回答パターンから決まる並び順。
+   同じ回答なら毎回まったく同じ結果になるが、
+   特定の軸（以前は「達成」）が同点のたびに勝ちつづけることはなくなる。 */
+function seedOrder(){
+  let h = 2166136261;
+  answers.forEach((v,i)=>{
+    h ^= ((v ?? 2) + 1) * (i + 7);
+    h = Math.imul(h, 16777619) >>> 0;
+  });
+  const shuffled = AXES.map((a,i)=>({
+    k: a.k,
+    r: Math.imul(h ^ ((i+1) * 2654435761), 2246822519) >>> 0
+  })).sort((x,y)=> x.r - y.r);
+  const o = {};
+  shuffled.forEach((x,i)=> o[x.k] = i);
+  return o;
+}
+
+/* 順位づけ：①合計点 → ②「すごくそう思う」の数 → ③「まあそう思う」の数 → ④回答由来の並び */
+function ranked(st){
+  const o = seedOrder();
+  return AXES.map(a=>({...a, v: st.s[a.k]}))
+    .sort((x,y)=>
+      y.v - x.v ||
+      st.c4[y.k] - st.c4[x.k] ||
+      st.c3[y.k] - st.c3[x.k] ||
+      o[x.k] - o[y.k]
+    );
+}
+
+/* ========== レーダーチャート ========== */
+function drawRadar(rank, s){
+  const cx=150, cy=150, R=105, N=6;
+  const pt=(i,r)=>{
+    const ang = -Math.PI/2 + i * 2*Math.PI/N;
+    return [cx + Math.cos(ang)*r, cy + Math.sin(ang)*r];
+  };
+  let svg = '';
+  // グリッド
+  [0.25,0.5,0.75,1].forEach(f=>{
+    const p = AXES.map((_,i)=>pt(i,R*f).map(n=>n.toFixed(1)).join(',')).join(' ');
+    svg += `<polygon points="${p}" fill="none" stroke="var(--line)" stroke-width="1"/>`;
+  });
+  AXES.forEach((_,i)=>{
+    const [x,y]=pt(i,R);
+    svg += `<line x1="${cx}" y1="${cy}" x2="${x.toFixed(1)}" y2="${y.toFixed(1)}" stroke="var(--line)" stroke-width="1"/>`;
+  });
+  // データ
+  const data = AXES.map((a,i)=>{
+    const r = R * Math.max(s[a.k]/12, .06);
+    return pt(i,r).map(n=>n.toFixed(1)).join(',');
+  }).join(' ');
+  const main = rank[0];
+  svg += `<polygon class="poly" points="${data}" fill="${main.hex}" fill-opacity=".22"
+           stroke="${main.hex}" stroke-width="2.5" stroke-linejoin="round"
+           style="transform:scale(.05);opacity:0"/>`;
+  AXES.forEach((a,i)=>{
+    const r = R * Math.max(s[a.k]/12,.06);
+    const [x,y]=pt(i,r);
+    svg += `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="3.5" fill="${a.hex}"/>`;
+  });
+  // ラベル
+  AXES.forEach((a,i)=>{
+    const [x,y]=pt(i,R+27);
+    const top = rank[0].k===a.k || rank[1].k===a.k;
+    svg += `<text x="${x.toFixed(1)}" y="${(y+5).toFixed(1)}" text-anchor="middle"
+             font-size="13.5" font-weight="${top?700:500}"
+             fill="${top ? a.hex : 'var(--ink-faint)'}">${a.name}</text>`;
+  });
+  $('radar').innerHTML = svg;
+  requestAnimationFrame(()=>{
+    const p = document.querySelector('.poly');
+    if(p){ p.style.transform='scale(1)'; p.style.opacity='1'; }
+  });
+}
+
+/* ========== 結果 ========== */
+let lastShare = '';
+
+function finish(){
+  const st = stats();
+  const s = st.s;
+  const rank = ranked(st);
+  const main = rank[0], sub = rank[1];
+  const combo = COMBOS[main.k + '|' + sub.k];
+
+  $('r-name').textContent = combo.n;
+  $('r-copy').textContent = combo.c;
+  $('r-desc').textContent = combo.d;
+  // 6軸すべてが完全に同点だと、主軸・副軸を分ける根拠が無い(順位は便宜上の並びにすぎない)。
+  // その場合だけ、断定しすぎない一文を添える
+  const isFullTie = rank[0].v === rank[5].v;
+  $('r-sub').innerHTML =
+    '主軸は <b style="color:'+main.hex+'">'+main.name+'</b>【'+main.gist+'】<br>' +
+    '副軸は <b style="color:'+sub.hex+'">'+sub.name+'</b>【'+sub.gist+'】。' +
+    'この二つの重なりが、あなたが幸せを感じやすいポイントです。' +
+    (isFullTie ? '<br><span style="opacity:.75">※ 今回は6つの軸がすべて同じ強さだったため、'
+      + 'この2つはあくまで便宜的な並びです。特定の軸に偏りがあるわけではありません。</span>' : '');
+
+  // moments/cautionは30タイプそれぞれ専用(主軸だけで決まらないようにする)
+  $('r-moments').innerHTML = combo.m.map(m=>'<li>'+m+'</li>').join('');
+  $('r-caution').textContent = combo.cau;
+  $('r-action').textContent = combo.act;
+
+  // 6軸の合計を100%として、それぞれの占める割合を出す
+  const total = AXES.reduce((t,a)=> t + s[a.k], 0);
+  const sh = {};
+  if(total > 0){
+    const pos = {}; rank.forEach((a,i)=> pos[a.k] = i);   // 表示順
+    const raw = AXES.map(a=>({k:a.k, x: s[a.k]/total*100}));
+    raw.forEach(r=> sh[r.k] = Math.floor(r.x));
+    const rest = 100 - AXES.reduce((t,a)=> t + sh[a.k], 0);
+    // 端数の大きい軸から1%ずつ配る。端数が同じなら表示順が上の軸を優先し、
+    // 「下の行のほうが％が大きい」という見た目のねじれを防ぐ
+    raw.sort((p,q)=> (q.x % 1) - (p.x % 1) || pos[p.k] - pos[q.k]);
+    for(let i=0; i<rest; i++) sh[raw[i % raw.length].k]++;
+  } else {
+    // 全問「まったく思わない」など合計0点のときは、0%が6つ並ぶと
+    // 「合わせて100%」という説明文と矛盾する。差をつける根拠が無い以上、
+    // 均等(6等分)として100%になるよう配る
+    const base = Math.floor(100 / AXES.length);
+    const rest = 100 - base * AXES.length;
+    rank.forEach((a,i)=> sh[a.k] = base + (i < rest ? 1 : 0));
+  }
+  const top = Math.max(...AXES.map(a=> sh[a.k]), 1);
+  // 平均線の位置（バーは1位が満杯になる長さ。全問0点だとtop=1になり100%を超えるのでクランプする）
+  const avgPos = Math.min((100/6) / top * 100, 100);
+
+  $('r-bars').innerHTML = rank.map(a=>
+    '<div class="row"><b>'+a.name+'</b>' +
+    '<div class="track">' +
+      '<div class="fill" data-w="'+Math.round(sh[a.k]/top*100)+'" style="background:'+a.hex+'"></div>' +
+      '<span class="avg" style="left:'+avgPos.toFixed(1)+'%"></span>' +
+    '</div>' +
+    '<i>'+sh[a.k]+'%</i></div>'
+  ).join('');
+
+  // 「合計100%」は配分(かたち)しか見せないので、回答の強さ(量)も文章で補う。
+  // 差がほぼ無い回答(rawSpread)は、強さ(avg)によって意味が正反対なので分けて伝える。
+  const spread = sh[rank[0].k] - sh[rank[5].k];
+  const rawSpread = s[rank[0].k] - s[rank[5].k];   // 0〜12
+  const avg = total / 18;                          // 0(まったく思わない)〜4(すごくそう思う)
+  let barreadText;
+  if(rawSpread <= 2 && avg <= 1.3){
+    barreadText = '今回は、全体的にあまり強く共感しない回答でした。下の並び順はほぼ僅差なので、参考程度に見てください。';
+  }else if(rawSpread <= 2 && avg >= 3.0){
+    barreadText = '今回は、6つのどれにも強く共感する回答でした。順位はついていますが、僅差です。';
+  }else if(rawSpread <= 2){
+    barreadText = '今回は、はっきりした差が出ない回答でした。順位は僅差だと思ってください。';
+  }else if(spread <= 6){
+    barreadText = 'どれも近い数字です。ひとつに偏らず、6つをバランスよく大事にしているタイプです。';
+  }else{
+    barreadText = '上位2つが、いまのあなたの幸せを支えている価値観です。下位の項目は、出番が少ないだけです。';
+  }
+  $('r-barread').textContent = barreadText;
+
+  drawRadar(rank, s);
+  show('s-result');
+  requestAnimationFrame(()=>{
+    document.querySelectorAll('.fill').forEach(f=>{ f.style.width = f.dataset.w + '%'; });
+  });
+
+  // location.hrefを使うことで、公開場所が変わっても直す必要がない
+  lastShare = '【幸せの価値観診断】\n私の心の職業は「' + combo.n + '」\n' + combo.c +
+    '\n\n主軸：' + main.name + ' / 副軸：' + sub.name +
+    '\n' + rank.map(a=>a.name+' '+sh[a.k]+'%').join(' / ') +
+    '\n\n' + location.href;
+
+  // 画像保存ボタン用に、今の結果を覚えておく
+  lastResult = {combo, main, sub, rank, sh};
+}
+
+/* ========== 結果を画像にして保存 ========== */
+let lastResult = null;
+
+// 日本語は単語間の空白がないので、1文字ずつ幅を測って折り返す
+function wrapLines(ctx, text, maxWidth){
+  const lines = []; let cur = '';
+  for(const ch of text){
+    const test = cur + ch;
+    if(cur && ctx.measureText(test).width > maxWidth){ lines.push(cur); cur = ch; }
+    else cur = test;
+  }
+  if(cur) lines.push(cur);
+  return lines;
+}
+function drawCenterLines(ctx, lines, cx, y, lineHeight){
+  lines.forEach(l=>{ ctx.fillText(l, cx, y); y += lineHeight; });
+  return y;
+}
+// ctx.roundRect未対応の環境(古いSafari等)では、角丸なしの四角で代用する
+function fillRoundRect(ctx, x, y, w, h, r){
+  ctx.beginPath();
+  if(ctx.roundRect){ ctx.roundRect(x, y, w, h, r); } else { ctx.rect(x, y, w, h); }
+  ctx.fill();
+}
+
+function drawShareCard(){
+  const {combo, main, sub, rank, sh} = lastResult;
+  const W = 1080, H = 1350;
+  const cv = document.createElement('canvas');
+  cv.width = W; cv.height = H;
+  const ctx = cv.getContext('2d');
+
+  // 今見ている画面のテーマ(ライト/ダーク)に合わせる
+  const root = document.documentElement;
+  const explicit = root.getAttribute('data-theme');
+  const dark = explicit === 'dark' || (explicit !== 'light' && matchMedia('(prefers-color-scheme: dark)').matches);
+  const pal = dark
+    ? {bg1:'#1C1A18', bg2:'#211E25', ink:'#F0EBE4', inkSoft:'#B5ABA1', inkFaint:'#7C726A', card:'#26232A', line:'#3A353F', accent:'#E5906B'}
+    : {bg1:'#FBF7F1', bg2:'#F3EFF7', ink:'#2F2A26', inkSoft:'#6E655D', inkFaint:'#A79C92', card:'#FFFFFF', line:'#EAE2D8', accent:'#C9714A'};
+
+  const grad = ctx.createLinearGradient(0,0,W,H);
+  grad.addColorStop(0, pal.bg1); grad.addColorStop(1, pal.bg2);
+  ctx.fillStyle = grad; ctx.fillRect(0,0,W,H);
+  ctx.textAlign = 'center';
+
+  let y = 150;
+  ctx.fillStyle = pal.accent;
+  ctx.font = '64px system-ui, sans-serif';
+  ctx.fillText('✦', W/2, y);
+
+  y += 90;
+  ctx.fillStyle = pal.inkFaint;
+  ctx.font = '600 30px system-ui, sans-serif';
+  ctx.fillText('あなたの心の職業', W/2, y);
+
+  y += 80;
+  ctx.fillStyle = pal.ink;
+  ctx.font = 'bold 76px system-ui, sans-serif';
+  y = drawCenterLines(ctx, wrapLines(ctx, combo.n, W-160), W/2, y, 90);
+
+  y += 20;
+  ctx.fillStyle = pal.accent;
+  ctx.font = '600 36px system-ui, sans-serif';
+  y = drawCenterLines(ctx, wrapLines(ctx, combo.c, W-220), W/2, y, 48);
+
+  // 6軸の配分バー
+  y += 70;
+  const barLeft = 110, barRight = W-110, barMaxW = barRight-barLeft-260;
+  const top = Math.max(...AXES.map(a=>sh[a.k]), 1);
+  rank.forEach(a=>{
+    ctx.beginPath();
+    ctx.fillStyle = a.hex;
+    ctx.arc(barLeft+10, y-10, 10, 0, Math.PI*2);
+    ctx.fill();
+
+    ctx.textAlign = 'left';
+    ctx.fillStyle = pal.ink;
+    ctx.font = '600 32px system-ui, sans-serif';
+    ctx.fillText(a.name, barLeft+34, y);
+
+    const trackX = barLeft+180, trackW = barMaxW;
+    ctx.fillStyle = pal.line;
+    fillRoundRect(ctx, trackX, y-24, trackW, 16, 8);
+    const fillW = Math.max(trackW * (sh[a.k]/top), 10);
+    ctx.fillStyle = a.hex;
+    fillRoundRect(ctx, trackX, y-24, fillW, 16, 8);
+
+    ctx.textAlign = 'right';
+    ctx.fillStyle = pal.inkFaint;
+    ctx.font = '30px system-ui, sans-serif';
+    ctx.fillText(sh[a.k]+'%', barRight, y);
+
+    ctx.textAlign = 'center';
+    y += 76;
+  });
+
+  // フッター
+  y = H - 90;
+  ctx.fillStyle = pal.inkFaint;
+  ctx.font = '28px system-ui, sans-serif';
+  ctx.fillText('心の職業診断 ｜ 18の質問で、幸せの入り口がわかります', W/2, y);
+
+  // toBlobは環境によってnullを返すことがあるため、明示的に失敗として扱う
+  return new Promise((resolve, reject) =>
+    cv.toBlob(b => b ? resolve(b) : reject(new Error('toBlob failed')), 'image/png')
+  );
+}
+
+let savingImage = false;   // 連打でCanvasが並列生成されるのを防ぐロック
+async function saveResultImage(){
+  if(!lastResult || savingImage) return;
+  savingImage = true;
+  const toast = (msg)=>{ const t=$('toast'); t.textContent=msg; t.classList.add('on');
+    setTimeout(()=>{ t.classList.remove('on'); t.textContent='コピーしました'; }, 1800); };
+
+  try{
+    const blob = await drawShareCard();
+    const filename = `心の職業診断_${lastResult.combo.n}.png`;
+
+    // ① Claude Artifact環境: downloadsキャパビリティ(あればここで完結)
+    try{
+      const dl = (window.claude && window.claude.use) ? await window.claude.use('downloads') : null;
+      if(dl){
+        await dl.save({ filename, data: blob });
+        toast('画像を保存しました');
+        return;
+      }
+    }catch(e){
+      if(e && e.code === 'declined') return;   // キャンセルは何もしない
+      // 失敗したら以下のフォールバックへ続ける
+    }
+
+    // ② それ以外の環境(将来、正式な場所に公開したときなど):端末の共有シート
+    try{
+      const file = new File([blob], filename, {type:'image/png'});
+      if(navigator.canShare && navigator.canShare({files:[file]})){
+        await navigator.share({files:[file], title: lastResult.combo.n});
+        return;
+      }
+    }catch(e){
+      if(e && e.name === 'AbortError') return;   // 共有シートを閉じただけ
+    }
+
+    // ③ 最終手段: 通常のダウンロードリンク(主にPCブラウザ向け)
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = filename;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(()=> URL.revokeObjectURL(url), 4000);
+    toast('画像を保存しました');
+  }catch(e){
+    toast('保存できませんでした');
+  }finally{
+    savingImage = false;
+  }
+}
+
+/* ========== イベント ========== */
+$('start').onclick = ()=>{ idx=0; answers.fill(null); renderQ(); show('s-quiz'); };
+$('back').onclick = ()=>{ cancelPendingAdvance(); if(idx>0){ idx--; renderQ(); window.scrollTo({top:0,behavior:'smooth'}); } };
+$('again').onclick = ()=>{ idx=0; answers.fill(null); show('s-intro'); };
+$('save-image').onclick = saveResultImage;
+$('copy').onclick = async ()=>{
+  try{
+    await navigator.clipboard.writeText(lastShare);
+    const t=$('toast'); t.classList.add('on'); setTimeout(()=>t.classList.remove('on'),1600);
+  }catch(e){
+    const t=$('toast'); t.textContent='コピーできませんでした'; t.classList.add('on');
+    setTimeout(()=>{t.classList.remove('on'); t.textContent='コピーしました';},1600);
+  }
+};
+</script>
+</body>
+</html>

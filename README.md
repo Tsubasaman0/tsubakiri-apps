@@ -29,6 +29,13 @@
 
 各アプリのREADMEに「困りごと・決めたこと・確かめたこと・AIとの分担」を書いている。
 
+## データ分析・機械学習の練習(2025年10月〜、ChatGPT/Codexと)
+
+別リポジトリ [20251026STRAT-PYTHON](https://github.com/Tsubasaman0/20251026STRAT-PYTHON/tree/main/portfolio)。実装はAI、データの設計と比べ方は自分。
+
+- [SIM申込件数の需要予測](https://github.com/Tsubasaman0/20251026STRAT-PYTHON/tree/main/portfolio/demand_forecast_SIM_applications) — 売り場の感覚(3月が最多・土日が多い)を数値にした擬似データで、季節性を入れた線形回帰が「前月と同じ」よりMAEをほぼ半分に
+- [携帯ショップの問い合わせ分類](https://github.com/Tsubasaman0/20251026STRAT-PYTHON/tree/main/portfolio/mobile_shop_nlp_text_classifier) — 店頭の質問を自分でラベル付け、確信度が低ければ人に戻すAPI(FastAPI+Docker)
+
 ## 自分で書いたコード(AI未使用)
 
 - Rubyのブラックジャック(2020年): https://qiita.com/tsubasaman/items/76fcdc20555e677c0a04

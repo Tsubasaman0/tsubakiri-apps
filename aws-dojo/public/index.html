@@ -1,0 +1,2938 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>AWS道場</title>
+  <link rel="apple-touch-icon" sizes="180x180" href="icon-180.png">
+  <link rel="icon" type="image/png" sizes="64x64" href="favicon.png">
+  <link rel="manifest" href="manifest.webmanifest">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="AWS道場">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#141210">
+<style>
+  :root{
+    --bg:#121212;
+    --bg-elevated:#191919;
+    --bg-card:#1e1e1e;
+    --border:#2e2b26;
+    --text:#f2efe8;
+    --text-dim:#a39d90;
+    --accent:#e3a53c;
+    --accent-strong:#f6c15a;
+    --accent-soft:rgba(227,165,60,0.16);
+    --correct:#57b98a;
+    --wrong:#e2645a;
+    --shadow:rgba(0,0,0,0.5);
+  }
+  [data-theme="light"]{
+    --bg:#f6f2ea;
+    --bg-elevated:#ffffff;
+    --bg-card:#ffffff;
+    --border:#e3ddcc;
+    --text:#2a2620;
+    --text-dim:#7a7264;
+    --accent:#b9790f;
+    --accent-strong:#a6690a;
+    --accent-soft:rgba(185,121,15,0.12);
+    --correct:#2f8f5f;
+    --wrong:#c3392c;
+    --shadow:rgba(0,0,0,0.12);
+  }
+  *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html,body{ margin:0; padding:0; width:100%; overflow-x:hidden; background:var(--bg); }
+  body{
+    color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Hiragino Kaku Gothic ProN",sans-serif;
+    font-size:17px;
+    line-height:1.65;
+    touch-action:manipulation;
+    -webkit-user-select:none;
+    user-select:none;
+    min-height:100vh;
+  }
+  input, textarea{ -webkit-user-select:text; user-select:text; }
+  #app{
+    min-height:100vh;
+    padding:calc(env(safe-area-inset-top) + 14px) calc(env(safe-area-inset-right) + 16px) calc(env(safe-area-inset-bottom) + 24px) calc(env(safe-area-inset-left) + 16px);
+    max-width:560px;
+    margin:0 auto;
+  }
+  .screen{ display:block; }
+  .screen.hidden{ display:none; }
+  .hidden{ display:none !important; }
+  .topbar{ display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }
+  .brand{ font-size:20px; font-weight:800; letter-spacing:0.03em; color:var(--accent-strong); margin:0; }
+  .brand .sub{ display:block; font-size:11px; color:var(--text-dim); font-weight:500; letter-spacing:0.08em; }
+  .icon-btn{
+    background:var(--bg-card); border:1px solid var(--border); color:var(--text);
+    width:44px; height:44px; border-radius:12px; font-size:20px; display:flex; align-items:center; justify-content:center;
+  }
+  .card{
+    background:var(--bg-card); border:1px solid var(--border); border-radius:18px; padding:16px; margin-bottom:14px;
+    box-shadow:0 2px 10px var(--shadow);
+  }
+  .level-row{ display:flex; align-items:center; gap:12px; margin-bottom:10px; }
+  .level-badge{
+    width:56px; height:56px; border-radius:16px; background:linear-gradient(155deg,var(--accent-strong),var(--accent));
+    color:#211603; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:18px; flex-shrink:0;
+  }
+  .level-title{ font-size:15px; font-weight:700; color:var(--accent-strong); }
+  .level-sub{ font-size:12.5px; color:var(--text-dim); }
+  .xp-bar-track{ height:12px; border-radius:8px; background:var(--bg-elevated); border:1px solid var(--border); overflow:hidden; }
+  .xp-bar-fill{ height:100%; background:linear-gradient(90deg,var(--accent),var(--accent-strong)); transition:width .4s ease; }
+  .xp-bar-label{ font-size:11.5px; color:var(--text-dim); margin-top:5px; text-align:right; }
+  .stat-grid{ display:flex; gap:10px; margin-bottom:14px; }
+  .stat-box{ flex:1; background:var(--bg-card); border:1px solid var(--border); border-radius:16px; padding:14px 10px; text-align:center; }
+  .stat-num{ font-size:22px; font-weight:800; color:var(--text); }
+  .stat-label{ font-size:11.5px; color:var(--text-dim); margin-top:2px; }
+  .domain-bar-row{ margin-bottom:10px; }
+  .domain-bar-row:last-child{ margin-bottom:0; }
+  .domain-bar-label{ display:flex; justify-content:space-between; font-size:12.5px; color:var(--text-dim); margin-bottom:4px; }
+  .domain-bar-track{ height:10px; border-radius:6px; background:var(--bg-elevated); border:1px solid var(--border); overflow:hidden; }
+  .domain-bar-fill{ height:100%; background:var(--accent); }
+  .review-badge{
+    display:flex; align-items:center; justify-content:space-between; padding:12px 14px; border-radius:14px;
+    background:var(--accent-soft); border:1px solid var(--accent); margin-bottom:14px; font-size:14.5px;
+  }
+  .review-badge b{ color:var(--accent-strong); font-size:18px; }
+  .btn{
+    display:block; width:100%; min-height:56px; border-radius:16px; border:none; font-size:17px; font-weight:700;
+    margin-bottom:12px; padding:0 16px; text-align:center;
+  }
+  .btn-primary{ background:linear-gradient(135deg,var(--accent-strong),var(--accent)); color:#201400; }
+  .btn-secondary{ background:var(--bg-card); color:var(--text); border:1.5px solid var(--border); font-weight:600; }
+  .btn-ghost{ background:transparent; color:var(--accent-strong); border:1.5px solid var(--accent-dim,var(--accent)); font-weight:600; min-height:48px; }
+  .btn-danger{ background:transparent; color:var(--wrong); border:1.5px solid var(--wrong); font-weight:700; }
+  .btn-small{ min-height:44px; font-size:14.5px; }
+  .btn:active{ transform:scale(0.98); }
+  .progress-line{ display:flex; justify-content:space-between; align-items:center; font-size:13.5px; color:var(--text-dim); margin-bottom:10px; }
+  .timer{ font-variant-numeric:tabular-nums; font-weight:700; color:var(--accent-strong); }
+  .timer.low{ color:var(--wrong); }
+  .domain-tag{
+    display:inline-block; font-size:12px; padding:4px 10px; border-radius:999px; background:var(--accent-soft);
+    color:var(--accent-strong); margin-bottom:10px; font-weight:600;
+  }
+  .question-text{ font-size:18.5px; font-weight:700; margin:0 0 16px; line-height:1.7; overflow-wrap:anywhere; word-break:break-word; }
+  .choice-btn{
+    display:flex; align-items:center; gap:10px; width:100%; min-height:56px; padding:12px 16px; margin-bottom:10px;
+    border-radius:14px; border:1.5px solid var(--border); background:var(--bg-card); color:var(--text);
+    font-size:16px; text-align:left; line-height:1.5; overflow-wrap:anywhere; word-break:break-word;
+  }
+  .choice-mark{
+    flex-shrink:0; width:24px; height:24px; border-radius:7px; border:1.5px solid var(--text-dim);
+    display:flex; align-items:center; justify-content:center; font-size:13px; color:transparent;
+  }
+  .choice-btn.multi .choice-mark{ border-radius:7px; }
+  .choice-btn.single .choice-mark{ border-radius:999px; }
+  .choice-btn.selected{ border-color:var(--accent); background:var(--accent-soft); }
+  .choice-btn.selected .choice-mark{ background:var(--accent); color:#201400; border-color:var(--accent); }
+  .choice-btn.correct{ border-color:var(--correct); background:rgba(87,185,138,0.16); animation:flashCorrect .5s ease; }
+  .choice-btn.correct .choice-mark{ background:var(--correct); border-color:var(--correct); color:#0c1f16; }
+  .choice-btn.wrong{ border-color:var(--wrong); background:rgba(226,100,90,0.14); animation:shakeWrong .4s ease; }
+  .choice-btn.wrong .choice-mark{ background:var(--wrong); border-color:var(--wrong); color:#2a0b08; }
+  .choice-btn:disabled{ opacity:0.95; }
+  @keyframes flashCorrect{ 0%{ box-shadow:0 0 0 0 rgba(87,185,138,0.5);} 100%{ box-shadow:0 0 0 8px rgba(87,185,138,0);} }
+  @keyframes shakeWrong{ 0%,100%{ transform:translateX(0);} 25%{ transform:translateX(-4px);} 75%{ transform:translateX(4px);} }
+  .feedback-box{
+    border-radius:16px; padding:16px; margin:6px 0 16px; border:1.5px solid; font-size:15.5px;
+  }
+  .feedback-box.ok{ border-color:var(--correct); background:rgba(87,185,138,0.1); }
+  .feedback-box.ng{ border-color:var(--wrong); background:rgba(226,100,90,0.1); }
+  .feedback-title{ font-weight:800; font-size:16.5px; margin-bottom:6px; }
+  .feedback-box.ok .feedback-title{ color:var(--correct); }
+  .feedback-box.ng .feedback-title{ color:var(--wrong); }
+  .explanation{ color:var(--text-dim); font-size:14.5px; margin-top:8px; overflow-wrap:anywhere; word-break:break-word; }
+  .link-box{
+    margin-top:10px; padding:10px 12px; border-radius:10px; background:var(--accent-soft); border:1px dashed var(--accent);
+    font-size:14px; overflow-wrap:anywhere; word-break:break-word;
+  }
+  .link-box .label{ font-weight:700; color:var(--accent-strong); font-size:12.5px; margin-bottom:3px; }
+  .flag-row{ display:flex; align-items:center; gap:8px; margin-bottom:14px; font-size:14.5px; color:var(--text-dim); }
+  .flag-row input{ width:20px; height:20px; }
+  .nav-row{ display:flex; gap:10px; }
+  .nav-row .btn{ flex:1; }
+  .result-hero{ text-align:center; padding:22px 10px; }
+  .result-score{ font-size:44px; font-weight:800; color:var(--accent-strong); }
+  .result-sub{ color:var(--text-dim); font-size:14.5px; margin-top:4px; }
+  .pass-badge{
+    display:inline-block; margin-top:10px; padding:6px 16px; border-radius:999px; font-weight:800; font-size:13.5px;
+  }
+  .pass-badge.pass{ background:rgba(87,185,138,0.18); color:var(--correct); border:1.5px solid var(--correct); }
+  .pass-badge.fail{ background:rgba(226,100,90,0.14); color:var(--wrong); border:1.5px solid var(--wrong); }
+  .levelup-overlay{
+    position:fixed; inset:0; background:rgba(10,8,4,0.86); display:flex; align-items:center; justify-content:center;
+    flex-direction:column; z-index:50; animation:fadeIn .25s ease;
+  }
+  .levelup-overlay.hidden{ display:none; }
+  .levelup-burst{
+    font-size:26px; font-weight:800; color:var(--accent-strong); text-align:center;
+    animation:levelPop .6s cubic-bezier(.2,1.6,.4,1);
+    text-shadow:0 0 24px rgba(246,193,90,0.7);
+  }
+  .levelup-num{ font-size:60px; margin:6px 0; }
+  @keyframes fadeIn{ from{opacity:0;} to{opacity:1;} }
+  @keyframes levelPop{ 0%{ transform:scale(0.3); opacity:0;} 60%{ transform:scale(1.15); opacity:1;} 100%{ transform:scale(1);} }
+  .accordion{ border:1px solid var(--border); border-radius:14px; margin-bottom:10px; overflow:hidden; background:var(--bg-card); }
+  .accordion-head{ padding:14px 16px; display:flex; justify-content:space-between; align-items:center; font-size:15px; font-weight:600; }
+  .accordion-head .meta{ font-size:12px; color:var(--text-dim); font-weight:500; }
+  .accordion-body{ padding:0 16px 16px; display:none; font-size:14.5px; color:var(--text-dim); border-top:1px solid var(--border); }
+  .accordion-body.open{ display:block; padding-top:12px; }
+  .accordion-body .ans-line{ color:var(--text); margin-bottom:6px; }
+  .domain-group-head{ display:flex; justify-content:space-between; align-items:center; margin:18px 0 10px; }
+  .domain-group-head h3{ margin:0; font-size:15px; }
+  .domain-group-head .btn-ghost{ width:auto; padding:0 12px; min-height:38px; font-size:12.5px; margin:0; }
+  .empty-note{ color:var(--text-dim); font-size:14px; text-align:center; padding:20px 0; }
+  .settings-row{ margin-bottom:18px; }
+  .settings-label{ font-size:13.5px; color:var(--text-dim); margin-bottom:6px; font-weight:600; }
+  .text-input{
+    width:100%; min-height:48px; border-radius:12px; border:1.5px solid var(--border); background:var(--bg-elevated);
+    color:var(--text); padding:10px 14px; font-size:16px;
+  }
+  textarea.text-input{ min-height:110px; resize:vertical; font-family:monospace; font-size:12.5px; }
+  .theme-toggle{ display:flex; gap:10px; }
+  .theme-toggle button{
+    flex:1; min-height:48px; border-radius:12px; border:1.5px solid var(--border); background:var(--bg-elevated); color:var(--text-dim); font-weight:600;
+  }
+  .theme-toggle button.active{ border-color:var(--accent); color:var(--accent-strong); background:var(--accent-soft); }
+  .confirm-box{ background:rgba(226,100,90,0.1); border:1.5px solid var(--wrong); border-radius:14px; padding:14px; margin-top:10px; font-size:14px; color:var(--text); }
+  .toast{
+    position:fixed; left:50%; bottom:calc(env(safe-area-inset-bottom) + 22px); transform:translateX(-50%);
+    background:var(--accent-strong); color:#201400; padding:10px 18px; border-radius:999px; font-size:13.5px; font-weight:700;
+    box-shadow:0 4px 16px var(--shadow); z-index:60; opacity:0; pointer-events:none; transition:opacity .25s ease;
+  }
+  .toast.show{ opacity:1; }
+  .copy-btn{ min-height:48px; font-size:14.5px; }
+  .mock-grid{ display:grid; grid-template-columns:repeat(6,1fr); gap:6px; margin-bottom:14px; }
+  .mock-grid button{
+    aspect-ratio:1; min-height:44px; border-radius:8px; border:1.5px solid var(--border); background:var(--bg-elevated); color:var(--text-dim); font-size:11px; font-weight:700;
+  }
+  .mock-grid button.done{ background:var(--accent-soft); color:var(--accent-strong); border-color:var(--accent); }
+  .mock-grid button.flagged{ border-color:var(--wrong); }
+  .mock-grid button.current{ box-shadow:0 0 0 2px var(--accent-strong); }
+  .quiz-back-row{ margin-bottom:10px; }
+  .quiz-back-row .btn-ghost{ width:auto; padding:0 14px; min-height:38px; font-size:13px; margin:0; }
+  .small-note{ color:var(--text-dim); font-size:12px; margin:-4px 0 14px; text-align:center; }
+  .export-hint{ font-size:11px; color:var(--text-dim); margin-top:4px; text-align:right; }
+  .backup-hint{ color:var(--text-dim); font-size:12.5px; margin:-6px 0 14px; text-align:center; }
+  h2.section-title{ font-size:16px; margin:0 0 12px; color:var(--text); }
+  p.lead{ color:var(--text-dim); font-size:14.5px; margin:0 0 16px; }
+  .audio-lead{ color:var(--text-dim); font-size:13px; text-align:center; margin:0 0 14px; }
+  .audio-resume{ margin-bottom:14px; }
+  .audio-full-card{ padding:18px 16px; }
+  .audio-full-row{ display:flex; align-items:center; justify-content:space-between; gap:12px; }
+  .audio-full-title{ font-size:17px; font-weight:800; color:var(--text); }
+  .audio-full-sub{ font-size:13px; color:var(--text-dim); margin-top:3px; }
+  .audio-chapter-card{ padding:14px 16px; }
+  .audio-chapter-row{ display:flex; align-items:center; gap:12px; }
+  .audio-chapter-num{
+    width:34px; height:34px; border-radius:10px; background:var(--bg-elevated); border:1px solid var(--border);
+    display:flex; align-items:center; justify-content:center; font-weight:800; color:var(--text-dim); flex-shrink:0;
+  }
+  .audio-chapter-info{ flex:1; min-width:0; }
+  .audio-chapter-title{ font-size:15px; font-weight:700; color:var(--text); overflow-wrap:anywhere; }
+  .audio-chapter-sub{ font-size:12px; color:var(--text-dim); margin-top:2px; }
+  .audio-play-btn{
+    flex-shrink:0; width:48px; height:48px; border-radius:999px; border:none;
+    background:linear-gradient(135deg,var(--accent-strong),var(--accent)); color:#201400; font-size:18px;
+  }
+  .audio-chapter-card.playing, .audio-full-card.playing{
+    border-color:var(--accent-strong); box-shadow:0 0 0 2px var(--accent-strong) inset, 0 4px 18px rgba(246,193,90,0.28);
+  }
+  .audio-section-head{ font-size:12px; color:var(--text-dim); margin:0 0 6px 4px; }
+  .audio-chapter-num.daily{ width:auto; min-width:34px; padding:0 8px; font-size:12px; }
+  .audio-daily-list{ margin-bottom:6px; }
+  .audio-subtitle-link{ width:auto; padding:0 14px; min-height:38px; font-size:13px; margin:10px 0 0; }
+  .audio-subtitle-box .sub-line{ font-size:16px; line-height:2; margin-bottom:6px; color:var(--text); }
+  .audio-subtitle-box .sub-line.dim{ color:var(--text-dim); font-size:14px; }
+  .audio-controls{ padding:16px; }
+  .audio-now-title{ font-size:14.5px; font-weight:700; color:var(--accent-strong); margin-bottom:10px; text-align:center; overflow-wrap:anywhere; }
+  .audio-seek-row input[type="range"]{ width:100%; accent-color:var(--accent-strong); }
+  .audio-time-row{ display:flex; justify-content:space-between; font-size:12px; color:var(--text-dim); margin:2px 0 14px; font-variant-numeric:tabular-nums; }
+  .audio-btn-row{ display:flex; align-items:center; justify-content:center; gap:16px; margin-bottom:16px; }
+  .audio-btn-row .icon-btn{ width:56px; height:56px; font-size:14px; font-weight:700; border-radius:999px; }
+  .audio-btn-row #btn-audio-playpause{ width:64px; height:64px; font-size:22px; background:var(--accent-soft); border-color:var(--accent); }
+  .audio-setting-row{ margin-bottom:14px; }
+  .audio-setting-row .theme-toggle button{ font-size:12.5px; padding:0 4px; }
+  .audio-sleep-remain{ font-size:12px; color:var(--accent-strong); margin-top:6px; text-align:center; min-height:16px; }
+  .audio-note-list{ margin-top:10px; }
+  .audio-note-item{ font-size:13.5px; color:var(--text); padding:8px 0; border-top:1px solid var(--border); }
+  .audio-note-item .audio-note-date{ font-size:11px; color:var(--text-dim); margin-right:6px; }
+
+  /* ---- 用語帳 ---- */
+  .glossary-search-row input{ font-size:16px; }
+  .glossary-domain-row{ margin-top:10px; }
+  .glossary-domain-row button{ font-size:13px; padding:0 4px; }
+  .key-letter{ color:var(--accent-strong); font-weight:800; }
+  .glossary-card{ background:var(--bg-card); border:1px solid var(--border); border-radius:16px; margin-bottom:12px; overflow:hidden; }
+  .glossary-card-head{ padding:14px 16px; }
+  .glossary-name-row{ display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:6px; }
+  .glossary-name{ font-size:17px; font-weight:800; color:var(--text); overflow-wrap:anywhere; word-break:break-word; }
+  .glossary-name-right{ display:flex; align-items:center; gap:8px; flex-shrink:0; }
+  .glossary-domain-pill{ margin-bottom:0; font-size:11px; padding:3px 8px; }
+  .glossary-check{ display:flex; align-items:center; gap:4px; font-size:11px; color:var(--text-dim); }
+  .glossary-check input{ width:18px; height:18px; }
+  .glossary-expand{ font-size:14px; color:var(--text-dim); margin-bottom:4px; overflow-wrap:anywhere; word-break:break-word; }
+  .glossary-key-meaning{ font-size:13.5px; color:var(--text); margin-bottom:4px; overflow-wrap:anywhere; word-break:break-word; }
+  .glossary-role{ font-size:14px; color:var(--text); overflow-wrap:anywhere; word-break:break-word; }
+  .glossary-card-body{ display:none; padding:0 16px 16px; border-top:1px solid var(--border); font-size:13.5px; }
+  .glossary-card-body.open{ display:block; padding-top:12px; }
+  .glossary-cues-label{ font-weight:700; color:var(--accent-strong); font-size:12.5px; margin-bottom:6px; }
+  .glossary-cues{ display:flex; flex-wrap:wrap; gap:6px; margin-bottom:8px; }
+  .chip{ display:inline-block; padding:4px 10px; border-radius:999px; background:var(--bg-elevated); border:1px solid var(--border); font-size:12px; color:var(--text-dim); }
+  .glossary-confuse{ font-size:13px; color:var(--text-dim); margin-bottom:8px; overflow-wrap:anywhere; word-break:break-word; }
+  .glossary-learned-row{ display:flex; align-items:center; gap:8px; font-size:13.5px; color:var(--text-dim); margin-top:4px; }
+  .glossary-learned-row input{ width:18px; height:18px; }
+  .glossary-hint{ font-size:15px; line-height:1.65; color:var(--text); margin-top:10px; padding-top:8px; border-top:1px dashed var(--border); overflow-wrap:anywhere; word-break:break-word; }
+  .glossary-hint .gh-title{ display:block; font-size:12px; color:var(--text-dim); letter-spacing:.06em; margin-bottom:4px; }
+  .glossary-hint .gh-item{ display:block; margin-top:4px; }
+  .glossary-tab-row{ margin-bottom:14px; }
+  .word-card{ background:var(--bg-card); border:1px solid var(--border); border-radius:16px; margin-bottom:12px; padding:14px 16px; }
+  .word-row-top{ display:flex; align-items:flex-start; justify-content:space-between; gap:8px; }
+  .word-word{ font-size:19px; font-weight:800; color:var(--accent-strong); overflow-wrap:anywhere; word-break:break-word; }
+  .word-row-right{ display:flex; align-items:center; gap:8px; flex-shrink:0; }
+  .word-ja{ font-size:14px; color:var(--text); text-align:right; overflow-wrap:anywhere; word-break:break-word; }
+  .word-hint{ font-size:12.5px; color:var(--text-dim); margin-top:6px; overflow-wrap:anywhere; word-break:break-word; }
+  .word-chip-row{ display:flex; flex-wrap:wrap; gap:8px; margin-top:10px; }
+  .word-chip{
+    display:inline-flex; align-items:center; min-height:44px; padding:0 12px; border-radius:12px;
+    background:var(--bg-elevated); border:1px solid var(--border); font-size:13px; color:var(--text-dim);
+    overflow-wrap:anywhere; word-break:break-word; text-align:left;
+  }
+  .word-chip.linkable{ color:var(--accent-strong); border-color:var(--accent); }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- ============ ホーム ============ -->
+  <main id="screen-home" class="screen">
+    <div class="topbar">
+      <p class="brand">AWS道場<span class="sub">CLF-C02 五日で合格</span></p>
+      <div>
+        <button class="icon-btn" id="btn-open-settings" type="button">⚙️</button>
+        <div class="export-hint" id="home-export-hint">控え: まだ</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="level-row">
+        <div class="level-badge" id="home-level-badge">Lv1</div>
+        <div>
+          <div class="level-title" id="home-level-title">白帯</div>
+          <div class="level-sub" id="home-level-sub">次のレベルまで 100XP</div>
+        </div>
+      </div>
+      <div class="xp-bar-track"><div class="xp-bar-fill" id="home-xp-fill" style="width:0%"></div></div>
+      <div class="xp-bar-label" id="home-xp-label">0 / 100 XP</div>
+    </div>
+
+    <div class="stat-grid">
+      <div class="stat-box"><div class="stat-num" id="home-total-answered">0</div><div class="stat-label">累計解答数</div></div>
+      <div class="stat-box"><div class="stat-num" id="home-accuracy">0%</div><div class="stat-label">累計正答率</div></div>
+    </div>
+
+    <div class="card">
+      <h2 class="section-title">分野別 正答率</h2>
+      <div id="home-domain-bars"></div>
+    </div>
+
+    <div class="review-badge">
+      <span>復習待ちの問題</span>
+      <span><b id="home-review-count">0</b> 問</span>
+    </div>
+
+    <div class="small-note hidden" id="home-skip-note"></div>
+
+    <button class="btn btn-primary" id="btn-start-five" type="button">5問やる</button>
+    <button class="btn btn-secondary" id="btn-start-mock" type="button">模擬試験(65問・90分)</button>
+    <button class="btn btn-secondary" id="btn-open-mistakes" type="button">間違いノート</button>
+    <button class="btn btn-secondary" id="btn-open-audio" type="button">ねむり音声(寝る前に聞くだけ)</button>
+    <button class="btn btn-secondary" id="btn-open-glossary" type="button">用語帳(略の意味と決め手の言葉)</button>
+    <button class="btn btn-ghost copy-btn" id="btn-copy-home" type="button">記録をコピー</button>
+  </main>
+
+  <!-- ============ 模擬試験セットアップ ============ -->
+  <main id="screen-mock-setup" class="screen hidden">
+    <div class="topbar">
+      <p class="brand">模擬試験</p>
+      <button class="icon-btn" id="btn-mock-back" type="button">←</button>
+    </div>
+    <div class="card">
+      <h2 class="section-title" id="mock-setup-title">65問・90分</h2>
+      <p class="lead">分野配分 1:16問 / 2:19問 / 3:22問 / 4:8問。時間切れで自動採点されます。中断しても続きから再開できます。時計は止まりません(中断中も90分は進みます)。</p>
+      <button class="btn btn-primary" id="btn-mock-start-new" type="button">新しく始める</button>
+      <button class="btn btn-secondary hidden" id="btn-mock-resume" type="button">再開する</button>
+    </div>
+  </main>
+
+  <!-- ============ クイズ(5問/模擬 共通) ============ -->
+  <main id="screen-quiz" class="screen hidden">
+    <div class="quiz-back-row">
+      <button class="btn-ghost" id="btn-quiz-back" type="button">← ホーム</button>
+    </div>
+    <div class="progress-line">
+      <span id="quiz-progress">1 / 5</span>
+      <span class="timer" id="quiz-timer"></span>
+    </div>
+    <div class="domain-tag" id="quiz-domain-tag">分野1</div>
+    <p class="question-text" id="quiz-question-text"></p>
+    <div id="quiz-choices"></div>
+
+    <div class="flag-row hidden" id="quiz-flag-row">
+      <input type="checkbox" id="quiz-flag-checkbox">
+      <label for="quiz-flag-checkbox">あとで見直す</label>
+    </div>
+
+    <div id="quiz-feedback"></div>
+
+    <button class="btn btn-primary hidden" id="btn-quiz-confirm" type="button">答える</button>
+    <button class="btn btn-primary hidden" id="btn-quiz-next" type="button">次へ</button>
+
+    <div class="nav-row hidden" id="quiz-mock-nav">
+      <button class="btn btn-secondary" id="btn-mock-prev" type="button">前へ</button>
+      <button class="btn btn-secondary" id="btn-mock-next" type="button">次へ</button>
+    </div>
+    <button class="btn btn-primary hidden" id="btn-mock-finish" type="button">採点する</button>
+    <div class="mock-grid hidden" id="mock-grid"></div>
+  </main>
+
+  <!-- ============ 結果(5問) ============ -->
+  <main id="screen-result-five" class="screen hidden">
+    <div class="card result-hero">
+      <div class="result-score" id="rf-score">0/5</div>
+      <div class="result-sub" id="rf-xp">獲得XP +0</div>
+    </div>
+    <div class="backup-hint hidden" id="rf-backup-hint">データはこの端末の中だけ。たまに 設定→データを書き出す で控えを取ってください</div>
+    <button class="btn btn-primary" id="btn-rf-again" type="button">もう5問</button>
+    <button class="btn btn-secondary" id="btn-rf-home" type="button">ホーム</button>
+    <button class="btn btn-ghost copy-btn" id="btn-copy-rf" type="button">記録をコピー</button>
+  </main>
+
+  <!-- ============ 結果(模擬) ============ -->
+  <main id="screen-result-mock" class="screen hidden">
+    <div class="card result-hero">
+      <div class="result-score" id="rm-percent">0%</div>
+      <div class="result-sub" id="rm-score1000">1000点換算 0点</div>
+      <span class="pass-badge fail" id="rm-pass-badge">不合格ライン</span>
+    </div>
+    <div class="card">
+      <h2 class="section-title">分野別内訳</h2>
+      <div id="rm-domain-bars"></div>
+    </div>
+    <div class="card">
+      <h2 class="section-title">間違えた問題の解説</h2>
+      <div id="rm-review-body"></div>
+    </div>
+    <button class="btn btn-secondary" id="btn-rm-home" type="button">ホーム</button>
+    <button class="btn btn-ghost copy-btn" id="btn-copy-rm" type="button">記録をコピー</button>
+  </main>
+
+  <!-- ============ 間違いノート ============ -->
+  <main id="screen-mistakes" class="screen hidden">
+    <div class="topbar">
+      <p class="brand">間違いノート</p>
+      <button class="icon-btn" id="btn-mistakes-back" type="button">←</button>
+    </div>
+    <div id="mistakes-body"></div>
+  </main>
+
+  <!-- ============ 用語帳 ============ -->
+  <main id="screen-glossary" class="screen hidden">
+    <div class="topbar">
+      <p class="brand">用語帳</p>
+      <button class="icon-btn" id="btn-glossary-back" type="button">←</button>
+    </div>
+
+    <div class="theme-toggle glossary-tab-row" id="glossary-tab-row">
+      <button type="button" data-gtab="services" id="glossary-tab-btn-services">サービス</button>
+      <button type="button" data-gtab="words" id="glossary-tab-btn-words">部品の英単語</button>
+    </div>
+
+    <div id="glossary-panel-services">
+      <div class="card">
+        <div class="glossary-search-row">
+          <input class="text-input" id="glossary-search" type="search" placeholder="名前・役割・決め手の言葉で検索" autocomplete="off">
+        </div>
+        <div class="theme-toggle glossary-domain-row" id="glossary-domain-row">
+          <button type="button" data-domain="all">全部</button>
+          <button type="button" data-domain="1">1</button>
+          <button type="button" data-domain="2">2</button>
+          <button type="button" data-domain="3">3</button>
+          <button type="button" data-domain="4">4</button>
+        </div>
+      </div>
+
+      <div class="review-badge">
+        <span>覚えた語</span>
+        <span><b id="glossary-learned-count">0</b> / <span id="glossary-total-count">0</span></span>
+      </div>
+
+      <div class="flag-row">
+        <input type="checkbox" id="glossary-only-left">
+        <label for="glossary-only-left">まだの語だけ</label>
+      </div>
+
+      <div id="glossary-list"></div>
+    </div>
+
+    <div id="glossary-panel-words" class="hidden">
+      <p class="lead">訳語は1つだけ覚える。意味のない名前は丸のみ</p>
+
+      <div class="review-badge">
+        <span>覚えた</span>
+        <span><b id="words-learned-count">0</b> / <span id="words-total-count">0</span></span>
+      </div>
+
+      <div class="flag-row">
+        <input type="checkbox" id="words-only-left">
+        <label for="words-only-left">まだの単語だけ</label>
+      </div>
+
+      <div id="words-list"></div>
+    </div>
+
+    <button class="btn btn-ghost copy-btn" id="btn-copy-glossary" type="button">記録をコピー</button>
+  </main>
+
+  <!-- ============ 設定 ============ -->
+  <main id="screen-settings" class="screen hidden">
+    <div class="topbar">
+      <p class="brand">設定</p>
+      <button class="icon-btn" id="btn-settings-back" type="button">←</button>
+    </div>
+
+    <div class="settings-row">
+      <div class="settings-label">表示名(任意)</div>
+      <input class="text-input" id="settings-name" type="text" placeholder="道場生">
+    </div>
+
+    <div class="settings-row">
+      <div class="settings-label">画面の色</div>
+      <div class="theme-toggle">
+        <button id="btn-theme-dark" type="button">ダーク</button>
+        <button id="btn-theme-light" type="button">ライト</button>
+      </div>
+    </div>
+
+    <div class="settings-row">
+      <div class="settings-label">データを書き出す</div>
+      <textarea class="text-input" id="settings-export-area" readonly></textarea>
+      <button class="btn btn-secondary btn-small" id="btn-export" type="button">書き出す</button>
+      <button class="btn btn-ghost btn-small" id="btn-copy-export" type="button">コピー</button>
+    </div>
+
+    <div class="settings-row">
+      <div class="settings-label">データを読み込む(貼り付け)</div>
+      <textarea class="text-input" id="settings-import-area" placeholder="ここに書き出したJSONを貼り付け"></textarea>
+      <button class="btn btn-secondary btn-small" id="btn-import" type="button">読み込む</button>
+      <div class="confirm-box hidden" id="import-confirm-box">
+        <span id="import-confirm-text"></span><br>
+        <button class="btn btn-danger" id="btn-import-confirm" type="button" style="margin-top:10px;">上書きする</button>
+        <button class="btn btn-secondary" id="btn-import-cancel" type="button" style="margin-top:10px;">キャンセル</button>
+      </div>
+    </div>
+
+    <div class="settings-row">
+      <div class="settings-label">データを全消去</div>
+      <button class="btn btn-danger" id="btn-reset-1" type="button">全消去する</button>
+      <div class="confirm-box hidden" id="reset-confirm-box">
+        本当に消しますか?レベル・記録・復習の履歴が全部消えます。<br>
+        <button class="btn btn-danger" id="btn-reset-2" type="button" style="margin-top:10px;">本当に消す</button>
+        <button class="btn btn-secondary" id="btn-reset-cancel" type="button" style="margin-top:10px;">キャンセル</button>
+      </div>
+    </div>
+  </main>
+
+  <!-- ============ ねむり音声 ============ -->
+  <main id="screen-audio" class="screen hidden">
+    <div class="topbar">
+      <p class="brand">ねむり音声</p>
+      <button class="icon-btn" id="btn-audio-back" type="button">←</button>
+    </div>
+
+    <p class="audio-lead">覚えなくていい。目を閉じたままでいい。</p>
+
+    <div class="audio-resume hidden" id="audio-resume-row">
+      <button class="btn btn-ghost" id="btn-audio-resume" type="button"></button>
+    </div>
+
+    <div class="audio-daily-list hidden" id="audio-daily-wrap">
+      <p class="audio-section-head">今日の分(毎日18時ごろに増える。その日に出た言葉だけ)</p>
+      <div id="audio-daily-list"></div>
+    </div>
+
+    <div class="card audio-full-card" id="audio-full-card">
+      <div class="audio-full-row">
+        <div>
+          <div class="audio-full-title">全部通し</div>
+          <div class="audio-full-sub" id="audio-full-sub">約15分</div>
+        </div>
+        <button type="button" class="audio-play-btn" id="btn-audio-play-full">▶</button>
+      </div>
+    </div>
+
+    <div id="audio-chapter-list"></div>
+
+    <div class="card audio-controls hidden" id="audio-controls">
+      <div class="audio-now-title" id="audio-now-title">-</div>
+      <div class="audio-seek-row">
+        <input type="range" id="audio-seek" min="0" max="0" value="0" step="1">
+      </div>
+      <div class="audio-time-row">
+        <span id="audio-time-current">0:00</span>
+        <span id="audio-time-total">0:00</span>
+      </div>
+      <div class="audio-btn-row">
+        <button type="button" class="icon-btn" id="btn-audio-back10">-10</button>
+        <button type="button" class="icon-btn" id="btn-audio-playpause">▶</button>
+        <button type="button" class="icon-btn" id="btn-audio-fwd10">+10</button>
+      </div>
+      <div class="audio-setting-row">
+        <div class="settings-label">速さ</div>
+        <div class="theme-toggle" id="audio-speed-row">
+          <button type="button" data-speed="1">1.0</button>
+          <button type="button" data-speed="1.25">1.25</button>
+          <button type="button" data-speed="1.5">1.5</button>
+          <button type="button" data-speed="2">2.0</button>
+        </div>
+      </div>
+      <div class="audio-setting-row">
+        <div class="settings-label">スリープタイマー</div>
+        <div class="theme-toggle" id="audio-sleep-row">
+          <button type="button" data-sleep="off">なし</button>
+          <button type="button" data-sleep="15">15分</button>
+          <button type="button" data-sleep="30">30分</button>
+          <button type="button" data-sleep="chapter">章の終わり</button>
+        </div>
+        <div class="audio-sleep-remain" id="audio-sleep-remain"></div>
+      </div>
+      <button type="button" class="btn btn-ghost" id="btn-audio-subtitle-toggle">字幕を見る</button>
+      <div class="accordion-body audio-subtitle-box" id="audio-subtitle-box"></div>
+    </div>
+
+    <div class="card">
+      <div class="settings-label">今日の1個を書く(任意)</div>
+      <input class="text-input" id="audio-note-input" type="text" placeholder="覚えた1個を書いてみる">
+      <button type="button" class="btn btn-secondary btn-small" id="btn-audio-note-save" style="margin-top:8px;">保存</button>
+      <div id="audio-note-list" class="audio-note-list"></div>
+    </div>
+
+    <button type="button" class="btn btn-ghost copy-btn" id="btn-copy-audio">記録をコピー</button>
+  </main>
+
+</div>
+
+<div class="levelup-overlay hidden" id="levelup-overlay">
+  <div class="levelup-burst">レベルアップ!<div class="levelup-num" id="levelup-num">Lv2</div><div id="levelup-title-text">黄帯</div></div>
+</div>
+<div class="levelup-overlay hidden" id="copy-fallback-overlay">
+  <div class="card" style="width:100%;max-width:480px;">
+    <div class="settings-label">コピーできませんでした。下のテキストを選択してコピーしてください。</div>
+    <textarea class="text-input" id="copy-fallback-area" readonly style="min-height:90px;"></textarea>
+    <button class="btn btn-secondary" id="btn-copy-fallback-close" type="button" style="margin-top:10px;">閉じる</button>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+<audio id="audio-player" preload="none" playsinline webkit-playsinline="true"></audio>
+
+<script src="questions.js"></script>
+<script src="glossary.js"></script>
+<script src="words.js"></script>
+<script>
+(function(){
+  "use strict";
+
+  /* =========================================================
+     DOJO: 画面に依存しないコアロジック。テストから直接呼べる。
+     ========================================================= */
+  var DOJO = {};
+
+  DOJO.STORAGE_KEY = "aws_dojo_v1";
+
+  DOJO.CONFIG = {
+    maxLevel: 30,
+    baseXp: 100,
+    xpGrowth: 1.3,
+    fiveXpCorrect: 10,
+    fiveXpReview: 15,
+    mockXpBonus: 100,
+    mockDurationSec: 90 * 60,
+    mockDomainCounts: { 1:16, 2:19, 3:22, 4:8 },
+    passScore1000: 700
+  };
+
+  var DOMAIN_NAMES = {
+    1: "クラウドの概念",
+    2: "セキュリティとコンプライアンス",
+    3: "クラウドの技術とサービス",
+    4: "請求・料金・サポート"
+  };
+  DOJO.DOMAIN_NAMES = DOMAIN_NAMES;
+
+  // ---- 日付 ----
+  DOJO.todayStr = function(d){
+    d = d || new Date();
+    var y = d.getFullYear();
+    var m = String(d.getMonth()+1).padStart(2,"0");
+    var day = String(d.getDate()).padStart(2,"0");
+    return y + "-" + m + "-" + day;
+  };
+
+  DOJO.addDays = function(dateStr, n){
+    var parts = dateStr.split("-").map(Number);
+    var d = new Date(parts[0], parts[1]-1, parts[2]);
+    d.setDate(d.getDate() + n);
+    return DOJO.todayStr(d);
+  };
+
+  // ---- 乱数まわり ----
+  DOJO.shuffle = function(arr, rng){
+    rng = rng || Math.random;
+    var a = arr.slice();
+    for (var i = a.length - 1; i > 0; i--){
+      var j = Math.floor(rng() * (i+1));
+      var tmp = a[i]; a[i] = a[j]; a[j] = tmp;
+    }
+    return a;
+  };
+
+  // 分野ごとにグループ化し、ラウンドロビンで混ぜて返す(自然に分野が散らばる)
+  DOJO.shuffleGroupedByDomain = function(list, rng){
+    rng = rng || Math.random;
+    var groups = {};
+    list.forEach(function(q){
+      var k = String(q.domain);
+      if (!groups[k]) groups[k] = [];
+      groups[k].push(q);
+    });
+    var keys = DOJO.shuffle(Object.keys(groups), rng);
+    keys.forEach(function(k){ groups[k] = DOJO.shuffle(groups[k], rng); });
+    var result = [];
+    var idx = 0;
+    var added = true;
+    while (added){
+      added = false;
+      for (var i=0;i<keys.length;i++){
+        var g = groups[keys[i]];
+        if (idx < g.length){ result.push(g[idx]); added = true; }
+      }
+      idx++;
+    }
+    return result;
+  };
+
+  // ---- 問題プールの決定(questions.js未読込ならダミー) ----
+  DOJO.resolveQuestionPool = function(externalQuestions, dummyQuestions){
+    if (Array.isArray(externalQuestions) && externalQuestions.length > 0) return externalQuestions;
+    return dummyQuestions;
+  };
+
+  // ---- 問題データの検査(questions.js の壊れた行を除外する) ----
+  DOJO.sanitizeQuestions = function(list){
+    var out = [];
+    var seenIds = {};
+    (Array.isArray(list) ? list : []).forEach(function(raw){
+      if (!raw || typeof raw !== "object"){
+        console.warn("[DOJO] 問題を読み飛ばしました id=(不明) 理由=行の形式が不正");
+        return;
+      }
+      var reason = null;
+      var id = raw.id;
+
+      if (typeof id !== "string" || id === ""){ reason = "idが文字列でない、または空"; }
+      else if (seenIds[id]){ reason = "idが重複している"; }
+
+      var domain = Number(raw.domain);
+      if (!reason && [1,2,3,4].indexOf(domain) < 0){ reason = "domainが1〜4のいずれでもない"; }
+
+      if (!reason && (typeof raw.q !== "string" || raw.q === "")){ reason = "問題文(q)が空、または文字列でない"; }
+
+      var choices = raw.choices;
+      if (!reason && (!Array.isArray(choices) || choices.length < 2 || !choices.every(function(c){ return typeof c === "string"; }))){
+        reason = "choicesが2つ未満、または文字列以外の要素を含む";
+      }
+
+      var answer = raw.answer;
+      var multi = !!raw.multi;
+      if (!reason){
+        if (!Array.isArray(answer) || answer.length === 0){
+          reason = "answerが配列でない、または空";
+        } else if (!answer.every(function(i){ return Number.isInteger(i) && i >= 0 && i < choices.length; })){
+          reason = "answerに選択肢の範囲外の添字がある";
+        } else if (multi && answer.length < 2){
+          reason = "multi指定なのにanswerが2個未満";
+        } else if (!multi && answer.length !== 1){
+          reason = "単一選択なのにanswerが1個でない";
+        }
+      }
+
+      if (reason){
+        console.warn("[DOJO] 問題を読み飛ばしました id=" + (typeof id === "string" && id ? id : "(不明)") + " 理由=" + reason);
+        return;
+      }
+
+      seenIds[id] = true;
+      out.push({
+        id: id,
+        domain: domain,
+        topic: typeof raw.topic === "string" ? raw.topic : "",
+        q: raw.q,
+        choices: choices.slice(),
+        answer: answer.slice(),
+        multi: multi,
+        explanation: typeof raw.explanation === "string" ? raw.explanation : "",
+        link: typeof raw.link === "string" ? raw.link : ""
+      });
+    });
+    return out;
+  };
+
+  // ---- 正誤判定 ----
+  DOJO.isCorrectAnswer = function(question, selected){
+    var a = (question.answer || []).slice().sort();
+    var s = (selected || []).slice().sort();
+    if (a.length === 0) return false;
+    if (a.length !== s.length) return false;
+    for (var i=0;i<a.length;i++){ if (a[i] !== s[i]) return false; }
+    return true;
+  };
+
+  // ---- 選択肢の並び替え(表示のたびにシャッフルし、正解が常に先頭に来ないようにする) ----
+  // question は変更しない。rng省略時はMath.random(DOJO.shuffleと同じ流儀)。
+  // 戻り値: { order:[表示位置ごとの元の添字], choices:[並べ替え後の文字列], answer:[並べ替え後の正解の添字(昇順)] }
+  DOJO.permuteChoices = function(question, rng){
+    rng = rng || Math.random;
+    var choices = (question && Array.isArray(question.choices)) ? question.choices : [];
+    var origIndexes = choices.map(function(_, i){ return i; });
+    var order = DOJO.shuffle(origIndexes, rng); // order[表示位置] = 元の添字
+    var newChoices = order.map(function(origIdx){ return choices[origIdx]; });
+    var origAnswer = (question && Array.isArray(question.answer)) ? question.answer : [];
+    var newAnswer = origAnswer.map(function(origIdx){ return order.indexOf(origIdx); }).sort(function(a,b){ return a-b; });
+    return { order: order, choices: newChoices, answer: newAnswer };
+  };
+
+  // permuteChoicesが返したorderを使って、表示位置(shownIndex)から元の添字に戻す
+  DOJO.unpermuteIndex = function(order, shownIndex){
+    if (!Array.isArray(order)) return shownIndex;
+    return order[shownIndex];
+  };
+
+  // ---- 復習box遷移 ----
+  // prevState: { box, seenCount, wrongCount, everWrong, lastResult, lastAnsweredDate, nextDueDate } | null
+  DOJO.applyAnswer = function(prevState, correct, todayStr){
+    var st = prevState ? {
+      box: prevState.box || 0,
+      seenCount: prevState.seenCount || 0,
+      wrongCount: prevState.wrongCount || 0,
+      everWrong: !!prevState.everWrong,
+      lastResult: prevState.lastResult || null,
+      lastAnsweredDate: prevState.lastAnsweredDate || null,
+      nextDueDate: prevState.nextDueDate || null
+    } : { box:0, seenCount:0, wrongCount:0, everWrong:false, lastResult:null, lastAnsweredDate:null, nextDueDate:null };
+
+    var wasReview = st.box >= 1; // 答える直前、復習待ちの状態だったか(XP判定に使う)
+    st.seenCount = st.seenCount + 1;
+
+    if (correct){
+      if (st.box === 0) st.box = 0;
+      else if (st.box === 1) st.box = 2;
+      else if (st.box === 2) st.box = 0; // 卒業
+      st.lastResult = "correct";
+    } else {
+      st.box = 1;
+      st.wrongCount = st.wrongCount + 1;
+      st.everWrong = true;
+      st.lastResult = "wrong";
+    }
+    st.lastAnsweredDate = todayStr;
+    st.nextDueDate = DOJO.addDays(todayStr, 1);
+
+    return { newState: st, wasReview: wasReview };
+  };
+
+  DOJO.xpForAnswer = function(correct, wasReview){
+    if (!correct) return 0;
+    return wasReview ? DOJO.CONFIG.fiveXpReview : DOJO.CONFIG.fiveXpCorrect;
+  };
+
+  // ---- レベル ----
+  DOJO.levelInfo = function(totalXp){
+    totalXp = totalXp || 0;
+    var maxLevel = DOJO.CONFIG.maxLevel;
+    var need = DOJO.CONFIG.baseXp;
+    var level = 1;
+    var used = 0;
+    while (level < maxLevel && totalXp - used >= need){
+      used += need;
+      level += 1;
+      need = Math.round(need * DOJO.CONFIG.xpGrowth);
+    }
+    var xpIntoLevel = totalXp - used;
+    var xpForNext = level >= maxLevel ? null : need;
+    return { level: level, xpIntoLevel: xpIntoLevel, xpForNext: xpForNext, title: DOJO.titleForLevel(level) };
+  };
+
+  DOJO.titleForLevel = function(level){
+    if (level >= 28) return "師範";
+    if (level >= 23) return "黒帯";
+    if (level >= 18) return "茶帯";
+    if (level >= 14) return "紫帯";
+    if (level >= 10) return "青帯";
+    if (level >= 7) return "緑帯";
+    if (level >= 4) return "橙帯";
+    if (level >= 2) return "黄帯";
+    return "白帯";
+  };
+
+  // ---- 5問セットの出題選定 ----
+  // domainFilter があれば、その分野の問題だけに絞る(間違いノートの「この分野だけ5問」用)
+  DOJO.selectFive = function(allQuestions, questionState, todayStr, rng, domainFilter){
+    rng = rng || Math.random;
+    questionState = questionState || {};
+    var pool = domainFilter ? allQuestions.filter(function(q){ return Number(q.domain) === domainFilter; }) : allQuestions;
+
+    var dueReview = [], unseen = [], seen = [];
+    var todayCorrectIds = {};
+    pool.forEach(function(q){
+      var st = questionState[q.id];
+      if (!st){ unseen.push(q); return; }
+      if (st.lastAnsweredDate === todayStr && st.lastResult === "correct"){
+        todayCorrectIds[q.id] = true;
+        return; // 今日正解済みは出さない
+      }
+      if (st.box >= 1 && st.nextDueDate && st.nextDueDate <= todayStr){
+        dueReview.push(q);
+      } else if (!st.seenCount){
+        unseen.push(q);
+      } else {
+        seen.push(q);
+      }
+    });
+
+    var TARGET = 5;
+    var picked = [];
+    var pickedIds = {};
+
+    function remaining(){ return TARGET - picked.length; }
+
+    // list から最大n問選ぶ(残り必要数を超えては選ばない、重複も選ばない)
+    function pickFrom(list, n){
+      if (n <= 0 || remaining() <= 0) return;
+      var ordered = DOJO.shuffleGroupedByDomain(list, rng);
+      for (var i=0; i<ordered.length && n>0 && remaining()>0; i++){
+        var q = ordered[i];
+        if (!pickedIds[q.id]){
+          picked.push(q);
+          pickedIds[q.id] = true;
+          n--;
+        }
+      }
+    }
+
+    pickFrom(dueReview, Math.min(3, dueReview.length));
+    pickFrom(unseen, remaining());
+    pickFrom(seen, remaining());
+    pickFrom(dueReview, remaining());   // 復習待ちの残り(3問超過分)で穴埋め
+    // 最終手段: 問題数が少ない時の救済。ただし「当日正解済み」は除いたプールから取り、
+    // それでも足りなければ5問に満たないまま返す(当日正解済みを再出題しない)。
+    var rescuePool = pool.filter(function(q){ return !todayCorrectIds[q.id]; });
+    pickFrom(rescuePool, remaining());
+
+    return DOJO.shuffleGroupedByDomain(picked, rng).slice(0, Math.min(5, picked.length));
+  };
+
+  // ---- 模擬試験の出題選定 ----
+  DOJO.selectMockQuestions = function(allQuestions, rng){
+    rng = rng || Math.random;
+    var counts = DOJO.CONFIG.mockDomainCounts;
+    var byDomain = {1:[],2:[],3:[],4:[]};
+    allQuestions.forEach(function(q){ if (byDomain[q.domain]) byDomain[q.domain].push(q); });
+
+    var result = [];
+    var used = {};
+    Object.keys(counts).forEach(function(dStr){
+      var d = Number(dStr);
+      var pool = DOJO.shuffle(byDomain[d].slice(), rng);
+      var n = Math.min(counts[d], pool.length);
+      for (var i=0;i<n;i++){ result.push(pool[i]); used[pool[i].id] = true; }
+    });
+
+    var total = Object.keys(counts).reduce(function(s,k){ return s + counts[k]; }, 0);
+    var need = total - result.length;
+    if (need > 0){
+      var rest = DOJO.shuffle(allQuestions.filter(function(q){ return !used[q.id]; }), rng);
+      for (var i=0; i<need && i<rest.length; i++){ result.push(rest[i]); used[rest[i].id] = true; }
+    }
+    return DOJO.shuffle(result, rng);
+  };
+
+  // ---- 模擬試験の出題数(乱数を使わず、プールから実際に作れる問題数だけを見積もる) ----
+  DOJO.mockAvailableCount = function(allQuestions){
+    var counts = DOJO.CONFIG.mockDomainCounts;
+    var byDomainCount = {1:0,2:0,3:0,4:0};
+    (allQuestions || []).forEach(function(q){
+      var d = Number(q.domain);
+      if (byDomainCount[d] !== undefined) byDomainCount[d]++;
+    });
+    var used = 0;
+    Object.keys(counts).forEach(function(dStr){
+      var d = Number(dStr);
+      used += Math.min(counts[d], byDomainCount[d]);
+    });
+    var target = Object.keys(counts).reduce(function(s,k){ return s + counts[k]; }, 0);
+    var poolTotal = (allQuestions || []).length;
+    var need = target - used;
+    var restAvailable = Math.max(0, poolTotal - used);
+    var actual = used + Math.min(need, restAvailable);
+    return { target: target, actual: actual, insufficient: actual < target };
+  };
+
+  // ---- 模擬試験の採点 ----
+  // questions: 出題順の配列, answersById: { id: { selected:[idx...] } }
+  DOJO.scoreMock = function(questions, answersById){
+    answersById = answersById || {};
+    var byDomain = {1:{total:0,correct:0},2:{total:0,correct:0},3:{total:0,correct:0},4:{total:0,correct:0}};
+    var totalCorrect = 0;
+    questions.forEach(function(q){
+      var a = answersById[q.id];
+      var selected = a ? (a.selected || []) : [];
+      var correct = DOJO.isCorrectAnswer(q, selected);
+      byDomain[q.domain].total++;
+      if (correct) { byDomain[q.domain].correct++; totalCorrect++; }
+    });
+    var total = questions.length;
+    var ratio = total ? totalCorrect / total : 0;
+    var percent = Math.round(ratio * 1000) / 10;
+    var score1000 = Math.round(ratio * 1000);
+    var passed = score1000 >= DOJO.CONFIG.passScore1000;
+    var byDomainPercent = {};
+    Object.keys(byDomain).forEach(function(k){
+      var d = byDomain[k];
+      byDomainPercent[k] = d.total ? Math.round((d.correct/d.total)*100) : 0;
+    });
+    return { percent:percent, score1000:score1000, passed:passed, byDomain:byDomain, byDomainPercent:byDomainPercent, totalCorrect:totalCorrect, total:total };
+  };
+
+  // ---- バックアップ促し(iOSプライベートモード等でデータが消える対策) ----
+  // 5問セットの結果画面を表示するたび呼ぶ。3回に1回だけ促しを出す。
+  DOJO.shouldShowBackupHint = function(resultShownCount){
+    return resultShownCount > 0 && resultShownCount % 3 === 0;
+  };
+
+  // ---- 記録テキスト ----
+  DOJO.formatRecordFive = function(correctCount, totalAnswered, accuracyPercent, level){
+    return "記録 AWS 5問 " + correctCount + "/5 累計" + totalAnswered + "問 正答率" + accuracyPercent + "% Lv" + level;
+  };
+
+  // 分野フィルタ等で5問に満たないセットにも対応した汎用版(setSizeがセット内の実際の問題数)
+  DOJO.formatRecordFiveN = function(correctCount, setSize, totalAnswered, accuracyPercent, level){
+    return "記録 AWS " + setSize + "問 " + correctCount + "/" + setSize + " 累計" + totalAnswered + "問 正答率" + accuracyPercent + "% Lv" + level;
+  };
+
+  DOJO.formatRecordMock = function(percent, byDomainPercent){
+    return "記録 AWS 模擬 " + percent + "% 分野1:" + byDomainPercent[1] + " 2:" + byDomainPercent[2] + " 3:" + byDomainPercent[3] + " 4:" + byDomainPercent[4];
+  };
+
+  // ホーム画面の「記録をコピー」用。文字列の切り貼りではなく素直に組み立てる。
+  DOJO.formatRecordHome = function(state){
+    var stats = state.stats || { totalAnswered:0, totalCorrect:0 };
+    var acc = stats.totalAnswered ? Math.round((stats.totalCorrect/stats.totalAnswered)*100) : 0;
+    var lv = DOJO.levelInfo(state.xp).level;
+    return "記録 AWS 累計" + stats.totalAnswered + "問 正答率" + acc + "% Lv" + lv;
+  };
+
+  // ---- 保存データ ----
+  DOJO.defaultState = function(){
+    var t = DOJO.todayStr();
+    return {
+      meta: { name:"", theme:"dark", createdAt:t, updatedAt:t, lastExportAt:null },
+      xp: 0,
+      stats: {
+        totalAnswered: 0,
+        totalCorrect: 0,
+        byDomain: { 1:{answered:0,correct:0}, 2:{answered:0,correct:0}, 3:{answered:0,correct:0}, 4:{answered:0,correct:0} }
+      },
+      questionState: {},
+      mockExam: null,
+      fiveResultCount: 0
+    };
+  };
+
+  // ---- 保存データの部分ごとの型検査(壊れたJSONの一部だけ壊れているケースに耐える) ----
+  // stats.byDomain[1〜4] は {answered:number, correct:number} でなければ、その分野だけ初期値に戻す
+  DOJO.sanitizeByDomain = function(raw){
+    var out = {};
+    [1,2,3,4].forEach(function(d){
+      var v = raw && raw[d];
+      if (v && typeof v === "object" && typeof v.answered === "number" && typeof v.correct === "number"){
+        out[d] = { answered: v.answered, correct: v.correct };
+      } else {
+        out[d] = { answered: 0, correct: 0 };
+      }
+    });
+    return out;
+  };
+
+  // questionState の各レコードも同様に型検査し、壊れているIDの記録だけ落とす(未出題扱いに戻る)
+  DOJO.sanitizeQuestionState = function(raw){
+    var out = {};
+    if (!raw || typeof raw !== "object") return out;
+    Object.keys(raw).forEach(function(id){
+      var v = raw[id];
+      if (v && typeof v === "object" &&
+          typeof v.box === "number" &&
+          typeof v.seenCount === "number" &&
+          typeof v.wrongCount === "number"){
+        out[id] = {
+          box: v.box,
+          seenCount: v.seenCount,
+          wrongCount: v.wrongCount,
+          everWrong: !!v.everWrong,
+          lastResult: (v.lastResult === "correct" || v.lastResult === "wrong") ? v.lastResult : null,
+          lastAnsweredDate: typeof v.lastAnsweredDate === "string" ? v.lastAnsweredDate : null,
+          nextDueDate: typeof v.nextDueDate === "string" ? v.nextDueDate : null
+        };
+      }
+    });
+    return out;
+  };
+
+  // 「データを読み込む」で貼り付けられたJSONの形が期待通りか(必須キーの有無)を見る
+  DOJO.isValidExportedState = function(obj){
+    if (!obj || typeof obj !== "object" || Array.isArray(obj)) return false;
+    if (!obj.stats || typeof obj.stats !== "object" || Array.isArray(obj.stats)) return false;
+    if (!obj.questionState || typeof obj.questionState !== "object" || Array.isArray(obj.questionState)) return false;
+    return true;
+  };
+
+  DOJO.loadState = function(storage){
+    var def = DOJO.defaultState();
+    try {
+      if (!storage) return def;
+      var raw = storage.getItem(DOJO.STORAGE_KEY);
+      if (!raw) return def;
+      var parsed = JSON.parse(raw);
+      if (!parsed || typeof parsed !== "object") return def;
+      var out = def;
+      out.meta = Object.assign({}, def.meta, parsed.meta || {});
+      out.xp = typeof parsed.xp === "number" ? parsed.xp : 0;
+      out.stats = Object.assign({}, def.stats, parsed.stats || {});
+      out.stats.byDomain = DOJO.sanitizeByDomain((parsed.stats && parsed.stats.byDomain) || {});
+      out.questionState = DOJO.sanitizeQuestionState(parsed.questionState);
+      out.mockExam = parsed.mockExam || null;
+      out.fiveResultCount = typeof parsed.fiveResultCount === "number" ? parsed.fiveResultCount : 0;
+      return out;
+    } catch(e){
+      return def;
+    }
+  };
+
+  DOJO.saveState = function(storage, state){
+    try {
+      if (!storage) return false;
+      state.meta.updatedAt = DOJO.todayStr();
+      storage.setItem(DOJO.STORAGE_KEY, JSON.stringify(state));
+      return true;
+    } catch(e){
+      return false;
+    }
+  };
+
+  /* =========================================================
+     ねむり音声(DOJO.audio*)。画面に依存しないコアロジック。
+     ========================================================= */
+  DOJO.AUDIO_STORAGE_KEY = "aws_dojo_audio_v1";
+
+  // script.json が無い/壊れている時に使う章名だけの固定リスト
+  DOJO.AUDIO_FALLBACK_CHAPTERS = [
+    { n: 1, title: "責任共有モデル" },
+    { n: 2, title: "IAM" },
+    { n: 3, title: "料金とEC2の購入オプション、コスト管理" },
+    { n: 4, title: "サポート・Trusted Advisor・Well-Architected・6つの利点" },
+    { n: 5, title: "今日の1個" }
+  ];
+
+  // script.json の生データ(または取得失敗時はnull)を、画面が使いやすい形に正規化する
+  DOJO.audioResolveScript = function(raw){
+    if (raw && typeof raw === "object" && Array.isArray(raw.chapters) && raw.chapters.length > 0){
+      var chapters = raw.chapters.map(function(c){
+        var n = Number(c && c.n);
+        return {
+          n: n,
+          file: (c && typeof c.file === "string") ? c.file : ("ch" + n + ".mp3"),
+          title: (c && typeof c.title === "string") ? c.title : ("第" + n + "章"),
+          minutes: (c && typeof c.minutes === "number") ? c.minutes : null,
+          lines: (c && Array.isArray(c.lines)) ? c.lines.filter(function(l){ return typeof l === "string"; }) : []
+        };
+      }).filter(function(c){ return Number.isInteger(c.n) && c.n >= 1; });
+      if (chapters.length === 0) return DOJO.audioResolveScript(null);
+      return {
+        title: (typeof raw.title === "string") ? raw.title : "AWS道場 ねむり台本",
+        total_minutes: (typeof raw.total_minutes === "number") ? raw.total_minutes : null,
+        chapters: chapters,
+        daily: DOJO.audioResolveDaily(raw.daily),
+        hasScript: true
+      };
+    }
+    var fallback = DOJO.AUDIO_FALLBACK_CHAPTERS.map(function(c){
+      return { n: c.n, file: "ch" + c.n + ".mp3", title: c.title, minutes: null, lines: [] };
+    });
+    return { title: "AWS道場 ねむり台本", total_minutes: null, chapters: fallback, daily: [], hasScript: false };
+  };
+
+  // script.json の daily(「今日の分」、毎日1本増える)を正規化する。n は日付の数字(20260913)、file は daily/2026-09-13.mp3
+  DOJO.audioResolveDaily = function(list){
+    if (!Array.isArray(list)) return [];
+    return list.map(function(e){
+      var n = Number(e && e.n);
+      return {
+        n: n,
+        date: (e && typeof e.date === "string") ? e.date : "",
+        label: (e && typeof e.label === "string") ? e.label : "",
+        file: (e && typeof e.file === "string") ? e.file : "",
+        title: (e && typeof e.title === "string") ? e.title : "今日の分",
+        minutes: (e && typeof e.minutes === "number") ? e.minutes : null,
+        lines: (e && Array.isArray(e.lines)) ? e.lines.filter(function(l){ return typeof l === "string"; }) : [],
+        daily: true
+      };
+    }).filter(function(e){ return Number.isInteger(e.n) && e.n >= 1 && e.file; });
+  };
+
+  // 章番号(または今日の分の日付番号)から、章か今日の分を探す
+  DOJO.audioFindChapter = function(script, n){
+    var lists = [(script && script.chapters) || [], (script && script.daily) || []];
+    for (var k = 0; k < lists.length; k++){
+      for (var i = 0; i < lists[k].length; i++){ if (lists[k][i].n === n) return lists[k][i]; }
+    }
+    return null;
+  };
+
+  // 今日の分の見出し。今日なら「今日の分 クラウドの概念」、前の日なら「9/12の分 クラウドの概念」
+  DOJO.audioDailyTitle = function(entry, todayISO){
+    var theme = String((entry && entry.title) || "").replace(/^今日の分[:：]\s*/, "");
+    var head = (entry && entry.date && entry.date === todayISO) ? "今日の分" : ((entry && entry.label) ? entry.label + "の分" : "今日の分");
+    return theme ? (head + " " + theme) : head;
+  };
+
+  // 「約2.7分」のような表示用テキスト(小数第1位まで、末尾.0は落とす)
+  DOJO.audioFormatMinutes = function(minutes){
+    if (typeof minutes !== "number" || isNaN(minutes)) return "";
+    var rounded = Math.round(minutes * 10) / 10;
+    var text = (rounded % 1 === 0) ? String(Math.round(rounded)) : String(rounded);
+    return "約" + text + "分";
+  };
+
+  // 秒数を "1:05" のようなmm:ss表示にする
+  DOJO.audioFormatTime = function(seconds){
+    var sec = Math.max(0, Math.floor(seconds || 0));
+    var m = Math.floor(sec / 60), s = sec % 60;
+    return m + ":" + String(s).padStart(2, "0");
+  };
+
+  // 「全部通し」再生中、経過秒数から今どの章にいるか(章のnを返す)。
+  // minutesが無い(不明な)章はまたげないので候補にせず、最終的に判定できなければ最後の章を返す。
+  DOJO.audioChapterAtTime = function(chapters, seconds){
+    var list = chapters || [];
+    var elapsed = 0;
+    for (var i = 0; i < list.length; i++){
+      var c = list[i];
+      var durSec = (typeof c.minutes === "number" && c.minutes > 0) ? c.minutes * 60 : 0;
+      if (durSec <= 0) continue;
+      elapsed += durSec;
+      if (seconds < elapsed) return c.n;
+    }
+    return list.length ? list[list.length - 1].n : null;
+  };
+
+  // スリープタイマー: "15"/"30"は時刻ベースの終了時刻を返す。"off"/"chapter"は時刻で管理しないのでnull
+  DOJO.audioSleepEndAt = function(option, nowMs){
+    var now = typeof nowMs === "number" ? nowMs : Date.now();
+    if (option === "15") return now + 15 * 60 * 1000;
+    if (option === "30") return now + 30 * 60 * 1000;
+    return null;
+  };
+
+  // スリープタイマーの残り表示。日をまたぐ終了時刻でも、時刻の引き算(ms)だけで計算するので影響を受けない
+  DOJO.audioSleepRemainingLabel = function(endAt, nowMs){
+    if (!endAt) return "";
+    var now = typeof nowMs === "number" ? nowMs : Date.now();
+    var remainMs = endAt - now;
+    if (remainMs <= 0) return "まもなく停止";
+    var remainSec = Math.ceil(remainMs / 1000);
+    var m = Math.floor(remainSec / 60), s = remainSec % 60;
+    return "あと " + m + ":" + String(s).padStart(2, "0") + " で停止";
+  };
+
+  DOJO.audioDefaultState = function(){
+    return { positions: {}, lastPlayed: null, speed: 1, sleepTimer: "off", notes: [], highestChapter: 0 };
+  };
+
+  DOJO.audioLoadState = function(storage){
+    var def = DOJO.audioDefaultState();
+    try {
+      if (!storage) return def;
+      var raw = storage.getItem(DOJO.AUDIO_STORAGE_KEY);
+      if (!raw) return def;
+      var parsed = JSON.parse(raw);
+      if (!parsed || typeof parsed !== "object") return def;
+      var out = def;
+      out.positions = (parsed.positions && typeof parsed.positions === "object" && !Array.isArray(parsed.positions)) ? parsed.positions : {};
+      out.lastPlayed = (parsed.lastPlayed && typeof parsed.lastPlayed === "object" && typeof parsed.lastPlayed.key === "string")
+        ? { key: parsed.lastPlayed.key, seconds: Number(parsed.lastPlayed.seconds) || 0 }
+        : null;
+      out.speed = [1, 1.25, 1.5, 2].indexOf(parsed.speed) >= 0 ? parsed.speed : 1;
+      out.sleepTimer = ["off", "15", "30", "chapter"].indexOf(parsed.sleepTimer) >= 0 ? parsed.sleepTimer : "off";
+      out.notes = Array.isArray(parsed.notes) ? parsed.notes.filter(function(n){ return n && typeof n.text === "string"; }).slice(0, 5) : [];
+      out.highestChapter = typeof parsed.highestChapter === "number" ? parsed.highestChapter : 0;
+      return out;
+    } catch(e){
+      return def;
+    }
+  };
+
+  DOJO.audioSaveState = function(storage, state){
+    try {
+      if (!storage) return false;
+      storage.setItem(DOJO.AUDIO_STORAGE_KEY, JSON.stringify(state));
+      return true;
+    } catch(e){
+      return false;
+    }
+  };
+
+  // 再生位置の記録(章ごと・5秒ごと/一時停止時に呼ぶ想定)。stateは書き換えず新しいオブジェクトを返す
+  DOJO.audioRecordPosition = function(state, key, seconds){
+    var st = state || DOJO.audioDefaultState();
+    var positions = Object.assign({}, st.positions);
+    positions[key] = Math.max(0, Math.floor(seconds || 0));
+    var highestChapter = st.highestChapter || 0;
+    if (key !== "full"){
+      var n = Number(key);
+      if (Number.isInteger(n) && n > highestChapter) highestChapter = n;
+    }
+    return Object.assign({}, st, {
+      positions: positions,
+      lastPlayed: { key: key, seconds: positions[key] },
+      highestChapter: highestChapter
+    });
+  };
+
+  // 「続きから(第3章 1:20)」ボタン用のデータ。ほぼ最初(3秒未満)なら出さない
+  DOJO.audioResumeLabel = function(state, script){
+    if (!state || !state.lastPlayed || !state.lastPlayed.key) return null;
+    var key = state.lastPlayed.key;
+    var seconds = state.lastPlayed.seconds || 0;
+    if (seconds < 3) return null;
+    var found = script ? DOJO.audioFindChapter(script, Number(key)) : null;
+    var label = key === "full" ? "全部通し" : ((found && found.daily) ? (found.label + "の分") : ("第" + key + "章"));
+    return { key: key, seconds: seconds, label: label };
+  };
+
+  // 「今日の1個」を先頭に追加し、最新5件までに切り詰める。空文字は無視する
+  DOJO.audioAddNote = function(notes, text, dateStr){
+    var list = Array.isArray(notes) ? notes.slice() : [];
+    var trimmed = (text || "").trim();
+    if (!trimmed) return list;
+    list.unshift({ date: dateStr, text: trimmed });
+    return list.slice(0, 5);
+  };
+
+  DOJO.audioFormatRecord = function(highestChapter){
+    if (!highestChapter) return "記録 AWS 音声";
+    return "記録 AWS 音声 第" + highestChapter + "章まで";
+  };
+
+  /* =========================================================
+     用語帳(DOJO.glossary*)。画面に依存しないコアロジック。
+     ========================================================= */
+  DOJO.GLOSSARY_STORAGE_KEY = "aws_dojo_glossary_v1";
+
+  // ---- glossary.js の壊れた行を除外する(sanitizeQuestionsと同じ流儀) ----
+  DOJO.sanitizeGlossary = function(list){
+    var out = [];
+    var seenNames = {};
+    (Array.isArray(list) ? list : []).forEach(function(raw){
+      if (!raw || typeof raw !== "object"){
+        console.warn("[DOJO] 用語を読み飛ばしました name=(不明) 理由=行の形式が不正");
+        return;
+      }
+      var reason = null;
+      var name = raw.name;
+      if (typeof name !== "string" || name.trim() === ""){ reason = "nameが空、または文字列でない"; }
+      else if (seenNames[name]){ reason = "nameが重複している"; }
+
+      var domain = Number(raw.domain);
+      if (!reason && [1,2,3,4].indexOf(domain) < 0){ reason = "domainが1〜4のいずれでもない"; }
+
+      var role = raw.role;
+      if (!reason && (typeof role !== "string" || role.trim() === "")){ reason = "roleが空、または文字列でない"; }
+
+      if (reason){
+        console.warn("[DOJO] 用語を読み飛ばしました name=" + (typeof name === "string" && name ? name : "(不明)") + " 理由=" + reason);
+        return;
+      }
+
+      seenNames[name] = true;
+      out.push({
+        name: name,
+        domain: domain,
+        expand: typeof raw.expand === "string" ? raw.expand : "",
+        key_letter: typeof raw.key_letter === "string" ? raw.key_letter : "",
+        key_meaning: typeof raw.key_meaning === "string" ? raw.key_meaning : "",
+        role: role,
+        cues: Array.isArray(raw.cues) ? raw.cues.filter(function(c){ return typeof c === "string" && c !== ""; }) : [],
+        confuse: typeof raw.confuse === "string" ? raw.confuse : "",
+        link: typeof raw.link === "string" ? raw.link : ""
+      });
+    });
+    return out;
+  };
+
+  // "Amazon EBS" -> "EBS" / "AWS Lambda" -> "Lambda"(接頭辞が無ければそのまま)
+  DOJO.glossaryShortName = function(name){
+    if (typeof name !== "string") return "";
+    if (name.indexOf("Amazon ") === 0) return name.slice(7);
+    if (name.indexOf("AWS ") === 0) return name.slice(4);
+    return name;
+  };
+
+  // expand内のkey_letterに一致する最初の1箇所だけ<b class="key-letter">で囲む
+  DOJO.glossaryExpandHtml = function(expand, keyLetter){
+    if (typeof expand !== "string" || expand === "") return "";
+    if (typeof keyLetter !== "string" || keyLetter === "") return expand;
+    var idx = expand.indexOf(keyLetter);
+    if (idx < 0) return expand;
+    return expand.slice(0, idx) + '<b class="key-letter">' + expand.slice(idx, idx + keyLetter.length) + '</b>' + expand.slice(idx + keyLetter.length);
+  };
+
+  // 1語分の「略の意味」表示テキストを組み立てる(例: EBS = Elastic <b>B</b>lock Store(B=ブロック…))
+  DOJO.formatGlossaryHint = function(g){
+    var shortName = DOJO.glossaryShortName(g.name);
+    var body;
+    if (g.expand){
+      body = DOJO.glossaryExpandHtml(g.expand, g.key_letter);
+      if (g.key_meaning) body += " ／ " + g.key_meaning;
+    } else if (g.key_meaning){
+      body = g.key_meaning;
+    } else {
+      body = g.role || "";
+    }
+    return shortName + " = " + body;
+  };
+
+  // 問題文・選択肢に出てくる用語をglossaryから拾い、「略の意味」表示テキストを最大4語まで返す純粋関数
+  DOJO.glossaryHintsFor = function(question, glossaryList){
+    var list = Array.isArray(glossaryList) ? glossaryList : [];
+    if (!question || list.length === 0) return [];
+    var text = (typeof question.q === "string" ? question.q : "") + " " +
+      (Array.isArray(question.choices) ? question.choices.join(" ") : "");
+    var lowerText = text.toLowerCase();
+    var out = [];
+    for (var i = 0; i < list.length && out.length < 4; i++){
+      var g = list[i];
+      if (!g || typeof g.name !== "string" || g.name === "") continue;
+      var shortName = DOJO.glossaryShortName(g.name);
+      var hit = lowerText.indexOf(g.name.toLowerCase()) >= 0;
+      if (!hit && shortName && shortName !== g.name){
+        hit = lowerText.indexOf(shortName.toLowerCase()) >= 0;
+      }
+      if (!hit) continue;
+      out.push(DOJO.formatGlossaryHint(g));
+    }
+    return out;
+  };
+
+  // ひらがな/カタカナ/英字の大小を区別しない検索用に正規化(全角カタカナ→ひらがな、英字は小文字化)
+  DOJO.normalizeSearchText = function(s){
+    if (typeof s !== "string") return "";
+    return s.toLowerCase().replace(/[ァ-ヶ]/g, function(ch){
+      return String.fromCharCode(ch.charCodeAt(0) - 0x60);
+    });
+  };
+
+  // name・role・cuesの部分一致検索 + 分野フィルタ + 「まだの語だけ」を1回でかける
+  DOJO.glossaryFilter = function(list, query, domain, onlyLeft, learnedMap){
+    var items = Array.isArray(list) ? list : [];
+    var q = DOJO.normalizeSearchText(query || "");
+    var lm = (learnedMap && typeof learnedMap === "object") ? learnedMap : {};
+    var domainFilterOn = domain !== undefined && domain !== null && domain !== "all" && domain !== 0 && domain !== "";
+    var domNum = domainFilterOn ? Number(domain) : null;
+    return items.filter(function(g){
+      if (domainFilterOn && g.domain !== domNum) return false;
+      if (onlyLeft && lm[g.name]) return false;
+      if (q === "") return true;
+      var haystack = DOJO.normalizeSearchText(
+        (g.name || "") + " " + (g.role || "") + " " + (Array.isArray(g.cues) ? g.cues.join(" ") : "")
+      );
+      return haystack.indexOf(q) >= 0;
+    });
+  };
+
+  // ---- 「覚えた」チェックの保存(語ごと、用語帳専用のlocalStorageキー) ----
+  DOJO.glossarySanitizeLearned = function(raw){
+    var out = {};
+    if (raw && typeof raw === "object" && !Array.isArray(raw)){
+      Object.keys(raw).forEach(function(k){ if (raw[k] === true) out[k] = true; });
+    }
+    return out;
+  };
+
+  DOJO.glossaryLoadLearned = function(storage){
+    try {
+      if (!storage) return {};
+      var raw = storage.getItem(DOJO.GLOSSARY_STORAGE_KEY);
+      if (!raw) return {};
+      var parsed = JSON.parse(raw);
+      return DOJO.glossarySanitizeLearned(parsed);
+    } catch(e){
+      return {};
+    }
+  };
+
+  DOJO.glossarySaveLearned = function(storage, map){
+    try {
+      if (!storage) return false;
+      storage.setItem(DOJO.GLOSSARY_STORAGE_KEY, JSON.stringify(map || {}));
+      return true;
+    } catch(e){
+      return false;
+    }
+  };
+
+  DOJO.formatRecordGlossary = function(learnedCount, total){
+    return "記録 AWS 用語帳 " + learnedCount + "/" + total;
+  };
+
+  /* =========================================================
+     部品の英単語(DOJO.words*)。画面に依存しないコアロジック。
+     ========================================================= */
+  DOJO.WORDS_STORAGE_KEY = "aws_dojo_words_v1";
+
+  // ---- words.js の壊れた行を除外する(word・jaが無ければ読み飛ばす)。servicesは配列に正規化 ----
+  DOJO.sanitizeWords = function(list){
+    var out = [];
+    (Array.isArray(list) ? list : []).forEach(function(raw){
+      if (!raw || typeof raw !== "object"){
+        console.warn("[DOJO] 英単語を読み飛ばしました word=(不明) 理由=行の形式が不正");
+        return;
+      }
+      var word = raw.word;
+      var ja = raw.ja;
+      var reason = null;
+      if (typeof word !== "string" || word.trim() === ""){ reason = "wordが空、または文字列でない"; }
+      else if (typeof ja !== "string" || ja.trim() === ""){ reason = "jaが空、または文字列でない"; }
+
+      if (reason){
+        console.warn("[DOJO] 英単語を読み飛ばしました word=" + (typeof word === "string" && word ? word : "(不明)") + " 理由=" + reason);
+        return;
+      }
+
+      var services;
+      if (Array.isArray(raw.services)){
+        services = raw.services.filter(function(s){ return typeof s === "string" && s !== ""; });
+      } else if (typeof raw.services === "string" && raw.services !== ""){
+        services = [raw.services];
+      } else {
+        services = [];
+      }
+
+      out.push({
+        word: word,
+        ja: ja,
+        hint: typeof raw.hint === "string" ? raw.hint : "",
+        services: services
+      });
+    });
+    return out;
+  };
+
+  // 「まだの単語だけ」の絞り込み(検索は無し。onlyLeft=trueなら覚えた語を除く)
+  DOJO.wordsFilter = function(list, onlyLeft, learnedMap){
+    var items = Array.isArray(list) ? list : [];
+    var lm = (learnedMap && typeof learnedMap === "object") ? learnedMap : {};
+    return items.filter(function(w){
+      if (onlyLeft && lm[w.word]) return false;
+      return true;
+    });
+  };
+
+  DOJO.formatRecordWords = function(learned, total){
+    return "記録 AWS 英単語 " + learned + "/" + total;
+  };
+
+  window.DOJO = DOJO;
+
+  /* =========================================================
+     ダミー問題(questions.js が無い/空の時のフォールバック)
+     ========================================================= */
+  var DUMMY_QUESTIONS = [
+    { id:"dev-d1-01", domain:1, topic:"クラウドの利点", q:"AWSクラウドを使う利点として正しいものを2つ選んでください。", choices:["初期投資(データセンター購入費)が不要になる","需要に応じてキャパシティを柔軟に調整できる","運用コストが常に一定額になる","自社でハードウェアを保守する必要がある"], answer:[0,1], multi:true, explanation:"AWSでは先行投資が不要になり、実際の需要に応じてキャパシティを柔軟に調整できます。固定費でなく従量課金なので運用コストは変動します。", link:"" },
+    { id:"dev-d1-02", domain:1, topic:"責任共有モデル", q:"AWSの責任共有モデルで、AWS側が責任を持つのはどれですか。", choices:["OSへのパッチ適用","アプリケーションのデータ暗号化設定","データセンターの物理的セキュリティ","IAMユーザーの権限設定"], answer:[2], multi:false, explanation:"AWSは「クラウドの安全性(物理インフラ等)」に責任を持ちます。OSやデータの扱いは利用者側の責任です。", link:"" },
+    { id:"dev-d2-01", domain:2, topic:"IAM", q:"AWSアカウントのrootユーザーの扱いとして最も推奨されるのはどれですか。", choices:["日常作業でrootユーザーを使う","rootユーザーにMFAを設定し、普段はIAMユーザーを使う","rootユーザーのパスワードをチームで共有する","rootユーザーのアクセスキーを常時発行しておく"], answer:[1], multi:false, explanation:"rootユーザーはMFAで保護したうえで普段は使わず、権限を絞ったIAMユーザーで作業するのが推奨されます。", link:"" },
+    { id:"dev-d2-02", domain:2, topic:"責任共有モデル", q:"責任共有モデルで顧客(利用者)側の責任に含まれるものはどれですか。", choices:["ハードウェアの保守・交換","OSとアプリケーションへのパッチ適用","データセンターの電源・空調管理","ネットワーク配線の物理的保護"], answer:[1], multi:false, explanation:"顧客は「クラウド内のセキュリティ」に責任を持ち、OS・アプリのパッチ適用やデータの扱いが含まれます。", link:"" },
+    { id:"dev-d3-01", domain:3, topic:"コンピューティング", q:"サーバーを管理せずにコードを実行できるAWSサービスはどれですか。", choices:["Amazon EC2","AWS Lambda","Amazon RDS","AWS Direct Connect"], answer:[1], multi:false, explanation:"AWS Lambdaはサーバーレスでコードを実行できるサービスで、サーバーの管理は不要です。", link:"" },
+    { id:"dev-d3-02", domain:3, topic:"ストレージ", q:"オブジェクトストレージサービスはどれですか。", choices:["Amazon S3","Amazon EBS","Amazon EFS","Amazon RDS"], answer:[0], multi:false, explanation:"Amazon S3はオブジェクトストレージサービスで、静的ファイルなどの保存によく使われます。", link:"" },
+    { id:"dev-d4-01", domain:4, topic:"料金モデル", q:"AWSの基本的な料金の考え方として正しいものはどれですか。", choices:["定額制のみで従量課金はない","使った分だけ支払う従量課金が基本","必ず年間契約が必要","常に無料で使える"], answer:[1], multi:false, explanation:"AWSは基本的に「使った分だけ支払う」従量課金制です。", link:"" },
+    { id:"dev-d4-02", domain:4, topic:"サポートプラン", q:"24時間365日、技術サポートに電話でアクセスできる最低限のサポートプランはどれですか。", choices:["デベロッパー","ベーシック","ビジネス","エンタープライズ"], answer:[2], multi:false, explanation:"電話サポートが含まれる最低限のプランはビジネスサポートです。デベロッパー以下には電話サポートはありません。", link:"" }
+  ];
+
+  var RAW_EXTERNAL_QUESTIONS = window.AWS_QUESTIONS;
+  var SANITIZED_EXTERNAL_QUESTIONS = Array.isArray(RAW_EXTERNAL_QUESTIONS) ? DOJO.sanitizeQuestions(RAW_EXTERNAL_QUESTIONS) : [];
+  var QUESTIONS_SKIPPED_COUNT = Array.isArray(RAW_EXTERNAL_QUESTIONS) ? (RAW_EXTERNAL_QUESTIONS.length - SANITIZED_EXTERNAL_QUESTIONS.length) : 0;
+  var QUESTIONS = DOJO.resolveQuestionPool(SANITIZED_EXTERNAL_QUESTIONS, DUMMY_QUESTIONS);
+
+  // glossary.js未読込(window.AWS_GLOSSARYが無い)なら空配列。未定義でも壊れない。
+  var RAW_GLOSSARY = window.AWS_GLOSSARY;
+  var GLOSSARY = Array.isArray(RAW_GLOSSARY) ? DOJO.sanitizeGlossary(RAW_GLOSSARY) : [];
+
+  // words.js未読込(window.AWS_WORDSが無い)なら空配列。未定義でも壊れない。
+  var RAW_WORDS = window.AWS_WORDS;
+  var WORDS = Array.isArray(RAW_WORDS) ? DOJO.sanitizeWords(RAW_WORDS) : [];
+
+  /* =========================================================
+     UI(DOM依存)。ここから下はブラウザでのみ動く。
+     ========================================================= */
+  var storage = (function(){
+    try { window.localStorage.setItem("__t","1"); window.localStorage.removeItem("__t"); return window.localStorage; }
+    catch(e){ return null; }
+  })();
+
+  var state = DOJO.loadState(storage);
+  var audioState = DOJO.audioLoadState(storage);
+  var byId = {};
+  QUESTIONS.forEach(function(q){ byId[q.id] = q; });
+
+  var MOCK_COUNT_INFO = DOJO.mockAvailableCount(QUESTIONS);
+  var MOCK_COUNT_LABEL = MOCK_COUNT_INFO.actual + "問" + (MOCK_COUNT_INFO.insufficient ? "(問題帳が足りないため)" : "") + "・90分";
+
+  function persist(){ DOJO.saveState(storage, state); }
+
+  // 解説の下に付ける「略の意味」表示(用語帳が無い/一致が無ければ空文字)
+  function glossaryHintHtml(q){
+    if (!GLOSSARY.length) return "";
+    var hints = DOJO.glossaryHintsFor(q, GLOSSARY);
+    if (!hints.length) return "";
+    return '<div class="glossary-hint"><span class="gh-title">略の意味</span>' + hints.map(function(h){ return '<span class="gh-item">' + h + '</span>'; }).join('') + '</div>';
+  }
+
+  function $(id){ return document.getElementById(id); }
+  function showScreen(name){
+    document.querySelectorAll(".screen").forEach(function(el){ el.classList.add("hidden"); });
+    $("screen-" + name).classList.remove("hidden");
+    window.scrollTo(0,0);
+  }
+
+  function toast(msg){
+    var t = $("toast");
+    t.textContent = msg;
+    t.classList.add("show");
+    setTimeout(function(){ t.classList.remove("show"); }, 1600);
+  }
+
+  function applyTheme(){
+    document.documentElement.setAttribute("data-theme", state.meta.theme === "light" ? "light" : "dark");
+  }
+
+  function showCopyFallback(text){
+    $("copy-fallback-area").value = text;
+    $("copy-fallback-overlay").classList.remove("hidden");
+  }
+
+  function copyText(text, btnEl){
+    function fallback(){
+      var ta = document.createElement("textarea");
+      ta.value = text;
+      ta.style.position = "fixed";
+      ta.style.opacity = "0";
+      document.body.appendChild(ta);
+      ta.focus(); ta.select();
+      var ok = false;
+      try { ok = document.execCommand("copy"); } catch(e){ ok = false; }
+      document.body.removeChild(ta);
+      if (ok){ toast("コピーしました"); }
+      else { showCopyFallback(text); }
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(function(){ toast("コピーしました"); }).catch(fallback);
+    } else {
+      fallback();
+    }
+  }
+
+  $("btn-copy-fallback-close").addEventListener("click", function(){
+    $("copy-fallback-overlay").classList.add("hidden");
+  });
+
+  // ---------- ホーム描画 ----------
+  function renderHome(){
+    $("home-export-hint").textContent = state.meta.lastExportAt ? ("控え: " + state.meta.lastExportAt) : "控え: まだ";
+
+    if (QUESTIONS_SKIPPED_COUNT > 0){
+      $("home-skip-note").textContent = "問題帳のうち" + QUESTIONS_SKIPPED_COUNT + "問を読み飛ばしました";
+      $("home-skip-note").classList.remove("hidden");
+    }
+
+    var info = DOJO.levelInfo(state.xp);
+    $("home-level-badge").textContent = "Lv" + info.level;
+    $("home-level-title").textContent = info.title;
+    $("home-level-sub").textContent = info.xpForNext === null ? "最高レベルに到達" : ("次のレベルまで " + (info.xpForNext - info.xpIntoLevel) + "XP");
+    var pct = info.xpForNext ? Math.min(100, Math.round((info.xpIntoLevel / info.xpForNext) * 100)) : 100;
+    $("home-xp-fill").style.width = pct + "%";
+    $("home-xp-label").textContent = info.xpForNext === null ? (state.xp + " XP") : (info.xpIntoLevel + " / " + info.xpForNext + " XP");
+
+    $("home-total-answered").textContent = state.stats.totalAnswered;
+    var acc = state.stats.totalAnswered ? Math.round((state.stats.totalCorrect / state.stats.totalAnswered) * 100) : 0;
+    $("home-accuracy").textContent = acc + "%";
+
+    var barsHtml = "";
+    [1,2,3,4].forEach(function(d){
+      var s = state.stats.byDomain[d] || {answered:0,correct:0};
+      var p = s.answered ? Math.round((s.correct/s.answered)*100) : 0;
+      barsHtml += '<div class="domain-bar-row">' +
+        '<div class="domain-bar-label"><span>分野' + d + ' ' + DOMAIN_NAMES[d] + '</span><span>' + p + '%</span></div>' +
+        '<div class="domain-bar-track"><div class="domain-bar-fill" style="width:' + p + '%"></div></div></div>';
+    });
+    $("home-domain-bars").innerHTML = barsHtml;
+
+    var reviewCount = 0;
+    Object.keys(state.questionState).forEach(function(id){ if (state.questionState[id].box >= 1) reviewCount++; });
+    $("home-review-count").textContent = reviewCount;
+
+    if (state.mockExam && !state.mockExam.finished){
+      $("btn-start-mock").textContent = "模擬試験を再開する";
+    } else {
+      $("btn-start-mock").textContent = "模擬試験(" + MOCK_COUNT_LABEL + ")";
+    }
+  }
+
+  // ---------- 5問セッション ----------
+  var fiveSession = null;
+
+  function startFive(domainFilter){
+    var today = DOJO.todayStr();
+    var qs = DOJO.selectFive(QUESTIONS, state.questionState, today, Math.random, domainFilter || null);
+    if (qs.length === 0){ toast("出せる問題がありません"); return; }
+    fiveSession = { questions: qs, index: 0, correctCount: 0, xpGained: 0, leveledUp:false, startLevel: DOJO.levelInfo(state.xp).level };
+    showScreen("quiz");
+    renderQuizFor("five");
+  }
+
+  var quizSelected = [];
+  var quizAnswered = false;
+  var currentQuizMode = null;
+  var quizOrder = null; // 表示中の問題の選択肢シャッフル順(order[表示位置]=元の添字)
+
+  function currentQuestion(mode){
+    if (mode === "five") return fiveSession.questions[fiveSession.index];
+    return byId[state.mockExam.questionIds[state.mockExam.currentIndex]];
+  }
+
+  // 模擬試験は「中断→再開」「前へ/次へ」で同じ問題に戻っても選択肢の並びが変わらないよう、
+  // 問題ごとのorderをmockExamの保存状態に持つ。古い保存データ(orderが無い)ならその場で作って保存する。
+  function getOrCreateMockOrder(q){
+    if (!state.mockExam) return DOJO.permuteChoices(q, Math.random).order;
+    if (!state.mockExam.choiceOrders || typeof state.mockExam.choiceOrders !== "object"){
+      state.mockExam.choiceOrders = {};
+    }
+    var order = state.mockExam.choiceOrders[q.id];
+    if (!Array.isArray(order) || order.length !== q.choices.length){
+      order = DOJO.permuteChoices(q, Math.random).order;
+      state.mockExam.choiceOrders[q.id] = order;
+      persist();
+    }
+    return order;
+  }
+
+  // 模擬試験の回答(表示位置ベースで保存済み)を、既存の判定関数に渡せる元の添字に戻す
+  function mockOriginalSelected(q){
+    var a = state.mockExam.answers[q.id];
+    if (!a || !a.selected) return [];
+    var order = getOrCreateMockOrder(q);
+    return a.selected.map(function(shownIdx){ return DOJO.unpermuteIndex(order, shownIdx); });
+  }
+
+  function renderQuizFor(mode){
+    quizSelected = [];
+    quizAnswered = false;
+    currentQuizMode = mode;
+    var q = currentQuestion(mode);
+    // 表示のたびに選択肢をシャッフルする(5問セットは毎回新しく、模擬試験は問題ごとに固定して保存する)
+    quizOrder = mode === "five" ? DOJO.permuteChoices(q, Math.random).order : getOrCreateMockOrder(q);
+
+    $("btn-quiz-back").textContent = mode === "five" ? "← ホーム" : "中断して戻る";
+    $("quiz-domain-tag").textContent = "分野" + q.domain + " " + DOMAIN_NAMES[q.domain];
+    $("quiz-question-text").textContent = q.q;
+    $("quiz-feedback").innerHTML = "";
+    $("btn-quiz-next").classList.add("hidden");
+    $("btn-quiz-confirm").classList.add("hidden");
+    $("quiz-mock-nav").classList.add("hidden");
+    $("btn-mock-finish").classList.add("hidden");
+    $("mock-grid").classList.add("hidden");
+    $("quiz-flag-row").classList.add("hidden");
+    $("quiz-timer").textContent = "";
+
+    if (mode === "five"){
+      $("quiz-progress").textContent = (fiveSession.index+1) + " / " + fiveSession.questions.length;
+      if (q.multi) $("btn-quiz-confirm").classList.remove("hidden");
+    } else {
+      var total = state.mockExam.questionIds.length;
+      $("quiz-progress").textContent = (state.mockExam.currentIndex+1) + " / " + total;
+      $("quiz-mock-nav").classList.remove("hidden");
+      $("quiz-flag-row").classList.remove("hidden");
+      $("mock-grid").classList.remove("hidden");
+      var savedAns = state.mockExam.answers[q.id];
+      $("quiz-flag-checkbox").checked = !!(savedAns && savedAns.flagged);
+      if (savedAns && savedAns.selected) quizSelected = savedAns.selected.slice();
+      renderMockGrid();
+      updateMockTimerDisplay();
+      if (state.mockExam.currentIndex === total - 1) $("btn-mock-finish").classList.remove("hidden");
+    }
+
+    var choicesHtml = "";
+    quizOrder.forEach(function(origIdx, i){
+      var c = q.choices[origIdx];
+      var sel = quizSelected.indexOf(i) >= 0 ? " selected" : "";
+      choicesHtml += '<button type="button" class="choice-btn ' + (q.multi ? "multi" : "single") + sel + '" data-idx="' + i + '">' +
+        '<span class="choice-mark">✓</span><span>' + c + '</span></button>';
+    });
+    $("quiz-choices").innerHTML = choicesHtml;
+
+    Array.prototype.forEach.call(document.querySelectorAll("#quiz-choices .choice-btn"), function(btn){
+      btn.addEventListener("click", function(){ onChoiceClick(mode, Number(btn.getAttribute("data-idx"))); });
+    });
+
+    if (mode === "mock" && quizSelected.length > 0){
+      // 既に選択済みなら見た目を反映
+      Array.prototype.forEach.call(document.querySelectorAll("#quiz-choices .choice-btn"), function(btn, i){
+        if (quizSelected.indexOf(i) >= 0) btn.classList.add("selected");
+      });
+    }
+  }
+
+  function onChoiceClick(mode, idx){
+    var q = currentQuestion(mode);
+    if (mode === "five" && quizAnswered) return;
+
+    if (q.multi){
+      var pos = quizSelected.indexOf(idx);
+      if (pos >= 0) quizSelected.splice(pos,1); else quizSelected.push(idx);
+      Array.prototype.forEach.call(document.querySelectorAll("#quiz-choices .choice-btn"), function(btn){
+        var i = Number(btn.getAttribute("data-idx"));
+        btn.classList.toggle("selected", quizSelected.indexOf(i) >= 0);
+      });
+      if (mode === "mock") saveMockAnswer(q.id);
+    } else {
+      quizSelected = [idx];
+      Array.prototype.forEach.call(document.querySelectorAll("#quiz-choices .choice-btn"), function(btn){
+        var i = Number(btn.getAttribute("data-idx"));
+        btn.classList.toggle("selected", i === idx);
+      });
+      if (mode === "five"){
+        confirmFiveAnswer();
+      } else {
+        saveMockAnswer(q.id);
+      }
+    }
+  }
+
+  $("btn-quiz-confirm").addEventListener("click", function(){ confirmFiveAnswer(); });
+
+  $("btn-quiz-back").addEventListener("click", function(){
+    if (currentQuizMode === "five"){
+      fiveSession = null;
+      renderHome();
+      showScreen("home");
+      return;
+    }
+    if (currentQuizMode === "mock"){
+      if (!confirm("模擬試験を中断してホームに戻ります。状態は保存され、続きから再開できます。よろしいですか")) return;
+      saveMockAnswer(currentQuestion("mock").id);
+      stopMockTimer();
+      renderHome();
+      showScreen("home");
+    }
+  });
+
+  function confirmFiveAnswer(){
+    if (quizAnswered) return;
+    var q = currentQuestion("five");
+    if (quizSelected.length === 0){ toast("選択してください"); return; }
+    quizAnswered = true;
+
+    // quizSelectedは表示位置(シャッフル後)。判定は元の添字に戻してから既存関数へ渡す
+    var originalSelected = quizSelected.map(function(i){ return DOJO.unpermuteIndex(quizOrder, i); });
+    var correct = DOJO.isCorrectAnswer(q, originalSelected);
+    var today = DOJO.todayStr();
+    var xp = 0;
+
+    try {
+      var prev = state.questionState[q.id];
+      var res = DOJO.applyAnswer(prev, correct, today);
+      state.questionState[q.id] = res.newState;
+
+      xp = DOJO.xpForAnswer(correct, res.wasReview);
+      var beforeLevel = DOJO.levelInfo(state.xp).level;
+      state.xp += xp;
+      var afterLevel = DOJO.levelInfo(state.xp).level;
+
+      state.stats.totalAnswered++;
+      if (correct) state.stats.totalCorrect++;
+      state.stats.byDomain[q.domain].answered++;
+      if (correct) state.stats.byDomain[q.domain].correct++;
+
+      fiveSession.xpGained += xp;
+      if (correct) fiveSession.correctCount++;
+      if (afterLevel > beforeLevel) fiveSession.leveledUp = afterLevel;
+
+      persist();
+    } catch(e){
+      console.warn("[DOJO] confirmFiveAnswer 状態更新に失敗", e);
+      toast("記録に失敗");
+    }
+
+    // 選択肢に正誤を色付け(状態更新に失敗しても見た目は必ず進める)
+    Array.prototype.forEach.call(document.querySelectorAll("#quiz-choices .choice-btn"), function(btn){
+      var i = Number(btn.getAttribute("data-idx"));
+      var origIdx = DOJO.unpermuteIndex(quizOrder, i);
+      btn.disabled = true;
+      if (q.answer.indexOf(origIdx) >= 0) btn.classList.add("correct");
+      else if (quizSelected.indexOf(i) >= 0) btn.classList.add("wrong");
+    });
+
+    var fbHtml = '<div class="feedback-box ' + (correct ? "ok" : "ng") + '">' +
+      '<div class="feedback-title">' + (correct ? "正解! +" + xp + "XP" : "不正解") + '</div>' +
+      '<div class="explanation">' + q.explanation + '</div>';
+    if (q.link){
+      fbHtml += '<div class="link-box"><div class="label">つばさくんの実例</div>' + q.link + '</div>';
+    }
+    fbHtml += glossaryHintHtml(q);
+    fbHtml += '</div>';
+    $("quiz-feedback").innerHTML = fbHtml;
+
+    $("btn-quiz-confirm").classList.add("hidden");
+    $("btn-quiz-next").classList.remove("hidden");
+  }
+
+  $("btn-quiz-next").addEventListener("click", function(){
+    if (fiveSession.index < fiveSession.questions.length - 1){
+      fiveSession.index++;
+      renderQuizFor("five");
+    } else {
+      finishFive();
+    }
+  });
+
+  function finishFive(){
+    var setSize = fiveSession.questions.length;
+    $("rf-score").textContent = fiveSession.correctCount + "/" + setSize;
+    $("rf-xp").textContent = "獲得XP +" + fiveSession.xpGained;
+
+    try {
+      state.fiveResultCount = (state.fiveResultCount || 0) + 1;
+      persist();
+    } catch(e){
+      console.warn("[DOJO] fiveResultCount 更新に失敗", e);
+    }
+    if (DOJO.shouldShowBackupHint(state.fiveResultCount || 0)){
+      $("rf-backup-hint").classList.remove("hidden");
+    } else {
+      $("rf-backup-hint").classList.add("hidden");
+    }
+
+    showScreen("result-five");
+    if (fiveSession.leveledUp){
+      showLevelUp(fiveSession.leveledUp);
+    }
+  }
+
+  function showLevelUp(level){
+    $("levelup-num").textContent = "Lv" + level;
+    $("levelup-title-text").textContent = DOJO.titleForLevel(level);
+    var overlay = $("levelup-overlay");
+    overlay.classList.remove("hidden");
+    setTimeout(function(){ overlay.classList.add("hidden"); }, 1800);
+  }
+
+  $("btn-rf-again").addEventListener("click", function(){ startFive(); });
+  $("btn-rf-home").addEventListener("click", function(){ renderHome(); showScreen("home"); });
+  $("btn-copy-rf").addEventListener("click", function(){
+    var acc = state.stats.totalAnswered ? Math.round((state.stats.totalCorrect/state.stats.totalAnswered)*100) : 0;
+    var lv = DOJO.levelInfo(state.xp).level;
+    var setSize = fiveSession ? fiveSession.questions.length : 5;
+    copyText(DOJO.formatRecordFiveN(fiveSession ? fiveSession.correctCount : 0, setSize, state.stats.totalAnswered, acc, lv));
+  });
+  $("btn-copy-home").addEventListener("click", function(){
+    copyText(DOJO.formatRecordHome(state));
+  });
+
+  $("btn-start-five").addEventListener("click", function(){ startFive(); });
+
+  // ---------- 模擬試験 ----------
+  var mockTimerHandle = null;
+
+  $("btn-start-mock").addEventListener("click", function(){
+    showScreen("mock-setup");
+    if (state.mockExam && !state.mockExam.finished){
+      $("btn-mock-resume").classList.remove("hidden");
+    } else {
+      $("btn-mock-resume").classList.add("hidden");
+    }
+  });
+  $("btn-mock-back").addEventListener("click", function(){ renderHome(); showScreen("home"); });
+
+  $("btn-mock-start-new").addEventListener("click", function(){
+    if (state.mockExam && !state.mockExam.finished){
+      if (!confirm("進行中の模擬試験があります。新しく始めると消えますが良いですか?")) return;
+    }
+    var qs = DOJO.selectMockQuestions(QUESTIONS, Math.random);
+    if (qs.length === 0){ toast("問題がありません"); return; }
+    var now = Date.now();
+    state.mockExam = {
+      startedAt: now,
+      endAt: now + DOJO.CONFIG.mockDurationSec * 1000,
+      questionIds: qs.map(function(q){ return q.id; }),
+      answers: {},
+      currentIndex: 0,
+      finished: false,
+      choiceOrders: {} // 問題ごとの選択肢シャッフル順(中断→再開/前へ/次へで並びを変えないため)
+    };
+    persist();
+    enterMockQuiz();
+  });
+
+  $("btn-mock-resume").addEventListener("click", function(){ enterMockQuiz(); });
+
+  function enterMockQuiz(){
+    showScreen("quiz");
+    renderQuizFor("mock");
+    startMockTimer();
+  }
+
+  function saveMockAnswer(qId){
+    state.mockExam.answers[qId] = {
+      selected: quizSelected.slice(),
+      flagged: $("quiz-flag-checkbox").checked
+    };
+    persist();
+  }
+
+  $("quiz-flag-checkbox").addEventListener("change", function(){
+    var q = currentQuestion("mock");
+    if (!state.mockExam.answers[q.id]) state.mockExam.answers[q.id] = { selected: quizSelected.slice(), flagged:false };
+    state.mockExam.answers[q.id].flagged = $("quiz-flag-checkbox").checked;
+    persist();
+    renderMockGrid();
+  });
+
+  $("btn-mock-prev").addEventListener("click", function(){
+    saveMockAnswer(currentQuestion("mock").id);
+    if (state.mockExam.currentIndex > 0){
+      state.mockExam.currentIndex--;
+      persist();
+      renderQuizFor("mock");
+    }
+  });
+  $("btn-mock-next").addEventListener("click", function(){
+    saveMockAnswer(currentQuestion("mock").id);
+    if (state.mockExam.currentIndex < state.mockExam.questionIds.length - 1){
+      state.mockExam.currentIndex++;
+      persist();
+      renderQuizFor("mock");
+    }
+  });
+
+  function renderMockGrid(){
+    var html = "";
+    state.mockExam.questionIds.forEach(function(id, i){
+      var a = state.mockExam.answers[id];
+      var cls = "";
+      if (a && a.selected && a.selected.length) cls += " done";
+      if (a && a.flagged) cls += " flagged";
+      if (i === state.mockExam.currentIndex) cls += " current";
+      html += '<button type="button" class="' + cls + '" data-jump="' + i + '">' + (i+1) + '</button>';
+    });
+    $("mock-grid").innerHTML = html;
+    Array.prototype.forEach.call(document.querySelectorAll("#mock-grid button"), function(btn){
+      btn.addEventListener("click", function(){
+        saveMockAnswer(currentQuestion("mock").id);
+        state.mockExam.currentIndex = Number(btn.getAttribute("data-jump"));
+        persist();
+        renderQuizFor("mock");
+      });
+    });
+  }
+
+  function updateMockTimerDisplay(){
+    if (!state.mockExam) return;
+    var remain = Math.max(0, Math.floor((state.mockExam.endAt - Date.now())/1000));
+    var m = Math.floor(remain/60), s = remain%60;
+    var label = "残り " + m + ":" + String(s).padStart(2,"0");
+    var el = $("quiz-timer");
+    el.textContent = label;
+    el.classList.toggle("low", remain <= 300);
+    if (remain <= 0){
+      stopMockTimer();
+      if (!state.mockExam.finished){
+        toast("時間切れで自動採点しました");
+        finishMock();
+      }
+    }
+  }
+
+  function startMockTimer(){
+    stopMockTimer();
+    updateMockTimerDisplay();
+    mockTimerHandle = setInterval(updateMockTimerDisplay, 1000);
+  }
+  function stopMockTimer(){
+    if (mockTimerHandle){ clearInterval(mockTimerHandle); mockTimerHandle = null; }
+  }
+
+  $("btn-mock-finish").addEventListener("click", function(){
+    saveMockAnswer(currentQuestion("mock").id);
+    finishMock();
+  });
+
+  function finishMock(){
+    if (!state.mockExam || state.mockExam.finished) return;
+    stopMockTimer();
+    var qs = state.mockExam.questionIds.map(function(id){ return byId[id]; }).filter(Boolean);
+    // 保存されている回答は表示位置(シャッフル後)。採点は元の添字に戻したものを使う
+    var originalAnswersById = {};
+    qs.forEach(function(q){ originalAnswersById[q.id] = { selected: mockOriginalSelected(q) }; });
+    var scoreResult = DOJO.scoreMock(qs, originalAnswersById);
+    var today = DOJO.todayStr();
+
+    try {
+      qs.forEach(function(q){
+        var selected = originalAnswersById[q.id].selected;
+        var correct = DOJO.isCorrectAnswer(q, selected);
+        var res = DOJO.applyAnswer(state.questionState[q.id], correct, today);
+        state.questionState[q.id] = res.newState;
+        state.stats.totalAnswered++;
+        if (correct) state.stats.totalCorrect++;
+        state.stats.byDomain[q.domain].answered++;
+        if (correct) state.stats.byDomain[q.domain].correct++;
+      });
+      state.xp += DOJO.CONFIG.mockXpBonus;
+      state.mockExam.finished = true;
+      state.mockExam.lastResult = scoreResult;
+      persist();
+    } catch(e){
+      console.warn("[DOJO] finishMock 状態更新に失敗", e);
+      // 二重採点を避けるため、記録が一部失敗しても終了扱いにする
+      state.mockExam.finished = true;
+      state.mockExam.lastResult = scoreResult;
+      try { persist(); } catch(e2){}
+      toast("記録に失敗");
+    }
+
+    renderMockResult(scoreResult);
+    showScreen("result-mock");
+  }
+
+  function renderMockResult(scoreResult){
+    $("rm-percent").textContent = scoreResult.percent + "%";
+    $("rm-score1000").textContent = "1000点換算 " + scoreResult.score1000 + "点";
+    var badge = $("rm-pass-badge");
+    if (scoreResult.passed){
+      badge.textContent = "合格ライン到達";
+      badge.className = "pass-badge pass";
+    } else {
+      badge.textContent = "合格ラインまで " + (DOJO.CONFIG.passScore1000 - scoreResult.score1000) + "点";
+      badge.className = "pass-badge fail";
+    }
+    var html = "";
+    [1,2,3,4].forEach(function(d){
+      var db = scoreResult.byDomain[d];
+      var p = scoreResult.byDomainPercent[d];
+      html += '<div class="domain-bar-row">' +
+        '<div class="domain-bar-label"><span>分野' + d + ' ' + DOMAIN_NAMES[d] + '</span><span>' + db.correct + '/' + db.total + '(' + p + '%)</span></div>' +
+        '<div class="domain-bar-track"><div class="domain-bar-fill" style="width:' + p + '%"></div></div></div>';
+    });
+    $("rm-domain-bars").innerHTML = html;
+
+    renderMockReview();
+  }
+
+  // 模擬試験で間違えた問題だけを、間違いノートと同じ折り畳みの見た目で出す
+  function renderMockReview(){
+    var wrongQs = [];
+    if (state.mockExam && Array.isArray(state.mockExam.questionIds)){
+      state.mockExam.questionIds.forEach(function(id){
+        var q = byId[id];
+        if (!q) return;
+        var selected = mockOriginalSelected(q);
+        if (!DOJO.isCorrectAnswer(q, selected)) wrongQs.push(q);
+      });
+    }
+
+    if (wrongQs.length === 0){
+      $("rm-review-body").innerHTML = '<div class="empty-note">全問正解でした</div>';
+      return;
+    }
+
+    var html = "";
+    wrongQs.forEach(function(q, i){
+      html += '<div class="accordion"><div class="accordion-head" data-mr-toggle="' + i + '">' +
+        '<span>分野' + q.domain + ' / ' + q.q.slice(0,26) + (q.q.length>26?"…":"") + '</span>' +
+        '<span class="meta">不正解</span></div>' +
+        '<div class="accordion-body" id="mr-acc-' + i + '">' +
+        '<div class="ans-line"><b>問題:</b> ' + q.q + '</div>' +
+        '<div class="ans-line"><b>正解:</b> ' + q.answer.map(function(idx){ return q.choices[idx]; }).join(" / ") + '</div>' +
+        '<div>' + q.explanation + '</div>' +
+        (q.link ? '<div class="link-box"><div class="label">つばさくんの実例</div>' + q.link + '</div>' : '') +
+        glossaryHintHtml(q) +
+        '</div></div>';
+    });
+    $("rm-review-body").innerHTML = html;
+
+    Array.prototype.forEach.call(document.querySelectorAll("#rm-review-body [data-mr-toggle]"), function(el){
+      el.addEventListener("click", function(){
+        var idx = el.getAttribute("data-mr-toggle");
+        $("mr-acc-" + idx).classList.toggle("open");
+      });
+    });
+  }
+
+  $("btn-rm-home").addEventListener("click", function(){ renderHome(); showScreen("home"); });
+  $("btn-copy-rm").addEventListener("click", function(){
+    var r = state.mockExam && state.mockExam.lastResult;
+    if (!r) return;
+    copyText(DOJO.formatRecordMock(r.percent, r.byDomainPercent));
+  });
+
+  // ---------- 間違いノート ----------
+  $("btn-open-mistakes").addEventListener("click", function(){ renderMistakes(); showScreen("mistakes"); });
+  $("btn-mistakes-back").addEventListener("click", function(){ renderHome(); showScreen("home"); });
+
+  function renderMistakes(){
+    var targets = QUESTIONS.filter(function(q){
+      var st = state.questionState[q.id];
+      return st && (st.box >= 1 || st.everWrong);
+    });
+    var byDomain = {1:[],2:[],3:[],4:[]};
+    targets.forEach(function(q){ byDomain[q.domain].push(q); });
+
+    var html = "";
+    [1,2,3,4].forEach(function(d){
+      var list = byDomain[d];
+      html += '<div class="domain-group-head"><h3>分野' + d + ' ' + DOMAIN_NAMES[d] + '(' + list.length + ')</h3>' +
+        '<button type="button" class="btn btn-ghost" data-domain-five="' + d + '">この分野だけ5問</button></div>';
+      if (list.length === 0){
+        html += '<div class="empty-note">今のところありません</div>';
+      } else {
+        var byTopic = {};
+        list.forEach(function(q){
+          var t = q.topic || "その他";
+          if (!byTopic[t]) byTopic[t] = [];
+          byTopic[t].push(q);
+        });
+        Object.keys(byTopic).forEach(function(topic){
+          byTopic[topic].forEach(function(q){
+            var st = state.questionState[q.id];
+            var statusLabel = st.box >= 1 ? "復習待ち box" + st.box : "解決済み";
+            html += '<div class="accordion"><div class="accordion-head" data-toggle="' + q.id + '">' +
+              '<span>' + topic + ' / ' + q.q.slice(0,26) + (q.q.length>26?"…":"") + '</span>' +
+              '<span class="meta">' + statusLabel + '</span></div>' +
+              '<div class="accordion-body" id="acc-' + q.id + '">' +
+              '<div class="ans-line"><b>問題:</b> ' + q.q + '</div>' +
+              '<div class="ans-line"><b>正解:</b> ' + q.answer.map(function(i){ return q.choices[i]; }).join(" / ") + '</div>' +
+              '<div>' + q.explanation + '</div>' +
+              (q.link ? '<div class="link-box"><div class="label">つばさくんの実例</div>' + q.link + '</div>' : '') +
+              glossaryHintHtml(q) +
+              '</div></div>';
+          });
+        });
+      }
+    });
+    $("mistakes-body").innerHTML = html;
+
+    Array.prototype.forEach.call(document.querySelectorAll("[data-toggle]"), function(el){
+      el.addEventListener("click", function(){
+        var id = el.getAttribute("data-toggle");
+        $("acc-" + id).classList.toggle("open");
+      });
+    });
+    Array.prototype.forEach.call(document.querySelectorAll("[data-domain-five]"), function(el){
+      el.addEventListener("click", function(){
+        startFive(Number(el.getAttribute("data-domain-five")));
+      });
+    });
+  }
+
+  // ---------- 用語帳 ----------
+  var glossaryLearned = DOJO.glossaryLoadLearned(storage);
+  var glossaryQuery = "";
+  var glossaryDomain = "all";
+  var glossaryOnlyLeft = false;
+
+  // 用語帳のタブ(サービス/部品の英単語)。選んだタブはlocalStorageに保存する
+  var GLOSSARY_TAB_KEY = "aws_dojo_glossary_tab_v1";
+  var glossaryTab = "services";
+
+  function loadGlossaryTab(){
+    try {
+      if (!storage) return "services";
+      var v = storage.getItem(GLOSSARY_TAB_KEY);
+      return v === "words" ? "words" : "services";
+    } catch(e){ return "services"; }
+  }
+  function saveGlossaryTab(tab){
+    try { if (storage) storage.setItem(GLOSSARY_TAB_KEY, tab); } catch(e){}
+  }
+
+  // 「部品の英単語」の覚えたチェック(単語ごと、専用のlocalStorageキー)。判定ロジックはglossaryと共通のものを使う
+  function loadWordsLearned(){
+    try {
+      if (!storage) return {};
+      var raw = storage.getItem(DOJO.WORDS_STORAGE_KEY);
+      if (!raw) return {};
+      var parsed = JSON.parse(raw);
+      return DOJO.glossarySanitizeLearned(parsed);
+    } catch(e){ return {}; }
+  }
+  function saveWordsLearned(map){
+    try { if (!storage) return false; storage.setItem(DOJO.WORDS_STORAGE_KEY, JSON.stringify(map || {})); return true; }
+    catch(e){ return false; }
+  }
+
+  var wordsLearned = loadWordsLearned();
+  var wordsOnlyLeft = false;
+
+  function persistGlossaryLearned(){ DOJO.glossarySaveLearned(storage, glossaryLearned); }
+  function persistWordsLearned(){ saveWordsLearned(wordsLearned); }
+
+  $("btn-open-glossary").addEventListener("click", function(){ openGlossaryScreen(); showScreen("glossary"); });
+  $("btn-glossary-back").addEventListener("click", function(){ renderHome(); showScreen("home"); });
+
+  function switchGlossaryTab(tab){
+    glossaryTab = tab === "words" ? "words" : "services";
+    saveGlossaryTab(glossaryTab);
+    $("glossary-panel-services").classList.toggle("hidden", glossaryTab !== "services");
+    $("glossary-panel-words").classList.toggle("hidden", glossaryTab !== "words");
+    $("glossary-tab-btn-services").classList.toggle("active", glossaryTab === "services");
+    $("glossary-tab-btn-words").classList.toggle("active", glossaryTab === "words");
+    if (glossaryTab === "words") renderWordsList(); else renderGlossaryList();
+  }
+
+  $("glossary-tab-btn-services").addEventListener("click", function(){ switchGlossaryTab("services"); });
+  $("glossary-tab-btn-words").addEventListener("click", function(){ switchGlossaryTab("words"); });
+
+  function openGlossaryScreen(){
+    glossaryQuery = "";
+    glossaryDomain = "all";
+    glossaryOnlyLeft = false;
+    $("glossary-search").value = "";
+    $("glossary-only-left").checked = false;
+    Array.prototype.forEach.call(document.querySelectorAll("#glossary-domain-row button"), function(btn){
+      btn.classList.toggle("active", btn.getAttribute("data-domain") === "all");
+    });
+    wordsOnlyLeft = false;
+    $("words-only-left").checked = false;
+    $("glossary-tab-btn-services").textContent = "サービス(" + GLOSSARY.length + ")";
+    $("glossary-tab-btn-words").textContent = "部品の英単語(" + WORDS.length + ")";
+    switchGlossaryTab(loadGlossaryTab());
+  }
+
+  $("glossary-search").addEventListener("input", function(){
+    glossaryQuery = $("glossary-search").value;
+    renderGlossaryList();
+  });
+
+  $("glossary-only-left").addEventListener("change", function(){
+    glossaryOnlyLeft = $("glossary-only-left").checked;
+    renderGlossaryList();
+  });
+
+  Array.prototype.forEach.call(document.querySelectorAll("#glossary-domain-row button"), function(btn){
+    btn.addEventListener("click", function(){
+      glossaryDomain = btn.getAttribute("data-domain");
+      Array.prototype.forEach.call(document.querySelectorAll("#glossary-domain-row button"), function(b){
+        b.classList.toggle("active", b === btn);
+      });
+      renderGlossaryList();
+    });
+  });
+
+  function renderGlossaryList(){
+    $("glossary-total-count").textContent = String(GLOSSARY.length);
+    var learnedCount = GLOSSARY.filter(function(g){ return !!glossaryLearned[g.name]; }).length;
+    $("glossary-learned-count").textContent = String(learnedCount);
+
+    if (GLOSSARY.length === 0){
+      $("glossary-list").innerHTML = '<div class="empty-note">まだありません</div>';
+      return;
+    }
+
+    var filtered = DOJO.glossaryFilter(GLOSSARY, glossaryQuery, glossaryDomain, glossaryOnlyLeft, glossaryLearned);
+    if (filtered.length === 0){
+      $("glossary-list").innerHTML = '<div class="empty-note">見つかりません(検索や絞り込みを変えてみてください)</div>';
+      return;
+    }
+
+    var html = "";
+    filtered.forEach(function(g, i){
+      var learned = !!glossaryLearned[g.name];
+      var expandLine = g.expand ? ('<div class="glossary-expand">' + DOJO.glossaryExpandHtml(g.expand, g.key_letter) + '</div>') : "";
+      var meaningLine = g.key_meaning ? ('<div class="glossary-key-meaning">' + g.key_meaning + '</div>') : "";
+      var cuesHtml = g.cues.length ? g.cues.map(function(c){ return '<span class="chip">' + c + '</span>'; }).join("") : "";
+      html += '<div class="glossary-card">' +
+          '<div class="glossary-card-head" data-gl-toggle="' + i + '">' +
+            '<div class="glossary-name-row">' +
+              '<span class="glossary-name">' + g.name + '</span>' +
+              '<span class="glossary-name-right">' +
+                '<span class="domain-tag glossary-domain-pill">分野' + g.domain + '</span>' +
+                '<label class="glossary-check" data-gl-check-wrap="' + i + '"><input type="checkbox" data-gl-learn="' + i + '"' + (learned ? " checked" : "") + '>覚えた</label>' +
+              '</span>' +
+            '</div>' +
+            expandLine +
+            meaningLine +
+            '<div class="glossary-role">' + g.role + '</div>' +
+          '</div>' +
+          '<div class="glossary-card-body" id="glossary-body-' + i + '">' +
+            (cuesHtml ? ('<div class="glossary-cues-label">決め手の言葉</div><div class="glossary-cues">' + cuesHtml + '</div>') : "") +
+            (g.confuse ? ('<div class="glossary-confuse">見分け方: ' + g.confuse + '</div>') : "") +
+            (g.link ? ('<div class="link-box"><div class="label">つばさくんの実例</div>' + g.link + '</div>') : "") +
+          '</div>' +
+        '</div>';
+    });
+    $("glossary-list").innerHTML = html;
+
+    Array.prototype.forEach.call(document.querySelectorAll("#glossary-list [data-gl-toggle]"), function(el){
+      el.addEventListener("click", function(e){
+        if (e.target && e.target.closest && e.target.closest("[data-gl-check-wrap]")) return;
+        var idx = el.getAttribute("data-gl-toggle");
+        $("glossary-body-" + idx).classList.toggle("open");
+      });
+    });
+    Array.prototype.forEach.call(document.querySelectorAll("#glossary-list [data-gl-learn]"), function(el){
+      el.addEventListener("click", function(e){ e.stopPropagation(); });
+      el.addEventListener("change", function(){
+        var idx = Number(el.getAttribute("data-gl-learn"));
+        var g = filtered[idx];
+        if (!g) return;
+        if (el.checked) glossaryLearned[g.name] = true; else delete glossaryLearned[g.name];
+        persistGlossaryLearned();
+        renderGlossaryList();
+      });
+    });
+  }
+
+  $("words-only-left").addEventListener("change", function(){
+    wordsOnlyLeft = $("words-only-left").checked;
+    renderWordsList();
+  });
+
+  function renderWordsList(){
+    $("words-total-count").textContent = String(WORDS.length);
+    var learnedCount = WORDS.filter(function(w){ return !!wordsLearned[w.word]; }).length;
+    $("words-learned-count").textContent = String(learnedCount);
+
+    if (WORDS.length === 0){
+      $("words-list").innerHTML = '<div class="empty-note">まだありません</div>';
+      return;
+    }
+
+    var filtered = DOJO.wordsFilter(WORDS, wordsOnlyLeft, wordsLearned);
+    if (filtered.length === 0){
+      $("words-list").innerHTML = '<div class="empty-note">見つかりません(絞り込みを変えてみてください)</div>';
+      return;
+    }
+
+    var html = "";
+    filtered.forEach(function(w, i){
+      var learned = !!wordsLearned[w.word];
+      var chipsHtml = w.services.length
+        ? w.services.map(function(s){
+            var known = GLOSSARY.some(function(g){ return g.name === s; });
+            return '<button type="button" class="word-chip' + (known ? " linkable" : "") + '" data-word-chip="' + i + '" data-chip-name="' + s + '">' + s + '</button>';
+          }).join("")
+        : '<div class="empty-note">まだありません</div>';
+      html += '<div class="word-card">' +
+          '<div class="word-row-top">' +
+            '<span class="word-word">' + w.word + '</span>' +
+            '<span class="word-row-right">' +
+              '<span class="word-ja">' + w.ja + '</span>' +
+              '<label class="glossary-check" data-word-check-wrap="' + i + '"><input type="checkbox" data-word-learn="' + i + '"' + (learned ? " checked" : "") + '>覚えた</label>' +
+            '</span>' +
+          '</div>' +
+          (w.hint ? ('<div class="word-hint">' + w.hint + '</div>') : "") +
+          '<div class="word-chip-row">' + chipsHtml + '</div>' +
+        '</div>';
+    });
+    $("words-list").innerHTML = html;
+
+    Array.prototype.forEach.call(document.querySelectorAll("#words-list [data-word-learn]"), function(el){
+      el.addEventListener("click", function(e){ e.stopPropagation(); });
+      el.addEventListener("change", function(){
+        var idx = Number(el.getAttribute("data-word-learn"));
+        var w = filtered[idx];
+        if (!w) return;
+        if (el.checked) wordsLearned[w.word] = true; else delete wordsLearned[w.word];
+        persistWordsLearned();
+        renderWordsList();
+      });
+    });
+    Array.prototype.forEach.call(document.querySelectorAll("#words-list [data-word-chip]"), function(el){
+      el.addEventListener("click", function(){
+        var name = el.getAttribute("data-chip-name") || "";
+        var hit = GLOSSARY.some(function(g){ return g.name === name; });
+        if (!hit) return;
+        glossaryQuery = name;
+        $("glossary-search").value = name;
+        switchGlossaryTab("services");
+      });
+    });
+  }
+
+  $("btn-copy-glossary").addEventListener("click", function(){
+    if (glossaryTab === "words"){
+      var learnedWords = WORDS.filter(function(w){ return !!wordsLearned[w.word]; }).length;
+      copyText(DOJO.formatRecordWords(learnedWords, WORDS.length));
+    } else {
+      var learnedCount = GLOSSARY.filter(function(g){ return !!glossaryLearned[g.name]; }).length;
+      copyText(DOJO.formatRecordGlossary(learnedCount, GLOSSARY.length));
+    }
+  });
+
+  // ---------- 設定 ----------
+  $("btn-open-settings").addEventListener("click", function(){ renderSettings(); showScreen("settings"); });
+  $("btn-settings-back").addEventListener("click", function(){ renderHome(); showScreen("home"); });
+
+  var pendingImportData = null;
+
+  function renderSettings(){
+    $("settings-name").value = state.meta.name || "";
+    $("btn-theme-dark").classList.toggle("active", state.meta.theme !== "light");
+    $("btn-theme-light").classList.toggle("active", state.meta.theme === "light");
+    $("settings-export-area").value = "";
+    $("settings-import-area").value = "";
+    $("reset-confirm-box").classList.add("hidden");
+    pendingImportData = null;
+    $("import-confirm-box").classList.add("hidden");
+  }
+
+  $("settings-name").addEventListener("input", function(){
+    state.meta.name = $("settings-name").value;
+    persist();
+  });
+  $("btn-theme-dark").addEventListener("click", function(){
+    state.meta.theme = "dark"; persist(); applyTheme(); renderSettings();
+  });
+  $("btn-theme-light").addEventListener("click", function(){
+    state.meta.theme = "light"; persist(); applyTheme(); renderSettings();
+  });
+
+  $("btn-export").addEventListener("click", function(){
+    $("settings-export-area").value = JSON.stringify(state);
+    state.meta.lastExportAt = DOJO.todayStr();
+    persist();
+  });
+  $("btn-copy-export").addEventListener("click", function(){
+    var text = $("settings-export-area").value || JSON.stringify(state);
+    $("settings-export-area").value = text;
+    copyText(text);
+  });
+  $("btn-import").addEventListener("click", function(){
+    var text = $("settings-import-area").value.trim();
+    if (!text){ toast("貼り付けてください"); return; }
+    var parsed;
+    try {
+      parsed = JSON.parse(text);
+    } catch(e){
+      toast("読み込めませんでした");
+      return;
+    }
+    if (!DOJO.isValidExportedState(parsed)){
+      toast("このデータは読み込めません");
+      return;
+    }
+    pendingImportData = parsed;
+    var curInfo = DOJO.levelInfo(state.xp);
+    $("import-confirm-text").textContent = "現在の進捗(Lv" + curInfo.level + "・累計" + state.stats.totalAnswered + "問)を上書きします。よろしいですか";
+    $("import-confirm-box").classList.remove("hidden");
+  });
+  $("btn-import-cancel").addEventListener("click", function(){
+    pendingImportData = null;
+    $("import-confirm-box").classList.add("hidden");
+  });
+  $("btn-import-confirm").addEventListener("click", function(){
+    if (!pendingImportData) return;
+    var fakeStorage = { getItem:function(){ return JSON.stringify(pendingImportData); }, setItem:function(){} };
+    state = DOJO.loadState(fakeStorage);
+    pendingImportData = null;
+    persist();
+    applyTheme();
+    renderHome();
+    toast("読み込みました");
+    renderSettings();
+  });
+
+  $("btn-reset-1").addEventListener("click", function(){
+    $("reset-confirm-box").classList.remove("hidden");
+  });
+  $("btn-reset-cancel").addEventListener("click", function(){
+    $("reset-confirm-box").classList.add("hidden");
+  });
+  $("btn-reset-2").addEventListener("click", function(){
+    state = DOJO.defaultState();
+    persist();
+    applyTheme();
+    renderHome();
+    renderSettings();
+    toast("消しました");
+    showScreen("home");
+  });
+
+  // ---------- ねむり音声 ----------
+  var AUDIO_SCRIPT = DOJO.audioResolveScript(null); // まずは章名だけの固定リストで表示、fetch成功後に差し替える
+  var audioPlayerEl = $("audio-player");
+  var audioCurrentKey = null;          // "full" または章番号の文字列("1"〜"5")。今読み込んでいる曲
+  var audioPendingSeek = null;         // 曲切り替え直後、loadedmetadataで適用する再開位置(秒)
+  var audioLastSavedSecond = -1;       // 5秒ごと保存の重複防止
+  var audioLastSubtitleChapter = null; // 全部通し再生中、字幕の再描画を減らすための直前の章番号
+  var audioSleepHandle = null;
+  var audioSleepEndAt = null;
+  var audioSleepStartChapterN = null;  // 「章の終わり」判定の基準になる、再生開始時点の章番号
+
+  function persistAudio(){ DOJO.audioSaveState(storage, audioState); }
+
+  function findAudioChapter(n){ return DOJO.audioFindChapter(AUDIO_SCRIPT, n); }
+  function todayISO(){ var d = new Date(); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); }
+
+  // script.jsonを取りに行く。無い/壊れている(fetch失敗・404)場合は固定リストのまま何もしない
+  function loadAudioScript(){
+    if (typeof fetch !== "function") return;
+    fetch("audio/script.json").then(function(res){
+      if (!res || !res.ok) throw new Error("script.json not found");
+      return res.json();
+    }).then(function(json){
+      AUDIO_SCRIPT = DOJO.audioResolveScript(json);
+      if (!$("screen-audio").classList.contains("hidden")) renderAudioScreen();
+    }).catch(function(){
+      // 何もしない(固定リスト+「まだありません」のまま表示を続ける)
+    });
+  }
+
+  function audioNowTitle(key){
+    if (key === "full") return "全部通し";
+    var c = findAudioChapter(Number(key));
+    if (c && c.daily) return DOJO.audioDailyTitle(c, todayISO());
+    return c ? ("第" + c.n + "章 " + c.title) : ("第" + key + "章");
+  }
+
+  function renderAudioScreen(){
+    var resume = DOJO.audioResumeLabel(audioState, AUDIO_SCRIPT);
+    if (resume && resume.key !== audioCurrentKey){
+      $("audio-resume-row").classList.remove("hidden");
+      $("btn-audio-resume").textContent = "続きから(" + resume.label + " " + DOJO.audioFormatTime(resume.seconds) + ")";
+    } else {
+      $("audio-resume-row").classList.add("hidden");
+    }
+
+    $("audio-full-sub").textContent = AUDIO_SCRIPT.total_minutes ? DOJO.audioFormatMinutes(AUDIO_SCRIPT.total_minutes) : "約15分";
+
+    var today = todayISO();
+    var dailyHtml = "";
+    (AUDIO_SCRIPT.daily || []).forEach(function(c){
+      var subHtml = (c.lines && c.lines.length)
+        ? c.lines.map(function(l){ return '<div class="sub-line">' + l + '</div>'; }).join("")
+        : '<div class="sub-line dim">まだありません</div>';
+      var minLabel = (typeof c.minutes === "number") ? DOJO.audioFormatMinutes(c.minutes) : "";
+      dailyHtml += '<div class="card audio-chapter-card" id="audio-card-' + c.n + '">' +
+        '<div class="audio-chapter-row">' +
+          '<div class="audio-chapter-num daily">' + c.label + '</div>' +
+          '<div class="audio-chapter-info">' +
+            '<div class="audio-chapter-title">' + DOJO.audioDailyTitle(c, today) + '</div>' +
+            '<div class="audio-chapter-sub">' + minLabel + '</div>' +
+          '</div>' +
+          '<button type="button" class="audio-play-btn" data-key="' + c.n + '">▶</button>' +
+        '</div>' +
+        '<button type="button" class="btn-ghost audio-subtitle-link" data-toggle-sub="' + c.n + '">字幕を見る</button>' +
+        '<div class="accordion-body audio-subtitle-box" id="sub-ch-' + c.n + '">' + subHtml + '</div>' +
+      '</div>';
+    });
+    $("audio-daily-list").innerHTML = dailyHtml;
+    $("audio-daily-wrap").classList.toggle("hidden", !dailyHtml);
+
+    var html = "";
+    AUDIO_SCRIPT.chapters.forEach(function(c){
+      var subHtml = (c.lines && c.lines.length)
+        ? c.lines.map(function(l){ return '<div class="sub-line">' + l + '</div>'; }).join("")
+        : '<div class="sub-line dim">まだありません</div>';
+      var minLabel = (typeof c.minutes === "number") ? DOJO.audioFormatMinutes(c.minutes) : "";
+      html += '<div class="card audio-chapter-card" id="audio-card-' + c.n + '">' +
+        '<div class="audio-chapter-row">' +
+          '<div class="audio-chapter-num">' + c.n + '</div>' +
+          '<div class="audio-chapter-info">' +
+            '<div class="audio-chapter-title">' + c.title + '</div>' +
+            '<div class="audio-chapter-sub">' + minLabel + '</div>' +
+          '</div>' +
+          '<button type="button" class="audio-play-btn" data-key="' + c.n + '">▶</button>' +
+        '</div>' +
+        '<button type="button" class="btn-ghost audio-subtitle-link" data-toggle-sub="' + c.n + '">字幕を見る</button>' +
+        '<div class="accordion-body audio-subtitle-box" id="sub-ch-' + c.n + '">' + subHtml + '</div>' +
+      '</div>';
+    });
+    $("audio-chapter-list").innerHTML = html;
+
+    Array.prototype.forEach.call(document.querySelectorAll("#audio-daily-list .audio-play-btn, #audio-chapter-list .audio-play-btn"), function(btn){
+      btn.addEventListener("click", function(){ onAudioPlayClick(btn.getAttribute("data-key")); });
+    });
+    Array.prototype.forEach.call(document.querySelectorAll("#audio-daily-list [data-toggle-sub], #audio-chapter-list [data-toggle-sub]"), function(btn){
+      btn.addEventListener("click", function(){
+        $("sub-ch-" + btn.getAttribute("data-toggle-sub")).classList.toggle("open");
+      });
+    });
+
+    renderAudioSpeedButtons();
+    renderAudioSleepButtons();
+    renderAudioNotes();
+    highlightAudioPlaying();
+  }
+
+  $("btn-open-audio").addEventListener("click", function(){ renderAudioScreen(); showScreen("audio"); });
+  $("btn-audio-back").addEventListener("click", function(){ renderHome(); showScreen("home"); });
+  $("btn-audio-play-full").addEventListener("click", function(){ onAudioPlayClick("full"); });
+  $("btn-audio-resume").addEventListener("click", function(){
+    var resume = DOJO.audioResumeLabel(audioState, AUDIO_SCRIPT);
+    if (resume) onAudioPlayClick(resume.key);
+  });
+
+  // ロック画面・車(Bluetooth/CarPlay)に曲名と操作ボタンを出す
+  function setMediaSession(title){
+    if (!("mediaSession" in navigator) || typeof MediaMetadata !== "function") return;
+    try {
+      navigator.mediaSession.metadata = new MediaMetadata({
+        title: title, artist: "むすび", album: "AWS道場 ねむり音声",
+        artwork: [{ src: "icon-512.png", sizes: "512x512", type: "image/png" }]
+      });
+      navigator.mediaSession.setActionHandler("play", function(){ doAudioPlay(); });
+      navigator.mediaSession.setActionHandler("pause", function(){ audioPlayerEl.pause(); });
+      navigator.mediaSession.setActionHandler("seekbackward", function(){ audioPlayerEl.currentTime = Math.max(0, audioPlayerEl.currentTime - 10); });
+      navigator.mediaSession.setActionHandler("seekforward", function(){ audioPlayerEl.currentTime = Math.min(audioPlayerEl.duration || 0, audioPlayerEl.currentTime + 10); });
+    } catch (e) { /* 対応していない端末では何もしない */ }
+  }
+
+  function doAudioPlay(){
+    var p = audioPlayerEl.play();
+    if (p && typeof p.catch === "function"){
+      p.catch(function(){ toast("音声はまだ用意中です"); });
+    }
+  }
+
+  // カードの再生ボタンから呼ばれる。同じ曲なら再生/一時停止をトグル、違う曲ならソースを切り替えて再生する
+  function onAudioPlayClick(key){
+    if (audioCurrentKey === key){
+      if (audioPlayerEl.paused) doAudioPlay(); else audioPlayerEl.pause();
+      return;
+    }
+    var savedPos = (audioState.positions && audioState.positions[key]) || 0;
+    audioCurrentKey = key;
+    audioLastSavedSecond = -1;
+    audioLastSubtitleChapter = null;
+    audioSleepStartChapterN = (key === "full") ? DOJO.audioChapterAtTime(AUDIO_SCRIPT.chapters, savedPos) : Number(key);
+    var file = (key === "full") ? "full.mp3" : ((findAudioChapter(Number(key)) || {}).file || ("ch" + key + ".mp3"));
+    audioPendingSeek = savedPos;
+    audioPlayerEl.src = "audio/" + file;
+    audioPlayerEl.playbackRate = audioState.speed || 1;
+    setMediaSession(audioNowTitle(key));
+    doAudioPlay();
+    $("audio-controls").classList.remove("hidden");
+    $("audio-now-title").textContent = audioNowTitle(key);
+    renderAudioSubtitleBox();
+    setupSleepCountdown();
+    highlightAudioPlaying();
+  }
+
+  audioPlayerEl.addEventListener("loadedmetadata", function(){
+    if (audioPendingSeek){
+      try { audioPlayerEl.currentTime = audioPendingSeek; } catch(e){}
+      audioPendingSeek = null;
+    }
+    $("audio-seek").max = Math.floor(audioPlayerEl.duration || 0);
+    $("audio-time-total").textContent = DOJO.audioFormatTime(audioPlayerEl.duration || 0);
+  });
+  audioPlayerEl.addEventListener("error", function(){ toast("音声はまだ用意中です"); });
+  audioPlayerEl.addEventListener("play", function(){ $("btn-audio-playpause").textContent = "⏸"; highlightAudioPlaying(); });
+  audioPlayerEl.addEventListener("pause", function(){ $("btn-audio-playpause").textContent = "▶"; saveAudioPositionNow(); highlightAudioPlaying(); });
+  audioPlayerEl.addEventListener("ended", function(){ saveAudioPositionNow(); highlightAudioPlaying(); });
+
+  audioPlayerEl.addEventListener("timeupdate", function(){
+    if (!audioCurrentKey) return;
+    var cur = audioPlayerEl.currentTime || 0;
+    $("audio-seek").value = Math.floor(cur);
+    $("audio-time-current").textContent = DOJO.audioFormatTime(cur);
+
+    var sec = Math.floor(cur);
+    if (sec !== audioLastSavedSecond && sec % 5 === 0){
+      audioLastSavedSecond = sec;
+      saveAudioPositionNow();
+    }
+
+    if (audioCurrentKey === "full"){
+      var chN = DOJO.audioChapterAtTime(AUDIO_SCRIPT.chapters, cur);
+      if (chN !== audioLastSubtitleChapter){
+        audioLastSubtitleChapter = chN;
+        renderAudioSubtitleBox();
+      }
+      if (audioState.sleepTimer === "chapter" && audioSleepStartChapterN !== null && chN !== audioSleepStartChapterN){
+        audioPlayerEl.pause();
+        toast("この章が終わったので止めました");
+      }
+    }
+  });
+
+  function saveAudioPositionNow(){
+    if (!audioCurrentKey) return;
+    audioState = DOJO.audioRecordPosition(audioState, audioCurrentKey, audioPlayerEl.currentTime || 0);
+    persistAudio();
+  }
+
+  $("audio-seek").addEventListener("input", function(){
+    if (!audioCurrentKey) return;
+    audioPlayerEl.currentTime = Number($("audio-seek").value) || 0;
+  });
+  $("btn-audio-playpause").addEventListener("click", function(){
+    if (!audioCurrentKey) return;
+    if (audioPlayerEl.paused) doAudioPlay(); else audioPlayerEl.pause();
+  });
+  $("btn-audio-back10").addEventListener("click", function(){
+    if (!audioCurrentKey) return;
+    audioPlayerEl.currentTime = Math.max(0, (audioPlayerEl.currentTime || 0) - 10);
+  });
+  $("btn-audio-fwd10").addEventListener("click", function(){
+    if (!audioCurrentKey) return;
+    audioPlayerEl.currentTime = (audioPlayerEl.currentTime || 0) + 10;
+  });
+
+  function renderAudioSpeedButtons(){
+    Array.prototype.forEach.call(document.querySelectorAll("#audio-speed-row button"), function(btn){
+      btn.classList.toggle("active", Number(btn.getAttribute("data-speed")) === (audioState.speed || 1));
+    });
+  }
+  Array.prototype.forEach.call(document.querySelectorAll("#audio-speed-row button"), function(btn){
+    btn.addEventListener("click", function(){
+      var v = Number(btn.getAttribute("data-speed"));
+      audioState.speed = v;
+      persistAudio();
+      audioPlayerEl.playbackRate = v;
+      renderAudioSpeedButtons();
+    });
+  });
+
+  function renderAudioSleepButtons(){
+    Array.prototype.forEach.call(document.querySelectorAll("#audio-sleep-row button"), function(btn){
+      btn.classList.toggle("active", btn.getAttribute("data-sleep") === (audioState.sleepTimer || "off"));
+    });
+  }
+  Array.prototype.forEach.call(document.querySelectorAll("#audio-sleep-row button"), function(btn){
+    btn.addEventListener("click", function(){
+      audioState.sleepTimer = btn.getAttribute("data-sleep");
+      persistAudio();
+      renderAudioSleepButtons();
+      setupSleepCountdown();
+    });
+  });
+
+  // 15分/30分は時刻ベースで毎秒残り表示を更新。「章の終わり」はtimeupdate側で判定するのでここでは案内文だけ出す
+  function setupSleepCountdown(){
+    if (audioSleepHandle){ clearInterval(audioSleepHandle); audioSleepHandle = null; }
+    var opt = audioState.sleepTimer || "off";
+    if (opt === "15" || opt === "30"){
+      audioSleepEndAt = DOJO.audioSleepEndAt(opt, Date.now());
+      audioSleepHandle = setInterval(updateSleepRemainDisplay, 1000);
+      updateSleepRemainDisplay();
+    } else {
+      audioSleepEndAt = null;
+      $("audio-sleep-remain").textContent = opt === "chapter" ? "この章が終わったら自動で止まります" : "";
+    }
+  }
+
+  function updateSleepRemainDisplay(){
+    $("audio-sleep-remain").textContent = DOJO.audioSleepRemainingLabel(audioSleepEndAt, Date.now());
+    if (audioSleepEndAt && Date.now() >= audioSleepEndAt){
+      clearInterval(audioSleepHandle);
+      audioSleepHandle = null;
+      audioPlayerEl.pause();
+      toast("スリープタイマーで止めました");
+    }
+  }
+
+  // 中央の字幕欄。全部通し中は今いる章、単独章再生中はその章の字幕を出す
+  function renderAudioSubtitleBox(){
+    if (!audioCurrentKey){ $("audio-subtitle-box").innerHTML = ""; return; }
+    var n = (audioCurrentKey === "full") ? DOJO.audioChapterAtTime(AUDIO_SCRIPT.chapters, audioPlayerEl.currentTime || 0) : Number(audioCurrentKey);
+    var c = findAudioChapter(n);
+    if (!c || !c.lines || c.lines.length === 0){
+      $("audio-subtitle-box").innerHTML = '<div class="sub-line dim">まだありません</div>';
+      return;
+    }
+    $("audio-subtitle-box").innerHTML = c.lines.map(function(l){ return '<div class="sub-line">' + l + '</div>'; }).join("");
+  }
+
+  $("btn-audio-subtitle-toggle").addEventListener("click", function(){
+    $("audio-subtitle-box").classList.toggle("open");
+    renderAudioSubtitleBox();
+  });
+
+  function highlightAudioPlaying(){
+    Array.prototype.forEach.call(document.querySelectorAll(".audio-chapter-card"), function(el){ el.classList.remove("playing"); });
+    $("audio-full-card").classList.remove("playing");
+    if (!audioCurrentKey || audioPlayerEl.paused) return;
+    if (audioCurrentKey === "full"){
+      $("audio-full-card").classList.add("playing");
+    } else {
+      var el = $("audio-card-" + audioCurrentKey);
+      if (el) el.classList.add("playing");
+    }
+  }
+
+  function renderAudioNotes(){
+    if (!audioState.notes || audioState.notes.length === 0){
+      $("audio-note-list").innerHTML = '<div class="empty-note">まだありません</div>';
+      return;
+    }
+    $("audio-note-list").innerHTML = audioState.notes.map(function(n){
+      return '<div class="audio-note-item"><span class="audio-note-date">' + n.date + '</span>' + n.text + '</div>';
+    }).join("");
+  }
+
+  $("btn-audio-note-save").addEventListener("click", function(){
+    var text = $("audio-note-input").value;
+    if (!text || !text.trim()){ toast("何も書かれていません"); return; }
+    audioState.notes = DOJO.audioAddNote(audioState.notes, text, DOJO.todayStr());
+    persistAudio();
+    $("audio-note-input").value = "";
+    renderAudioNotes();
+    toast("保存しました");
+  });
+
+  $("btn-copy-audio").addEventListener("click", function(){
+    copyText(DOJO.audioFormatRecord(audioState.highestChapter || 0));
+  });
+
+  // ---------- 初期化 ----------
+  function init(){
+    applyTheme();
+    $("mock-setup-title").textContent = MOCK_COUNT_LABEL;
+    renderHome();
+    showScreen("home");
+    loadAudioScript();
+  }
+
+  if (document.readyState === "loading"){
+    document.addEventListener("DOMContentLoaded", init);
+  } else {
+    init();
+  }
+
+})();
+</script>
+</body>
+</html>

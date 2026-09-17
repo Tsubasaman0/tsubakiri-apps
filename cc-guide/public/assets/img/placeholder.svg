@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="675" viewBox="0 0 1200 675" role="img" aria-labelledby="title desc">
+  <title id="title">案内図の画像枠</title><desc id="desc">紙色の背景に、操作の順番を示す朱色の丸と矢印を描いた簡略図</desc>
+  <rect width="1200" height="675" rx="32" fill="#fffdf8"/>
+  <rect x="72" y="72" width="1056" height="531" rx="24" fill="#f4f1ea" stroke="#cec8ba" stroke-width="4"/>
+  <circle cx="270" cy="338" r="86" fill="#fffdf8" stroke="#b8402d" stroke-width="12"/>
+  <path d="M390 338h330" stroke="#b8402d" stroke-width="12" stroke-linecap="round"/>
+  <path d="m690 292 54 46-54 46" fill="none" stroke="#b8402d" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="800" y="238" width="220" height="200" rx="24" fill="#fffdf8" stroke="#17212b" stroke-width="6"/>
+  <text x="600" y="548" text-anchor="middle" font-family="sans-serif" font-size="34" fill="#53606a">ここに、押す場所が分かる図が入ります</text>
+</svg>

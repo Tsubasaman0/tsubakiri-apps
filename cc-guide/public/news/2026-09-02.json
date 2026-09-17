@@ -1,0 +1,82 @@
+{
+  "date": "2026-09-02",
+  "generatedAtJst": "2026/09/02 20:47",
+  "policy": "一次情報でURLと日付を確認できたClaude Code関連項目だけを掲載。要約は出典に書いてあることだけを日本語3行で書く",
+  "sourcesChecked": [
+    {
+      "name": "Claude Code Docs",
+      "url": "https://code.claude.com/docs/en/whats-new",
+      "ok": true,
+      "detail": "取得 402430 bytes"
+    },
+    {
+      "name": "anthropics/claude-code Releases",
+      "url": "https://api.github.com/repos/anthropics/claude-code/releases?per_page=5",
+      "ok": true,
+      "detail": "取得 113906 bytes"
+    },
+    {
+      "name": "Anthropic Newsroom",
+      "url": "https://www.anthropic.com/news",
+      "ok": true,
+      "detail": "取得 471775 bytes"
+    }
+  ],
+  "items": [
+    {
+      "headline": "Claude Code v2.1.258 が公開",
+      "summary": [
+        "macOS 12(Monterey)でClaude Codeが起動しなくなっていた不具合を直しました(v2.1.255から壊れていたもの)。",
+        "リモート実行や定期実行のセッションが「user messages must have non-empty content」という英語のエラーで失敗する問題も直しました。",
+        "新機能はなく、修正2件だけの小さな更新です。"
+      ],
+      "sourceUrl": "https://github.com/anthropics/claude-code/releases/tag/v2.1.258",
+      "sourceName": "anthropics/claude-code Releases",
+      "sourceTier": "一次(公式)",
+      "status": "事実",
+      "note": "",
+      "date": "2026-09-01",
+      "takeaway": "つまり、あなたには何が変わる？ macOS 12で急に開けなくなった人は、新しい版でまた使えるようになります。",
+      "image": "assets/img/news_2158.png",
+      "summaryBy": "回収係(Fable 5.1)が出典のリリースノートを読んで手で要約 2026-09-02",
+      "imageAlt": "左の箱に「古いMacで開かない」、右の箱に「開くようになった」と書かれ、あいだに太い矢印がある前後の図。"
+    },
+    {
+      "headline": "Claude Code v2.1.257 が公開",
+      "summary": [
+        "新しいモデル Claude Fable 5.1 が追加され、Fable系ではじめから選ばれるモデルになりました(コンテキストは1M)。",
+        "時刻の見せ方の設定(timeFormat / timeZone)が増えました。auto modeで、作業フォルダの外のファイルを初めて読む前に確認を出す仕組みも入りました。新機能はあわせて8件です。",
+        "あとから作った .claude/ フォルダの設定が再起動まで読まれなかった問題など、修正63件・改善11件も含みます。"
+      ],
+      "sourceUrl": "https://github.com/anthropics/claude-code/releases/tag/v2.1.257",
+      "sourceName": "anthropics/claude-code Releases",
+      "sourceTier": "一次(公式)",
+      "status": "事実",
+      "note": "モデルは考え方の違うAI、コンテキストは一度に覚えていられる量、auto modeはおまかせで進める設定のことです。",
+      "date": "2026-09-01",
+      "takeaway": "つまり、あなたには何が変わる？ 新しいAIを選べるようになり、時刻の見せ方も合わせやすくなりました。",
+      "image": "assets/img/news_2157.png",
+      "summaryBy": "回収係(Fable 5.1)が出典のリリースノートを読んで手で要約 2026-09-02",
+      "imageAlt": "左の箱に「新しいAIは選べない」、右の箱に「新しいAIを選べる」と書かれ、あいだに太い矢印がある前後の図。"
+    },
+    {
+      "headline": "Claude Code v2.1.252 が公開",
+      "summary": [
+        "一部のMacで、作業の一部が「task output swap refused」という英語のエラーで止まる問題を直しました。",
+        ".claude/settings.local.json がまだ無いプロジェクトで「常に許可」が保存されなかった問題を直しました。",
+        "Claude DesktopやVS Codeから使うRemote Controlが、通信が不安定なときに数分止まる問題も直しています(修正4件のみ)。"
+      ],
+      "sourceUrl": "https://github.com/anthropics/claude-code/releases/tag/v2.1.252",
+      "sourceName": "anthropics/claude-code Releases",
+      "sourceTier": "一次(公式)",
+      "status": "事実",
+      "note": "Remote Controlは、離れた所からの操作のことです。",
+      "date": "2026-08-31",
+      "takeaway": "つまり、あなたには何が変わる？ 作業が途中で止まっていた人は、新しい版で直る可能性があります。",
+      "image": "assets/img/news_2152.png",
+      "summaryBy": "回収係(Fable 5.1)が出典のリリースノートを読んで手で要約 2026-09-02",
+      "imageAlt": "左の箱に「作業が途中で止まる」、右の箱に「最後まで進む」と書かれ、あいだに太い矢印がある前後の図。"
+    }
+  ],
+  "imageBy": "1件目はデザイン係(絵師)の図、2・3件目は scripts/make_news_png.sh でひな形から作成 2026-09-02"
+}

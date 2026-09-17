@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd">
+<channel>
+<title>AWS道場 ねむり音声</title>
+<link>https://aws-dojo.kachikan-shindan.workers.dev</link>
+<language>ja</language>
+<description>AWS Cloud Practitioner の言葉を、寝る前や運転中に聞くだけの音声。むすびの声。毎日18時に「今日の分」が増える。</description>
+<itunes:author>むすび</itunes:author>
+<itunes:image href="https://aws-dojo.kachikan-shindan.workers.dev/cover-1400.png"/>
+<itunes:explicit>false</itunes:explicit>
+<itunes:summary>AWS Cloud Practitioner の言葉を、寝る前や運転中に聞くだけの音声。</itunes:summary>
+<itunes:category text="Education"/>
+<itunes:type>episodic</itunes:type>
+<itunes:block>Yes</itunes:block>
+<image><url>https://aws-dojo.kachikan-shindan.workers.dev/cover-1400.png</url><title>AWS道場 ねむり音声</title><link>https://aws-dojo.kachikan-shindan.workers.dev</link></image>
+<item>
+<title>9/16(水) 今日の分: セキュリティ</title>
+<itunes:title>9/16(水) 今日の分: セキュリティ</itunes:title>
+<description>むすびです。 今日の分です。 今日は、セキュリティの言葉を、ゆっくり流します。 覚えなくていいです。</description>
+<itunes:summary>むすびです。 今日の分です。 今日は、セキュリティの言葉を、ゆっくり流します。 覚えなくていいです。</itunes:summary>
+<itunes:author>むすび</itunes:author>
+<itunes:explicit>false</itunes:explicit>
+<enclosure url="https://aws-dojo.kachikan-shindan.workers.dev/audio/daily/2026-09-16.mp3" length="4399763" type="audio/mpeg"/>
+<guid isPermaLink="false">https://aws-dojo.kachikan-shindan.workers.dev/audio/daily/2026-09-16.mp3</guid>
+<pubDate>Wed, 16 Sep 2026 18:00:00 +0900</pubDate>
+<itunes:duration>9:12</itunes:duration>
+</item>
+<item>
+<title>9/15(火) 今日の分: サービス(後半)</title>
+<itunes:title>9/15(火) 今日の分: サービス(後半)</itunes:title>
+<description>むすびです。 今日の分です。 今日は、サービス(後半)の言葉を、ゆっくり流します。 覚えなくていいです。</description>
+<itunes:summary>むすびです。 今日の分です。 今日は、サービス(後半)の言葉を、ゆっくり流します。 覚えなくていいです。</itunes:summary>
+<itunes:author>むすび</itunes:author>
+<itunes:explicit>false</itunes:explicit>
+<enclosure url="https://aws-dojo.kachikan-shindan.workers.dev/audio/daily/2026-09-15.mp3" length="3945011" type="audio/mpeg"/>
+<guid isPermaLink="false">https://aws-dojo.kachikan-shindan.workers.dev/audio/daily/2026-09-15.mp3</guid>
+<pubDate>Tue, 15 Sep 2026 18:00:00 +0900</pubDate>
+<itunes:duration>8:11</itunes:duration>
+</item>
+<item>
+<title>9/14(月) 今日の分: サービス(前半)</title>
+<itunes:title>9/14(月) 今日の分: サービス(前半)</itunes:title>
+<description>むすびです。 今日の分です。 今日は、サービス(前半)の言葉を、ゆっくり流します。 覚えなくていいです。</description>
+<itunes:summary>むすびです。 今日の分です。 今日は、サービス(前半)の言葉を、ゆっくり流します。 覚えなくていいです。</itunes:summary>
+<itunes:author>むすび</itunes:author>
+<itunes:explicit>false</itunes:explicit>
+<enclosure url="https://aws-dojo.kachikan-shindan.workers.dev/audio/daily/2026-09-14.mp3" length="3803891" type="audio/mpeg"/>
+<guid isPermaLink="false">https://aws-dojo.kachikan-shindan.workers.dev/audio/daily/2026-09-14.mp3</guid>
+<pubDate>Mon, 14 Sep 2026 18:00:00 +0900</pubDate>
+<itunes:duration>7:54</itunes:duration>
+</item>
+<item>
+<title>9/13(日) 今日の分: クラウドの概念</title>
+<itunes:title>9/13(日) 今日の分: クラウドの概念</itunes:title>
+<description>むすびです。 今日の分です。 今日は、クラウドの概念の言葉を、ゆっくり流します。 覚えなくていいです。</description>
+<itunes:summary>むすびです。 今日の分です。 今日は、クラウドの概念の言葉を、ゆっくり流します。 覚えなくていいです。</itunes:summary>
+<itunes:author>むすび</itunes:author>
+<itunes:explicit>false</itunes:explicit>
+<enclosure url="https://aws-dojo.kachikan-shindan.workers.dev/audio/daily/2026-09-13.mp3" length="4390259" type="audio/mpeg"/>
+<guid isPermaLink="false">https://aws-dojo.kachikan-shindan.workers.dev/audio/daily/2026-09-13.mp3</guid>
+<pubDate>Sun, 13 Sep 2026 18:00:00 +0900</pubDate>
+<itunes:duration>9:06</itunes:duration>
+</item>
+<item>
+<title>全部通し(第1〜5章)</title>
+<itunes:title>全部通し(第1〜5章)</itunes:title>
+<description>責任共有モデル→IAM→料金→サポートを通しで。</description>
+<itunes:summary>責任共有モデル→IAM→料金→サポートを通しで。</itunes:summary>
+<itunes:author>むすび</itunes:author>
+<itunes:explicit>false</itunes:explicit>
+<enclosure url="https://aws-dojo.kachikan-shindan.workers.dev/audio/full.mp3" length="8120780" type="audio/mpeg"/>
+<guid isPermaLink="false">https://aws-dojo.kachikan-shindan.workers.dev/audio/full.mp3</guid>
+<pubDate>Sat, 12 Sep 2026 21:10:00 +0900</pubDate>
+<itunes:duration>16:53</itunes:duration>
+</item>
+<item>
+<title>第5章 今日の1個</title>
+<itunes:title>第5章 今日の1個</itunes:title>
+<description>ここまでです。 おつかれさまでした。 今日の分は、これで終わりです。</description>
+<itunes:summary>ここまでです。 おつかれさまでした。 今日の分は、これで終わりです。</itunes:summary>
+<itunes:author>むすび</itunes:author>
+<itunes:explicit>false</itunes:explicit>
+<enclosure url="https://aws-dojo.kachikan-shindan.workers.dev/audio/ch5.mp3" length="472595" type="audio/mpeg"/>
+<guid isPermaLink="false">https://aws-dojo.kachikan-shindan.workers.dev/audio/ch5.mp3</guid>
+<pubDate>Sat, 12 Sep 2026 21:05:00 +0900</pubDate>
+<itunes:duration>1:00</itunes:duration>
+</item>
+<item>
+<title>第4章 サポートプラン、Trusted Advisor、Well-Architected、クラウドの利点</title>
+<itunes:title>第4章 サポートプラン、Trusted Advisor、Well-Architected、クラウドの利点</itunes:title>
+<description>4つめは、困ったときと、よい作りの話です。 まず、サポートプラン。 Basicは、すべてのお客様についています。</description>
+<itunes:summary>4つめは、困ったときと、よい作りの話です。 まず、サポートプラン。 Basicは、すべてのお客様についています。</itunes:summary>
+<itunes:author>むすび</itunes:author>
+<itunes:explicit>false</itunes:explicit>
+<enclosure url="https://aws-dojo.kachikan-shindan.workers.dev/audio/ch4.mp3" length="2068115" type="audio/mpeg"/>
+<guid isPermaLink="false">https://aws-dojo.kachikan-shindan.workers.dev/audio/ch4.mp3</guid>
+<pubDate>Sat, 12 Sep 2026 21:04:00 +0900</pubDate>
+<itunes:duration>4:18</itunes:duration>
+</item>
+<item>
+<title>第3章 料金モデルとEC2の買い方、お金の道具</title>
+<itunes:title>第3章 料金モデルとEC2の買い方、お金の道具</itunes:title>
+<description>3つめは、お金の話です。 AWSの料金は、だいたい3つの足し算でできています。 計算する力、ためておく場所、外に出ていくデータ。</description>
+<itunes:summary>3つめは、お金の話です。 AWSの料金は、だいたい3つの足し算でできています。 計算する力、ためておく場所、外に出ていくデータ。</itunes:summary>
+<itunes:author>むすび</itunes:author>
+<itunes:explicit>false</itunes:explicit>
+<enclosure url="https://aws-dojo.kachikan-shindan.workers.dev/audio/ch3.mp3" length="2567795" type="audio/mpeg"/>
+<guid isPermaLink="false">https://aws-dojo.kachikan-shindan.workers.dev/audio/ch3.mp3</guid>
+<pubDate>Sat, 12 Sep 2026 21:03:00 +0900</pubDate>
+<itunes:duration>5:18</itunes:duration>
+</item>
+<item>
+<title>第2章 IAM</title>
+<itunes:title>第2章 IAM</itunes:title>
+<description>次は、IAMです。 誰が、何に、何をしてよいかを決める仕組みです。 使うこと自体に、お金はかかりません。</description>
+<itunes:summary>次は、IAMです。 誰が、何に、何をしてよいかを決める仕組みです。 使うこと自体に、お金はかかりません。</itunes:summary>
+<itunes:author>むすび</itunes:author>
+<itunes:explicit>false</itunes:explicit>
+<enclosure url="https://aws-dojo.kachikan-shindan.workers.dev/audio/ch2.mp3" length="1763699" type="audio/mpeg"/>
+<guid isPermaLink="false">https://aws-dojo.kachikan-shindan.workers.dev/audio/ch2.mp3</guid>
+<pubDate>Sat, 12 Sep 2026 21:02:00 +0900</pubDate>
+<itunes:duration>3:42</itunes:duration>
+</item>
+<item>
+<title>第1章 責任共有モデル</title>
+<itunes:title>第1章 責任共有モデル</itunes:title>
+<description>むすびです。 つばさくん、おつかれさまです。 今日は、覚えなくていい時間にしましょう。</description>
+<itunes:summary>むすびです。 つばさくん、おつかれさまです。 今日は、覚えなくていい時間にしましょう。</itunes:summary>
+<itunes:author>むすび</itunes:author>
+<itunes:explicit>false</itunes:explicit>
+<enclosure url="https://aws-dojo.kachikan-shindan.workers.dev/audio/ch1.mp3" length="1255379" type="audio/mpeg"/>
+<guid isPermaLink="false">https://aws-dojo.kachikan-shindan.workers.dev/audio/ch1.mp3</guid>
+<pubDate>Sat, 12 Sep 2026 21:01:00 +0900</pubDate>
+<itunes:duration>2:36</itunes:duration>
+</item>
+</channel>
+</rss>
